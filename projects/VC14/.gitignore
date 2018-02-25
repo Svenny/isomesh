@@ -1,0 +1,14 @@
+# VS user-specific files
+.vs/
+*.VC.opendb
+*.VC.db
+*.user
+# Profiler data
+*.psess
+*.vsp
+*.vspx
+# Built binaries
+temp/
+bin/
+# Precompiled headers
+ipch/

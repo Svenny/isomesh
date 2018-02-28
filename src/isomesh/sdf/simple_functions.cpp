@@ -23,27 +23,38 @@ SOFTWARE.
 */
 #include "pch.hpp"
 
+#include <limits>
+
 #include "simple_functions.hpp"
 
 namespace isomesh::sdf
 {
 
-double Sphere::value (const glm::dvec3 &p) const noexcept
+double Sphere::calcValue (const glm::dvec3 &p) const noexcept
 {
-    glm::dvec3 diff (p - m_center);
-    return glm::dot (diff, diff) - m_radius;
+    // For a sphere of radius R with center in (x0; y0; z0) its SDF
+    // is defined as f(x,y,z) = sqrt ((x-x0)^2 + (y-y0)^2 + (z-z0)^2) - R
+    return glm::distance (p, m_center) - m_radius;
 }
 
-glm::dvec3 Sphere::grad (const glm::dvec3 &p) const noexcept
+glm::dvec3 Sphere::calcGradient (const glm::dvec3 &p) const noexcept
 {
-    return glm::normalize (p - m_center);
+    constexpr double eps = std::numeric_limits<double>::min ();
+    // Gradient of sphere SDF is simply its normalized offset vector
+    // Add very small value to avoid division by zero
+    glm::dvec3 offset = p - m_center + eps;
+    double len = glm::length (offset);
+    return offset / len;
 }
 
-std::pair<double, glm::dvec3> Sphere::value_and_grad (const glm::dvec3 &p) const noexcept
+std::pair<double, glm::dvec3> Sphere::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
-    glm::dvec3 diff (p - m_center);
-    double dot = glm::dot (diff, diff);
-    return { dot - m_radius, diff / glm::sqrt (dot) };
+    // See calcValue and calcGradient
+    constexpr double eps = std::numeric_limits<double>::min ();
+    glm::dvec3 offset = p - m_center + eps;
+    // Also len = glm::distance (p, m_center)
+    double len = glm::length (offset);
+    return { len - m_radius, offset / len };
 }
 
 }

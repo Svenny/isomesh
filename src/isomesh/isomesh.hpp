@@ -21,6 +21,22 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
+/** \file
+  \brief Main include file for isomesh library
+
+  This file includes all other needed headers automatically. The only
+  dependency is GLM, a header-only vector/matrix math library */
+/** \mainpage Library overview
+  This library contains implementations of several isosurface extraction
+  algorithms. There are also some utilities, such as signed distance functions which
+  define isosurfaces \n and QEF solvers which find the optimal
+  locations for vertex placement. The library can be extended
+  with new algorithms. \n A isosurface viewer is present as a separate application.
+  \author Pavel Asyutchenko
+  \version 0.1
+  \date 2018
+  \copyright MIT License
+*/
 #pragma once
 
 #include <glm/glm.hpp>
@@ -28,3 +44,4 @@
 #include "qef/qef_solver.hpp"
 
 #include "sdf/sdf.hpp"
+#include "sdf/simple_functions.hpp"

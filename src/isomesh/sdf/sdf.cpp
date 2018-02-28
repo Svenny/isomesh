@@ -28,17 +28,35 @@ SOFTWARE.
 namespace isomesh::sdf
 {
 
-glm::dvec3 SDF::grad (const glm::dvec3 &p) const noexcept
+glm::dvec3 ISignedDistance::calcGradient (const glm::dvec3 &p) const noexcept
 {
-    constexpr double Step = 1.0 / 1024.0;
-    double d[3];
-    for (int i = 0; i < 2; i++)
+    constexpr double step = 1.0 / 1024.0;
+    glm::dvec3 result;
+    // Points for function sampling
+    glm::dvec3 p1 (p), p2 (p);
+    // Calculate finite difference on each axis
+    for (int i = 0; i < 3; i++)
     {
-        glm::dvec3 shift; shift[i] = Step;
-        d[i] = value (p + shift) - value (p - shift);
-        d[i] /= 2.0 * Step;
+        /* Shift points slightly along i-th axis.
+          Due to the limited precision shifting by a small step will not
+          change any bit in huge numbers (on the order of 2^42 or more),
+          so if p[i] is so large then p1[i] == p2[i] and
+          result[i] == 0 regardless of function used. */
+        p1[i] += step;
+        p2[i] -= step;
+        result[i] = calcValue (p1) - calcValue (p2);
+        // Divide by interval length, which is 2 * step
+        // as we shifted both points by step in opposite sides
+        result[i] /= 2.0 * step;
+        // Restore original (unshifted) value
+        p1[i] = p2[i] = p[i];
     }
-    return glm::dvec3 (d[0], d[1], d[2]);
+    return result;
+}
+
+std::pair<double, glm::dvec3> ISignedDistance::calcHermiteData (const glm::dvec3 &p) const noexcept
+{
+    return { calcValue (p), calcGradient (p) };
 }
 
 }

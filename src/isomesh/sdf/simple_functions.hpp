@@ -21,6 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+/** \file
+  \brief Contains examples of some simple signed distance functions */
 #pragma once
 
 #include "sdf.hpp"
@@ -28,17 +30,27 @@ SOFTWARE.
 namespace isomesh::sdf
 {
 
-class Sphere : public SDF
+/** \brief Signed distance function of a sphere
+
+  
+*/
+class Sphere : public ISignedDistance
 {
 public:
-    Sphere (double radius, const glm::dvec3 &center = glm::dvec3 (0.0)) noexcept : m_radius (radius), m_center (center) {}
+    /** Basic constructor
+      \param[in] radius Radius of the sphere
+      \param[in] center Center of the sphere, defaults to origin (0; 0; 0)
+    */
+    explicit Sphere (double radius, const glm::dvec3 &center = glm::dvec3 (0.0)) noexcept :
+        m_radius (radius), m_center (center) {}
+    virtual ~Sphere () = default;
 
-    virtual double value (const glm::dvec3 &p) const noexcept override;
-    virtual glm::dvec3 grad (const glm::dvec3 &p) const noexcept override;
-    virtual std::pair<double, glm::dvec3> value_and_grad (const glm::dvec3 &p) const noexcept override;
+    virtual double calcValue (const glm::dvec3 &p) const noexcept override;
+    virtual glm::dvec3 calcGradient (const glm::dvec3 &p) const noexcept override;
+    virtual hermite_data calcHermiteData (const glm::dvec3 &p) const noexcept override;
 protected:
-    double m_radius;
-    glm::dvec3 m_center;
+    double m_radius; ///< Radius of the sphere
+    glm::dvec3 m_center; ///< Center of the sphere
 };
 
 }

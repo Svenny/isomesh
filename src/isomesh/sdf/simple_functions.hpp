@@ -32,17 +32,16 @@ namespace isomesh::sdf
 
 /** \brief Signed distance function of a sphere
 
-  
+  This class implements SDF of an origin-centered
+  sphere with user-defined radius
 */
 class Sphere : public ISignedDistance
 {
 public:
-    /** Basic constructor
+    /** \brief Basic constructor
       \param[in] radius Radius of the sphere
-      \param[in] center Center of the sphere, defaults to origin (0; 0; 0)
     */
-    explicit Sphere (double radius, const glm::dvec3 &center = glm::dvec3 (0.0)) noexcept :
-        m_radius (radius), m_center (center) {}
+    explicit Sphere (double radius) noexcept : m_radius (radius) {}
     virtual ~Sphere () = default;
 
     virtual double calcValue (const glm::dvec3 &p) const noexcept override;
@@ -50,7 +49,25 @@ public:
     virtual hermite_data calcHermiteData (const glm::dvec3 &p) const noexcept override;
 protected:
     double m_radius; ///< Radius of the sphere
-    glm::dvec3 m_center; ///< Center of the sphere
+};
+
+/** \brief Signed distance function of a cube
+
+  This class implements SDF of an origin-centered
+  cube with user-defined side length
+*/
+class Cube : public ISignedDistance
+{
+public:
+    /** \brief Basic constructor
+      \param[in] side Side of the cube
+    */
+    explicit Cube (double side) noexcept : m_halfside (side * 0.5) {}
+    virtual ~Cube () = default;
+
+    virtual double calcValue (const glm::dvec3 &p) const noexcept override;
+protected:
+    double m_halfside; ///< Half cube side length
 };
 
 }

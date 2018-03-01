@@ -30,11 +30,14 @@
 namespace isomesh::sdf
 {
 
+// For a nice list of distance functions see
+// http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
+
 double Sphere::calcValue (const glm::dvec3 &p) const noexcept
 {
-    // For a sphere of radius R with center in (x0; y0; z0) its SDF
-    // is defined as f(x,y,z) = sqrt ((x-x0)^2 + (y-y0)^2 + (z-z0)^2) - R
-    return glm::distance (p, m_center) - m_radius;
+    // For a sphere of radius R its SDF
+    // is defined as f(x,y,z) = sqrt (x^2 + y^2 + z^2) - R
+    return glm::length (p) - m_radius;
 }
 
 glm::dvec3 Sphere::calcGradient (const glm::dvec3 &p) const noexcept
@@ -42,19 +45,24 @@ glm::dvec3 Sphere::calcGradient (const glm::dvec3 &p) const noexcept
     constexpr double eps = std::numeric_limits<double>::min ();
     // Gradient of sphere SDF is simply its normalized offset vector
     // Add very small value to avoid division by zero
-    glm::dvec3 offset = p - m_center + eps;
-    double len = glm::length (offset);
-    return offset / len;
+    double len = glm::length (p) + eps;
+    return p / len;
 }
 
 std::pair<double, glm::dvec3> Sphere::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
     // See calcValue and calcGradient
     constexpr double eps = std::numeric_limits<double>::min ();
-    glm::dvec3 offset = p - m_center + eps;
-    // Also len = glm::distance (p, m_center)
-    double len = glm::length (offset);
-    return { len - m_radius, offset / len };
+    double len = glm::length (p);
+    return { len - m_radius, p / (len + eps) };
+}
+
+double Cube::calcValue (const glm::dvec3 &p) const noexcept
+{
+    // See the link above, Box-signed-exact
+    glm::dvec3 d = glm::abs (p) - m_halfside;
+    double maxd = glm::max (d.x, glm::max (d.y, d.z));
+    return glm::min (maxd, 0.0) + glm::length (glm::max (d, 0.0));
 }
 
 }

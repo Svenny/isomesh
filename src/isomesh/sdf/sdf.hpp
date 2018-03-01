@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 /** \file
-  \brief A definition of Signed Distance Function */
+  \brief Definition file for Signed Distance Function */
 #pragma once
 
 #include <utility>
@@ -40,12 +40,13 @@ class ISignedDistance
 public:
     virtual ~ISignedDistance () = default;
 
-    /** Calculates value of SDF in given point \c p
+    /** \brief Calculates value of SDF in given point \c p
       \param[in] p Point where to compute value
       \return Value of the function in point \c p
-      \attention Properly defined signed distance function is 
-      continuous over the whole \f$ R^3 \f$. This property is crucial
-      to produce a valid isosurface */
+      \attention Properly defined signed distance function is
+      continuous over the whole \f$ R^3 \f$. This property is
+      crucial to produce a valid isosurface
+    */
     virtual double calcValue (const glm::dvec3 &p) const noexcept = 0;
 
     /** \brief Calculates gradient of SDF in given point \c p
@@ -55,7 +56,8 @@ public:
       infinities. Prefer to return any unit vector instead
       \attention Properly defined signed distance function always
       has gradient of unit length (where the gradient is defined).
-      Normalize it if this property does not hold in your function */
+      Normalize it if this property does not hold in your function
+    */
     virtual glm::dvec3 calcGradient (const glm::dvec3 &p) const noexcept;
 
     /** \brief A shorthand for Hermite data pair
@@ -67,15 +69,18 @@ public:
       \frac{\partial f(p)}{\partial x};
       \frac{\partial f(p)}{\partial y};
       \frac{\partial f(p)}{\partial z}
-      \} \f$ */
+      \} \f$
+    */
     using hermite_data = std::pair<double, glm::dvec3>;
 
-    /** Calculates Hermite data (a pair of value and gradient)
-      of SDF in given point \c p. Default implementation simply calls
-      the respective functions and packs their result into a pair
+    /** \brief Calculates Hermite data of SDF in given point \c p
+
+      Default implementation simply calls the respective functions
+      and packs their result into a pair
       \param[in] p Point where to compute these values
       \return Hermite data pair in point \c p
-      \see calcValue, calcGradient, hermite_data */
+      \see calcValue, calcGradient, hermite_data
+    */
     virtual hermite_data calcHermiteData (const glm::dvec3 &p) const noexcept;
 };
 

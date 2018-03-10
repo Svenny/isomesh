@@ -52,7 +52,7 @@ glm::dvec3 Union::calcGradient (const glm::dvec3 &p) const noexcept
         return dataB.second;
 }
 
-Union::hermite_data Union::calcHermiteData (const glm::dvec3 &p) const noexcept
+hermite_data Union::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
     hermite_data dataA = m_funA.calcHermiteData (p);
     hermite_data dataB = m_funB.calcHermiteData (p);
@@ -90,7 +90,7 @@ glm::dvec3 Difference::calcGradient (const glm::dvec3 &p) const noexcept
         return dataB.second;
 }
 
-Difference::hermite_data Difference::calcHermiteData (const glm::dvec3 &p) const noexcept
+hermite_data Difference::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
     hermite_data dataA = m_funA.calcHermiteData (p);
     dataA.first = -dataA.first;
@@ -126,7 +126,7 @@ glm::dvec3 Intersection::calcGradient (const glm::dvec3 &p) const noexcept
         return dataB.second;
 }
 
-Intersection::hermite_data Intersection::calcHermiteData (const glm::dvec3 &p) const noexcept
+hermite_data Intersection::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
     hermite_data dataA = m_funA.calcHermiteData (p);
     hermite_data dataB = m_funB.calcHermiteData (p);

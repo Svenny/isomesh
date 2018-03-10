@@ -51,7 +51,7 @@ glm::dvec3 Sphere::calcGradient (const glm::dvec3 &p) const noexcept
     return p / len;
 }
 
-std::pair<double, glm::dvec3> Sphere::calcHermiteData (const glm::dvec3 &p) const noexcept
+hermite_data Sphere::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
     // See calcValue and calcGradient
     constexpr double eps = std::numeric_limits<double>::min ();

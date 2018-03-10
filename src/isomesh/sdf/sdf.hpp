@@ -32,6 +32,19 @@
 namespace isomesh::sdf
 {
 
+/** \brief A shorthand for Hermite data pair
+
+  For a given function \f$ f(x,y,z) \f$ its
+  Hermite data at point \f$ p \f$ is a pair
+  \f$ (f(p); \nabla f(p)) \f$, where
+  \f$ \nabla f(p) = \{
+  \frac{\partial f(p)}{\partial x};
+  \frac{\partial f(p)}{\partial y};
+  \frac{\partial f(p)}{\partial z}
+  \} \f$
+*/
+using hermite_data = std::pair<double, glm::dvec3>;
+
 /** \brief Abstract base class for Signed Distance Function (SDF)
   
 */
@@ -59,19 +72,6 @@ public:
       Normalize it if this property does not hold in your function
     */
     virtual glm::dvec3 calcGradient (const glm::dvec3 &p) const noexcept;
-
-    /** \brief A shorthand for Hermite data pair
-      
-      For a given function \f$ f(x,y,z) \f$ its
-      Hermite data at point \f$ p \f$ is a pair
-      \f$ (f(p); \nabla f(p)) \f$, where
-      \f$ \nabla f(p) = \{
-      \frac{\partial f(p)}{\partial x};
-      \frac{\partial f(p)}{\partial y};
-      \frac{\partial f(p)}{\partial z}
-      \} \f$
-    */
-    using hermite_data = std::pair<double, glm::dvec3>;
 
     /** \brief Calculates Hermite data of SDF in given point \c p
 

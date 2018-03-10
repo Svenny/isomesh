@@ -54,7 +54,7 @@ glm::dvec3 ISignedDistance::calcGradient (const glm::dvec3 &p) const noexcept
     return result;
 }
 
-std::pair<double, glm::dvec3> ISignedDistance::calcHermiteData (const glm::dvec3 &p) const noexcept
+hermite_data ISignedDistance::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
     return { calcValue (p), calcGradient (p) };
 }

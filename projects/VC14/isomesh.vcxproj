@@ -22,6 +22,8 @@
     <ClInclude Include="..\..\src\isomesh\isomesh.hpp" />
     <ClInclude Include="..\..\src\isomesh\pch.hpp" />
     <ClInclude Include="..\..\src\isomesh\qef\qef_solver.hpp" />
+    <ClInclude Include="..\..\src\isomesh\sdf\boolean_operations.hpp" />
+    <ClInclude Include="..\..\src\isomesh\sdf\domain_transforms.hpp" />
     <ClInclude Include="..\..\src\isomesh\sdf\sdf.hpp" />
     <ClInclude Include="..\..\src\isomesh\sdf\simple_functions.hpp" />
   </ItemGroup>
@@ -32,6 +34,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\..\src\isomesh\sdf\boolean_operations.cpp" />
+    <ClCompile Include="..\..\src\isomesh\sdf\domain_transforms.cpp" />
     <ClCompile Include="..\..\src\isomesh\sdf\sdf.cpp" />
     <ClCompile Include="..\..\src\isomesh\sdf\simple_functions.cpp" />
   </ItemGroup>

@@ -53,7 +53,7 @@ public:
       \param[in] p Point where to compute gradient
       \return Gradient of the function in point \c p
       \attention Function should not return NaNs or
-      infinities. Prefer to return any unit vector instead
+      infinities. Prefer to return arbitrary unit vector instead
       \attention Properly defined signed distance function always
       has gradient of unit length (where the gradient is defined).
       Normalize it if this property does not hold in your function
@@ -75,8 +75,11 @@ public:
 
     /** \brief Calculates Hermite data of SDF in given point \c p
 
-      Default implementation simply calls the respective functions
-      and packs their result into a pair
+      Hermite data consists of value and gradient in given point, so
+      default implementation simply calls the respective functions
+      and packs their result into a pair. Override this function
+      if it is possible to calculate value and gradient together
+      faster than separately (i.e. they have some common subexpressions)
       \param[in] p Point where to compute these values
       \return Hermite data pair in point \c p
       \see calcValue, calcGradient, hermite_data

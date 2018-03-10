@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 /** \file
-  \brief Contains examples of some simple signed distance functions
+  \brief Contains examples of some simple domain transformations of distance functions
   \see http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm - an excellent list of distance functions */
 #pragma once
 
@@ -31,43 +31,33 @@
 namespace isomesh::sdf
 {
 
-/** \brief Signed distance function of a sphere
+/** \brief Translates the origin of SDF domain to point \f$ p \f$.
 
-  This class implements SDF which produces an origin-centered
-  sphere with user-defined radius \f$ R \f$. This function
-  is defined as \f$ f(p) = |p| - R \f$.
+  Translation is done simply by subtracting \f$ p \f$ from any point. This
+  operation does not change the behavior of underlying SDF in any way.
 */
-class Sphere : public ISignedDistance
+class Translation : public ISignedDistance
 {
 public:
     /** \brief Basic constructor
-      \param[in] radius Radius of the sphere
+      \param[in] fun Function which to translate
+      \param[in] p New point of origin
     */
-    explicit Sphere (double radius) noexcept : m_radius (radius) {}
+    explicit Translation (const ISignedDistance &fun, const glm::dvec3 &p) noexcept :
+        m_fun (fun), m_offset (p) {}
 
-    virtual double calcValue (const glm::dvec3 &p) const noexcept override;
-    virtual glm::dvec3 calcGradient (const glm::dvec3 &p) const noexcept override;
-    virtual hermite_data calcHermiteData (const glm::dvec3 &p) const noexcept override;
+    virtual double calcValue (const glm::dvec3 &p) const noexcept override {
+        return m_fun.calcValue (p - m_offset);
+    }
+    virtual glm::dvec3 calcGradient (const glm::dvec3 &p) const noexcept override {
+        m_fun.calcGradient (p - m_offset);
+    }
+    virtual hermite_data calcHermiteData (const glm::dvec3 &p) const noexcept override {
+        return m_fun.calcHermiteData (p - m_offset);
+    }
 protected:
-    double m_radius; ///< Radius of the sphere
-};
-
-/** \brief Signed distance function of a cube
-
-  This class implements SDF of an origin-centered
-  cube with user-defined side length.
-*/
-class Cube : public ISignedDistance
-{
-public:
-    /** \brief Basic constructor
-      \param[in] side Side of the cube
-    */
-    explicit Cube (double side) noexcept : m_halfside (side * 0.5) {}
-
-    virtual double calcValue (const glm::dvec3 &p) const noexcept override;
-protected:
-    double m_halfside; ///< Half cube side length
+    const ISignedDistance &m_fun; ///< Base function
+    const glm::dvec3 m_offset; ///< Offset vector
 };
 
 }

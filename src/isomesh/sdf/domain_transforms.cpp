@@ -1,6 +1,6 @@
 /*
   Isomesh - a collection of isosurface extraction algorithms
-
+  
   Copyright (c) 2018 Pavel Asyutchenko
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,29 +21,13 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-/** \file
-  \brief Main include file for isomesh library
+#include "pch.hpp"
 
-  This file includes all other needed headers automatically. The only
-  dependency is GLM, a header-only vector/matrix math library */
-/** \mainpage Library overview
-  This library contains implementations of several isosurface extraction
-  algorithms. There are also some utilities, such as signed distance functions which
-  define isosurfaces and QEF solvers which find the optimal
-  locations for vertex placement. The library can be extended
-  with new algorithms. A isosurface viewer is present as a separate application.
-  \author Pavel Asyutchenko
-  \version 0.1
-  \date 2018
-  \copyright MIT License
-*/
-#pragma once
+#include "domain_transforms.hpp"
 
-#include <glm/glm.hpp>
+namespace isomesh::sdf
+{
 
-#include "qef/qef_solver.hpp"
 
-#include "sdf/sdf.hpp"
-#include "sdf/simple_functions.hpp"
-#include "sdf/domain_transforms.hpp"
-#include "sdf/boolean_operations.hpp"
+
+}

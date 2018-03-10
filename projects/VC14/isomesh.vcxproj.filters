@@ -38,6 +38,12 @@
     <ClInclude Include="..\..\src\isomesh\sdf\simple_functions.hpp">
       <Filter>Headers\SDF functions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\isomesh\sdf\boolean_operations.hpp">
+      <Filter>Headers\SDF functions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\isomesh\sdf\domain_transforms.hpp">
+      <Filter>Headers\SDF functions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\isomesh\pch.cpp">
@@ -47,6 +53,12 @@
       <Filter>Sources\SDF functions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\isomesh\sdf\sdf.cpp">
+      <Filter>Sources\SDF functions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\isomesh\sdf\boolean_operations.cpp">
+      <Filter>Sources\SDF functions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\isomesh\sdf\domain_transforms.cpp">
       <Filter>Sources\SDF functions</Filter>
     </ClCompile>
   </ItemGroup>

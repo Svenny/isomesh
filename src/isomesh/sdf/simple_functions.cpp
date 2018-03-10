@@ -30,8 +30,10 @@
 namespace isomesh::sdf
 {
 
-// For a nice list of distance functions see
+// For details on these distance functions see
 // http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
+
+// ---- Sphere ----
 
 double Sphere::calcValue (const glm::dvec3 &p) const noexcept
 {
@@ -56,6 +58,8 @@ std::pair<double, glm::dvec3> Sphere::calcHermiteData (const glm::dvec3 &p) cons
     double len = glm::length (p);
     return { len - m_radius, p / (len + eps) };
 }
+
+// ---- Cube ----
 
 double Cube::calcValue (const glm::dvec3 &p) const noexcept
 {

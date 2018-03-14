@@ -45,13 +45,12 @@ glm::dvec3 ISignedDistance::calcGradient (const glm::dvec3 &p) const noexcept
         p1[i] += step;
         p2[i] -= step;
         result[i] = calcValue (p1) - calcValue (p2);
-        // Divide by interval length, which is 2 * step
-        // as we shifted both points by step in opposite sides
-        result[i] /= 2.0 * step;
         // Restore original (unshifted) value
         p1[i] = p2[i] = p[i];
     }
-    return result;
+    // Safe normalize needed as gradient
+    // becomes zero in stationary points
+    return safeNormalize (result);
 }
 
 hermite_data ISignedDistance::calcHermiteData (const glm::dvec3 &p) const noexcept

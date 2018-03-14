@@ -23,8 +23,6 @@
 */
 #include "pch.hpp"
 
-#include <limits>
-
 #include "simple_functions.hpp"
 
 namespace isomesh::sdf
@@ -44,19 +42,15 @@ double Sphere::calcValue (const glm::dvec3 &p) const noexcept
 
 glm::dvec3 Sphere::calcGradient (const glm::dvec3 &p) const noexcept
 {
-    constexpr double eps = std::numeric_limits<double>::min ();
     // Gradient of sphere SDF is simply its normalized offset vector
-    // Add very small value to avoid division by zero
-    double len = glm::length (p) + eps;
-    return p / len;
+    return safeNormalize (p);
 }
 
 hermite_data Sphere::calcHermiteData (const glm::dvec3 &p) const noexcept
 {
     // See calcValue and calcGradient
-    constexpr double eps = std::numeric_limits<double>::min ();
     double len = glm::length (p);
-    return { len - m_radius, p / (len + eps) };
+    return { len - m_radius, safeNormalize (p, len) };
 }
 
 // ---- Cube ----

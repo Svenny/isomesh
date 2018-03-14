@@ -25,9 +25,11 @@
   \brief Definition file for Signed Distance Function */
 #pragma once
 
+#include <limits>
 #include <utility>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace isomesh::sdf
 {
@@ -69,7 +71,8 @@ public:
       infinities. Prefer to return arbitrary unit vector instead
       \attention Properly defined signed distance function always
       has gradient of unit length (where the gradient is defined).
-      Normalize it if this property does not hold in your function
+      QEF minimizers rely on this property, so normalize gradient
+      if it does not hold in your function.
     */
     virtual glm::dvec3 calcGradient (const glm::dvec3 &p) const noexcept;
 
@@ -85,6 +88,34 @@ public:
       \see calcValue, calcGradient, hermite_data
     */
     virtual hermite_data calcHermiteData (const glm::dvec3 &p) const noexcept;
+
+protected:
+    /** \brief Performs 'safe normalization' of a vector
+
+      This helper may be used in gradient calculation, where you
+      need to handle vectors of possible zero length. In case of zero
+      length it returns an arbitrary unit vector (as gradient is undefined anyway).
+      \param[in] vec Vector to normalize
+      \param[in] length Length of the vector
+      \return Unit vector
+    */
+    inline glm::dvec3 safeNormalize (const glm::dvec3 &vec, double length) const noexcept {
+        if (length < std::numeric_limits<double>::min ())
+            return glm::dvec3 (0.5773502691896257645);
+        return vec / length;
+    }
+
+    /** \brief Performs 'safe normalization' of a vector
+      
+      This helper may be used in gradient calculation, where you
+      need to handle vectors of possible zero length. In case of zero
+      length it returns an arbitrary unit vector (as gradient is undefined anyway).
+      \param[in] vec Vector to normalize
+      \return Unit vector
+    */
+    inline glm::dvec3 safeNormalize (const glm::dvec3 &vec) const noexcept {
+        return safeNormalize (vec, glm::length (vec));
+    }
 };
 
 }

@@ -2,7 +2,7 @@ set (ISOMESH_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../include/isomesh")
 set (ISOMESH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set (ISOMESH_HEADERS
-	${ISOMESH_HEADER_DIR}/isomesh.hpp
+	${ISOMESH_HEADER_DIR}/common.hpp
 	${ISOMESH_HEADER_DIR}/util/zero_finder.hpp
 )
 
@@ -22,3 +22,4 @@ set_target_properties (isomesh PROPERTIES
 )
 
 cotire (isomesh)
+

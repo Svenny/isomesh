@@ -27,8 +27,8 @@ bool testX (isomesh::SurfaceFunction &f, double x0, double x1, vector<double> ro
 bool testY (isomesh::SurfaceFunction &f, double y0, double y1, vector<double> roots);
 bool testZ (isomesh::SurfaceFunction &f, double z0, double z1, vector<double> roots);
 
-// 1D x-only polynomials
-bool testPolyX () {
+// Polynomials
+bool testPoly () {
 	{
 		clog << "Testing f(x) = x^2 - 8x + 15" << endl;
 		isomesh::SurfaceFunction poly2;
@@ -62,8 +62,8 @@ bool testPolyX () {
 	return true;
 }
 
-// 2D yz exponential functions
-bool testExpYZ () {
+// Exponential functions
+bool testExp () {
 	{
 		clog << "Testing f(y, z) = e^y + e^z - 4" << endl;
 		isomesh::SurfaceFunction f;
@@ -76,14 +76,41 @@ bool testExpYZ () {
 		if (!testY (f, 1.0, 2.0, { log (3.0) })) return false;
 		if (!testZ (f, 1.0, 2.0, { log (3.0) })) return false;
 	}
+	{
+		// This function is designed to defeat regula falsi.
+		// Looking at its plot you can see that its linear interpolation
+		// gives results far off from the actual root, slowing down convergence.
+		clog << "Testing f(z) = ln(z) if z <= 1, else 1 - exp(-1.9*(z-1))" << endl;
+		isomesh::SurfaceFunction f;
+		f.f = [] (glm::dvec3 p) {
+			if (p.z <= 1.0)
+				return log (p.z);
+			return 1.0 - exp (-1.9 * (p.z - 1.0));
+		};
+		f.grad = [] (glm::dvec3 p) {
+			if (p.z <= 1.0)
+				return glm::dvec3 (0, 0, 1.0 / p.z);
+			return glm::dvec3 (0, 0, 1.9 * (p.z - 1.0) * exp (-1.9 * (p.z - 1.0)));
+		};
+		if (!testZ (f, 0.5, 1.5, { 1.0 })) return false;
+		if (!testZ (f, 0.25, 3.0, { 1.0 })) return false;
+		if (!testZ (f, 0.9, 10.0, { 1.0 })) return false;
+		if (!testZ (f, 0.1, 3.0, { 1.0 })) return false;
+		if (!testZ (f, 0.4, 7.2, { 1.0 })) return false;
+		// This test should be very tough for regula falsi because of very slow
+		// convergence rate. Increasing the multiplier in exponent will make
+		// things even worse. Setting it to 2 is just enough for regula falsi
+		// to fail the "not worse than bisection" condition.
+		if (!testZ (f, 0.1, 10.0, { 1.0 })) return false;
+	}
 	return true;
 }
 
 int main () {
 	bool fail = false;
-	if (!testPolyX ())
+	if (!testPoly ())
 		fail = true;
-	if (!testExpYZ ())
+	if (!testExp ())
 		fail = true;
 	if (fail)
 		return 1;

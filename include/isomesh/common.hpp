@@ -25,13 +25,14 @@ struct SurfaceFunction {
 
 }
 
+// Adding std::get<> interface to GLM vectors
 namespace std
 {
 
-template<size_t I, int D, typename T>
-constexpr T &get (glm::vec<D, T, glm::defaultp> &v) noexcept {
-	static_assert (I < D, "Index should be less than vector dimension");
-	static_assert (D <= 4, "Dimension should be not higher than 4");
+template<int I, int D, typename T> constexpr
+T &get (glm::vec<D, T, glm::defaultp> &v) noexcept {
+	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
+	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
 	if constexpr (I == 0)
 		return v.x;
 	else if constexpr (I == 1)
@@ -42,10 +43,24 @@ constexpr T &get (glm::vec<D, T, glm::defaultp> &v) noexcept {
 		return v.w;
 }
 
-template<size_t I, int D, typename T>
-constexpr const T &get (const glm::vec<D, T, glm::defaultp> &v) noexcept {
-	static_assert (I < D, "Index should be less than vector dimension");
-	static_assert (D <= 4, "Dimension should be not higher than 4");
+template<int I, int D, typename T> constexpr
+T &&get (glm::vec<D, T, glm::defaultp> &&v) noexcept {
+	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
+	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
+	if constexpr (I == 0)
+		return std::move (v.x);
+	else if constexpr (I == 1)
+		return std::move (v.y);
+	else if constexpr (I == 2)
+		return std::move (v.z);
+	else
+		return std::move (v.w);
+}
+
+template<int I, int D, typename T> constexpr
+const T &get (const glm::vec<D, T, glm::defaultp> &v) noexcept {
+	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
+	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
 	if constexpr (I == 0)
 		return v.x;
 	else if constexpr (I == 1)

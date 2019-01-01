@@ -7,3 +7,4 @@ endfunction ()
 
 isomesh_add_test (glm)
 isomesh_add_test (zero_finder)
+isomesh_add_test (grid)

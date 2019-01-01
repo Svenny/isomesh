@@ -3,7 +3,6 @@
 // Tests for default Isomesh zero finders
 #include <iomanip>
 #include <iostream>
-#include <random>
 #include <vector>
 
 #include <isomesh/util/zero_finder.hpp>

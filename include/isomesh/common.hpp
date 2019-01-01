@@ -1,7 +1,11 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+/** \file
+	\brief Common definitions used across all Isomesh library
+*/
 #pragma once
 
+#include <cstdint>
 #include <functional>
 
 #include <glm/glm.hpp>
@@ -21,6 +25,20 @@ struct SurfaceFunction {
 	std::function<double (glm::dvec3)> f;
 	std::function<glm::dvec3 (glm::dvec3)> grad;
 	double operator () (const glm::dvec3 &p) const noexcept { return f (p); }
+};
+
+/** \brief Voxel materials enumeration
+
+	Empty = air
+*/
+enum class Material : uint8_t {
+	// No voxel (i.e. air)
+	Empty = 0,
+	Stone,
+	Soil,
+
+	// Not a material
+	Count
 };
 
 }

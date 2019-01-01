@@ -2,6 +2,8 @@
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
 #pragma once
 
+#include <algorithm>
+
 #include "../common.hpp"
 
 namespace isomesh
@@ -32,7 +34,7 @@ public:
 class StepCountedZeroFinder : public ZeroFinder {
 public:
 	StepCountedZeroFinder () noexcept = default;
-	StepCountedZeroFinder (int steps) noexcept { setStepCount (steps); }
+	explicit StepCountedZeroFinder (int steps) noexcept { setStepCount (steps); }
 
 	void setStepCount (int steps) noexcept { m_stepCount = std::max (1, steps); }
 	int stepCount () const noexcept { return m_stepCount; }
@@ -43,7 +45,7 @@ protected:
 class BisectionZeroFinder : public StepCountedZeroFinder {
 public:
 	BisectionZeroFinder () noexcept = default;
-	BisectionZeroFinder (int steps) noexcept : StepCountedZeroFinder (steps) {}
+	explicit BisectionZeroFinder (int steps) noexcept : StepCountedZeroFinder (steps) {}
 
 	double findAlongX (double x0, double y0, double z0,
 	                   double x1, double f0, double f1,
@@ -64,7 +66,7 @@ private:
 class RegulaFalsiZeroFinder : public StepCountedZeroFinder {
 public:
 	RegulaFalsiZeroFinder () noexcept = default;
-	RegulaFalsiZeroFinder (int steps) noexcept : StepCountedZeroFinder (steps) {}
+	explicit RegulaFalsiZeroFinder (int steps) noexcept : StepCountedZeroFinder (steps) {}
 
 	double findAlongX (double x0, double y0, double z0,
 	                   double x1, double f0, double f1,

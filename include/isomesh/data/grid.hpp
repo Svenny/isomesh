@@ -8,6 +8,7 @@
 #include <iterator>
 #include <memory>
 
+#include "../util/material_selector.hpp"
 #include "../util/zero_finder.hpp"
 #include "../common.hpp"
 
@@ -98,8 +99,8 @@ inline auto operator - (UniformGridEdgeStorage::const_iterator::difference_type 
 class UniformGrid {
 public:
 	explicit UniformGrid (uint32_t size, const glm::dvec3 &globalPos = glm::dvec3 (0.0), double scale = 1.0);
-	// Fills grid using given surface function and zero finder
-	void fill (SurfaceFunction &f, ZeroFinder &solver);
+	// Fills grid using given surface function & material selection method
+	void fill (const SurfaceFunction &f, const ZeroFinder &solver, const MaterialSelector &material);
 	// Converts local-coordinates point to YXZ-order traversal (raw) index
 	uint32_t pointToRawIndex (int32_t x, int32_t y, int32_t z) const;
 	uint32_t pointToRawIndex (const glm::ivec3 &v) const;

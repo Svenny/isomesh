@@ -4,6 +4,7 @@ set (ISOMESH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set (ISOMESH_HEADERS
 	${ISOMESH_HEADER_DIR}/common.hpp
 	${ISOMESH_HEADER_DIR}/data/grid.hpp
+	${ISOMESH_HEADER_DIR}/util/material_selector.hpp
 	${ISOMESH_HEADER_DIR}/util/zero_finder.hpp
 )
 

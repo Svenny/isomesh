@@ -3,6 +3,8 @@
 // Tests for uniform grid
 #include <iostream>
 
+#include <isomesh/util/material_selector.hpp>
+#include <isomesh/util/zero_finder.hpp>
 #include <isomesh/data/grid.hpp>
 
 using std::cerr;
@@ -18,7 +20,7 @@ int main () {
 	const int sz = 4;
 	const int hsz = sz / 2;
 	isomesh::UniformGrid G (sz);
-	G.fill (f, solver);
+	G.fill (f, solver, isomesh::TrivialMaterialSelector ());
 	clog << "Grid layout map:" << endl;
 	for (int32_t y = hsz; y >= -hsz; y--) {
 		for (int32_t z = -hsz; z <= hsz; z++) {

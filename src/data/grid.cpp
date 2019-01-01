@@ -29,7 +29,7 @@ void UniformGridEdgeStorage::sort () noexcept {
 }
 
 void UniformGridEdgeStorage::addEdge (int32_t x, int32_t y, int32_t z,
-	const glm::dvec3 &normal, double offset) {
+                                      const glm::dvec3 &normal, double offset) {
 	assert (x <= 64 && y <= 64 && z <= 64);
 	assert (x >= -64 && y >= -64 && z >= -64);
 	Edge e { int8_t (x), int8_t (y), int8_t (z), { normal, float (offset) } };
@@ -48,7 +48,9 @@ UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double sca
 	m_mat.reset (new Material[(size + 1) * (size + 1) * (size + 1)]);
 }
 
-void UniformGrid::fill (SurfaceFunction &f, ZeroFinder &solver) {
+void UniformGrid::fill (const SurfaceFunction &f,
+                        const ZeroFinder &solver,
+                        const MaterialSelector &material) {
 	std::vector<double> values (dataSize ());
 	// Compute function values over the whole grid
 	uint32_t idx = 0;
@@ -60,9 +62,7 @@ void UniformGrid::fill (SurfaceFunction &f, ZeroFinder &solver) {
 			call_pos.z = lowest_point.z;
 			for (int32_t z = -m_halfSize; z <= m_halfSize; z++) {
 				values[idx] = f (call_pos);
-				if (values[idx] > 0.0)
-					m_mat[idx] = Material::Empty;
-				else m_mat[idx] = Material::Stone;
+				m_mat[idx] = material.select (call_pos, values[idx]);
 				idx++;
 				call_pos.z += m_scale;
 			}

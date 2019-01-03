@@ -8,8 +8,6 @@
 #include <iterator>
 #include <memory>
 
-#include "../util/material_selector.hpp"
-#include "../util/zero_finder.hpp"
 #include "../common.hpp"
 
 namespace isomesh
@@ -90,6 +88,9 @@ inline auto operator + (UniformGridEdgeStorage::const_iterator::difference_type 
 	UniformGridEdgeStorage::const_iterator iter) noexcept { return iter + d; }
 inline auto operator - (UniformGridEdgeStorage::const_iterator::difference_type d,
 	UniformGridEdgeStorage::const_iterator iter) noexcept { return iter - d; }
+
+class ZeroFinder;
+class MaterialSelector;
 
 // YXZ traversal order (to match Voxen's layout)
 // Local coordinates are [-size/2; size/2]

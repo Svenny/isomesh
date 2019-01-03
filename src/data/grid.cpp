@@ -5,6 +5,8 @@
 #include <cassert>
 #include <stdexcept>
 
+#include <isomesh/util/material_selector.hpp>
+#include <isomesh/util/zero_finder.hpp>
 #include <isomesh/data/grid.hpp>
 
 namespace isomesh

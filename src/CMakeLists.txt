@@ -4,13 +4,17 @@ set (ISOMESH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set (ISOMESH_HEADERS
 	${ISOMESH_HEADER_DIR}/common.hpp
 	${ISOMESH_HEADER_DIR}/data/grid.hpp
+	${ISOMESH_HEADER_DIR}/data/mesh.hpp
+	${ISOMESH_HEADER_DIR}/util/material_filter.hpp
 	${ISOMESH_HEADER_DIR}/util/material_selector.hpp
 	${ISOMESH_HEADER_DIR}/util/zero_finder.hpp
 )
 
 set (ISOMESH_SOURCES
 	${ISOMESH_SOURCE_DIR}/data/grid.cpp
+	${ISOMESH_SOURCE_DIR}/data/mesh.cpp
 	${ISOMESH_SOURCE_DIR}/util/bisection_zero_finder.cpp
+	${ISOMESH_SOURCE_DIR}/util/material_filter.cpp
 	${ISOMESH_SOURCE_DIR}/util/regula_falsi_zero_finder.cpp
 )
 

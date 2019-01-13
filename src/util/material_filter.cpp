@@ -9,7 +9,7 @@ namespace isomesh
 {
 
 Material AnyNonemptyMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos,
-	                                         uint8_t vertexMask) const noexcept {
+                                            uint8_t vertexMask) const noexcept {
 	uint32_t idx = 0;
 	for (int32_t y = 0; y <= 1; y++) {
 		for (int32_t x = 0; x <= 1; x++) {
@@ -29,11 +29,11 @@ Material AnyNonemptyMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos
 }
 
 Material HistogramMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos,
-	                                       uint8_t vertexMask) const noexcept {
+                                          uint8_t vertexMask) const noexcept {
 	constexpr size_t n = size_t (Material::Count);
 	uint32_t cnt[n];
 	std::fill (cnt, cnt + n, 0);
-	
+
 	uint32_t idx = 0;
 	for (int32_t y = 0; y <= 1; y++) {
 		for (int32_t x = 0; x <= 1; x++) {
@@ -49,8 +49,8 @@ Material HistogramMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos,
 			}
 		}
 	}
-	
-	Material mat = Material (*std::max_element (cnt, cnt + n));
+
+	Material mat = Material (std::max_element (cnt, cnt + n) - cnt);
 	return mat;
 }
 

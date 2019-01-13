@@ -31,7 +31,7 @@ public:
 
 	Isomesh () noexcept;
 
-	explicit Isomesh (size_t reserveVertices = 0, size_t reserveIndices = 0);
+	explicit Isomesh (size_t reserveVertices, size_t reserveIndices = 0);
 
 	Isomesh (Isomesh &&) = default;
 	Isomesh &operator = (Isomesh &&) = default;
@@ -64,7 +64,9 @@ public:
 	const void *indices () const noexcept { return m_indices.data (); }
 
 	size_t verticesCount () const noexcept { return m_vertices.size (); }
+	size_t verticesSize () const noexcept { return m_vertices.size () * sizeof (Vertex); }
 	size_t indicesCount () const noexcept { return m_indices.size (); }
+	size_t indicesSize () const noexcept { return m_indices.size () * sizeof (uint32_t); }
 private:
 	std::vector<Vertex> m_vertices; ///< Vertices array
 	std::vector<uint32_t> m_indices; ///< Indices array

@@ -64,7 +64,10 @@ void UniformGrid::fill (const SurfaceFunction &f,
 			call_pos.z = lowest_point.z;
 			for (int32_t z = -m_halfSize; z <= m_halfSize; z++) {
 				values[idx] = f (call_pos);
-				m_mat[idx] = material.select (call_pos, values[idx]);
+				if (values[idx] > 0)
+					m_mat[idx] = Material::Empty;
+				else
+					m_mat[idx] = material.select (call_pos, values[idx]);
 				idx++;
 				call_pos.z += m_scale;
 			}
@@ -137,7 +140,7 @@ void UniformGrid::fill (const SurfaceFunction &f,
 					glm::dvec3 p = localToGlobal (glm::dvec3 (x, y, z));
 					double z0 = p.z;
 					double z1 = p.z + m_scale;
-					p.z = solver.findAlongZ (p.x, p.z, z0, z1, values[idx1], values[idx2], f);
+					p.z = solver.findAlongZ (p.x, p.y, z0, z1, values[idx1], values[idx2], f);
 					glm::dvec3 normal = glm::normalize (f.grad (p));
 					double offset = (p.z - z0) / m_scale;
 					m_edgeZ.addEdge (x, y, z, normal, offset);

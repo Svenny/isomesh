@@ -123,6 +123,8 @@ public:
 	// Properties
 	uint32_t dataSize () const noexcept { return (m_size + 1) * (m_size + 1) * (m_size + 1); }
 	uint32_t gridSize () const noexcept { return m_size; }
+	int32_t maxCoord () const noexcept { return m_halfSize; }
+	int32_t minCoord () const noexcept { return -m_halfSize; }
 	glm::dvec3 globalPosition () const noexcept { return m_globalPos; }
 	double scale () const noexcept { return m_scale; }
 	// Coordinate system conversions

@@ -43,11 +43,11 @@ enum class Material : uint8_t {
 
 }
 
-// Adding std::get<> interface to GLM vectors
+// Adding std::get<> and tuple interface to GLM vectors
 namespace std
 {
 
-template<int I, int D, typename T> constexpr
+template<size_t I, int D, typename T> constexpr
 T &get (glm::vec<D, T, glm::defaultp> &v) noexcept {
 	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
 	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
@@ -61,7 +61,7 @@ T &get (glm::vec<D, T, glm::defaultp> &v) noexcept {
 		return v.w;
 }
 
-template<int I, int D, typename T> constexpr
+template<size_t I, int D, typename T> constexpr
 T &&get (glm::vec<D, T, glm::defaultp> &&v) noexcept {
 	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
 	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
@@ -75,7 +75,7 @@ T &&get (glm::vec<D, T, glm::defaultp> &&v) noexcept {
 		return std::move (v.w);
 }
 
-template<int I, int D, typename T> constexpr
+template<size_t I, int D, typename T> constexpr
 const T &get (const glm::vec<D, T, glm::defaultp> &v) noexcept {
 	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
 	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
@@ -88,5 +88,14 @@ const T &get (const glm::vec<D, T, glm::defaultp> &v) noexcept {
 	else
 		return v.w;
 }
+
+template<int D, typename T>
+struct tuple_size<glm::vec<D, T, glm::defaultp> > :
+	std::integral_constant<size_t, D> {};
+
+template<size_t I, int D, typename T>
+struct tuple_element<I, glm::vec<D, T, glm::defaultp> > {
+	using type = T;
+};
 
 }

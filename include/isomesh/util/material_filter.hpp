@@ -25,24 +25,25 @@ namespace isomesh
 	5 - (0, 1, 1)
 	6 - (1, 1, 0)
 	7 - (1, 1, 1)
-	All-zero mask is not valid.
+	All-zero mask is not valid and should never be passed to this function.
 */
 class MaterialFilter {
 public:
-	virtual Material select (const UniformGrid &G, glm::ivec3 pos,
-	                         uint8_t vertexMask) const noexcept = 0;
+	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const = 0;
 };
 
+// Selects the first found material not equal to Empty. Selects Empty
+// only in case there are no non-Empty materials (which means invalid input)
 class AnyNonemptyMaterialFilter : public MaterialFilter {
 public:
-	virtual Material select (const UniformGrid &G, glm::ivec3 pos,
-	                         uint8_t vertexMask) const noexcept override;
+	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const override;
 };
 
+// Selects the most frequent material not equal to Empty. Selects Empty
+// only in case there are no non-Empty materials (which means invalid input)
 class HistogramMaterialFilter : public MaterialFilter {
 public:
-	virtual Material select (const UniformGrid &G, glm::ivec3 pos,
-	                         uint8_t vertexMask) const noexcept override;
+	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const override;
 };
 
 }

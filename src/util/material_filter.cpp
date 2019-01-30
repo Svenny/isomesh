@@ -8,19 +8,16 @@
 namespace isomesh
 {
 
-Material AnyNonemptyMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos,
-                                            uint8_t vertexMask) const noexcept {
+Material AnyNonemptyMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const {
 	uint32_t idx = 0;
 	for (int32_t y = 0; y <= 1; y++) {
 		for (int32_t x = 0; x <= 1; x++) {
 			for (int32_t z = 0; z <= 1; z++) {
-				if (!(vertexMask & (1 << idx))) {
-					idx++;
-					continue;
+				if (mask & (1 << idx)) {
+					auto mat = G.at (pos.x + x, pos.y + y, pos.z + z);
+					if (mat != Material::Empty)
+						return mat;
 				}
-				auto mat = G.at (pos.x + x, pos.y + y, pos.z + z);
-				if (mat != Material::Empty)
-					return mat;
 				idx++;
 			}
 		}
@@ -28,8 +25,7 @@ Material AnyNonemptyMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos
 	return Material::Empty;
 }
 
-Material HistogramMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos,
-                                          uint8_t vertexMask) const noexcept {
+Material HistogramMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const {
 	constexpr size_t n = size_t (Material::Count);
 	uint32_t cnt[n];
 	std::fill (cnt, cnt + n, 0);
@@ -38,13 +34,11 @@ Material HistogramMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos,
 	for (int32_t y = 0; y <= 1; y++) {
 		for (int32_t x = 0; x <= 1; x++) {
 			for (int32_t z = 0; z <= 1; z++) {
-				if (!(vertexMask & (1 << idx))) {
-					idx++;
-					continue;
+				if (!(mask & (1 << idx))) {
+					auto mat = G.at (pos.x + x, pos.y + y, pos.z + z);
+					if (mat != Material::Empty)
+						cnt[size_t (mat)]++;
 				}
-				auto mat = G.at (pos.x + x, pos.y + y, pos.z + z);
-				if (mat != Material::Empty)
-					cnt[size_t (mat)]++;
 				idx++;
 			}
 		}

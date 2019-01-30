@@ -132,8 +132,8 @@ bool testX (isomesh::SurfaceFunction &f, double x0, double x1, vector<double> ro
 	double re_root = regula.findAlongX (x0, 0, 0, x1, f0, f1, f);
 	double re_error = fabs (re_root - roots[0]);
 	for (double root : roots) {
-		bi_error = std::min (bi_error, fabs (root - bi_root));
-		re_error = std::min (re_error, fabs (root - re_root));
+		bi_error = glm::min (bi_error, fabs (root - bi_root));
+		re_error = glm::min (re_error, fabs (root - re_root));
 	}
 	clog << "   Bisect found: " << fixed << setprecision (10) << bi_root
 	     << ", error " << bi_error << endl;
@@ -168,8 +168,8 @@ bool testY (isomesh::SurfaceFunction &f, double y0, double y1, vector<double> ro
 	double re_root = regula.findAlongY (0, y0, 0, y1, f0, f1, f);
 	double re_error = fabs (re_root - roots[0]);
 	for (double root : roots) {
-		bi_error = std::min (bi_error, fabs (root - bi_root));
-		re_error = std::min (re_error, fabs (root - re_root));
+		bi_error = glm::min (bi_error, fabs (root - bi_root));
+		re_error = glm::min (re_error, fabs (root - re_root));
 	}
 	clog << "   Bisect found: " << fixed << setprecision (10) << bi_root
 	     << ", error " << bi_error << endl;
@@ -204,8 +204,8 @@ bool testZ (isomesh::SurfaceFunction &f, double z0, double z1, vector<double> ro
 	double re_root = regula.findAlongZ (0, 0, z0, z1, f0, f1, f);
 	double re_error = fabs (re_root - roots[0]);
 	for (double root : roots) {
-		bi_error = std::min (bi_error, fabs (root - bi_root));
-		re_error = std::min (re_error, fabs (root - re_root));
+		bi_error = glm::min (bi_error, fabs (root - bi_root));
+		re_error = glm::min (re_error, fabs (root - re_root));
 	}
 	clog << "   Bisect found: " << fixed << setprecision (10) << bi_root
 	     << ", error " << bi_error << endl;

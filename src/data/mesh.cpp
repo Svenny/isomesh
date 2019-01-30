@@ -8,8 +8,6 @@
 namespace isomesh
 {
 
-Isomesh::Isomesh () noexcept {}
-
 Isomesh::Isomesh (size_t reserveVertices, size_t reserveIndices) {
 	m_vertices.reserve (reserveVertices);
 	m_indices.reserve (reserveIndices);

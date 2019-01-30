@@ -24,7 +24,7 @@ namespace isomesh
 struct SurfaceFunction {
 	std::function<double (glm::dvec3)> f;
 	std::function<glm::dvec3 (glm::dvec3)> grad;
-	double operator () (const glm::dvec3 &p) const noexcept { return f (p); }
+	double operator () (glm::dvec3 p) const { return f (p); }
 };
 
 /** \brief Voxel materials enumeration
@@ -43,13 +43,13 @@ enum class Material : uint8_t {
 
 }
 
-// Adding std::get<> and tuple interface to GLM vectors
+// std::get<> and tuple interface for GLM vectors
 namespace std
 {
 
 template<size_t I, int D, typename T> constexpr
 T &get (glm::vec<D, T, glm::defaultp> &v) noexcept {
-	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
+	static_assert (I < size_t (D), "Index should be less than vector dimension");
 	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
 	if constexpr (I == 0)
 		return v.x;
@@ -63,7 +63,7 @@ T &get (glm::vec<D, T, glm::defaultp> &v) noexcept {
 
 template<size_t I, int D, typename T> constexpr
 T &&get (glm::vec<D, T, glm::defaultp> &&v) noexcept {
-	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
+	static_assert (I < size_t (D), "Index should be less than vector dimension");
 	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
 	if constexpr (I == 0)
 		return std::move (v.x);
@@ -77,7 +77,7 @@ T &&get (glm::vec<D, T, glm::defaultp> &&v) noexcept {
 
 template<size_t I, int D, typename T> constexpr
 const T &get (const glm::vec<D, T, glm::defaultp> &v) noexcept {
-	static_assert (I >= 0 && I < D, "Index should be less than vector dimension");
+	static_assert (I < size_t (D), "Index should be less than vector dimension");
 	static_assert (D >= 1 && D <= 4, "Dimension should be not higher than 4");
 	if constexpr (I == 0)
 		return v.x;
@@ -91,7 +91,7 @@ const T &get (const glm::vec<D, T, glm::defaultp> &v) noexcept {
 
 template<int D, typename T>
 struct tuple_size<glm::vec<D, T, glm::defaultp> > :
-	std::integral_constant<size_t, D> {};
+	std::integral_constant<size_t, size_t (D)> {};
 
 template<size_t I, int D, typename T>
 struct tuple_element<I, glm::vec<D, T, glm::defaultp> > {

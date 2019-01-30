@@ -2,8 +2,6 @@
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
 #pragma once
 
-#include <algorithm>
-
 #include "../common.hpp"
 
 namespace isomesh
@@ -18,17 +16,17 @@ public:
 	// f1 = f (x1, y0, z0)
 	virtual double findAlongX (double x0, double y0, double z0,
 	                           double x1, double f0, double f1,
-	                           const SurfaceFunction &f) const noexcept = 0;
+	                           const SurfaceFunction &f) const = 0;
 	// f0 = f (x0, y0, z0)
 	// f1 = f (x0, y1, z0)
 	virtual double findAlongY (double x0, double y0, double z0,
 	                           double y1, double f0, double f1,
-	                           const SurfaceFunction &f) const noexcept = 0;
+	                           const SurfaceFunction &f) const = 0;
 	// f0 = f (x0, y0, z0)
 	// f1 = f (x0, y0, z1)
 	virtual double findAlongZ (double x0, double y0, double z0,
 	                           double z1, double f0, double f1,
-	                           const SurfaceFunction &f) const noexcept = 0;
+	                           const SurfaceFunction &f) const = 0;
 };
 
 class StepCountedZeroFinder : public ZeroFinder {
@@ -36,7 +34,7 @@ public:
 	StepCountedZeroFinder () noexcept = default;
 	explicit StepCountedZeroFinder (int steps) noexcept { setStepCount (steps); }
 
-	void setStepCount (int steps) noexcept { m_stepCount = std::max (1, steps); }
+	void setStepCount (int steps) noexcept { m_stepCount = glm::max (1, steps); }
 	int stepCount () const noexcept { return m_stepCount; }
 protected:
 	int m_stepCount = 8;
@@ -49,18 +47,18 @@ public:
 
 	double findAlongX (double x0, double y0, double z0,
 	                   double x1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept override;
+	                   const SurfaceFunction &f) const override;
 	double findAlongY (double x0, double y0, double z0,
 	                   double y1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept override;
+	                   const SurfaceFunction &f) const override;
 	double findAlongZ (double x0, double y0, double z0,
 	                   double z1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept override;
+	                   const SurfaceFunction &f) const override;
 private:
 	template<size_t C>
 	double findAlongC (double x0, double y0, double z0,
 	                   double c1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept;
+	                   const SurfaceFunction &f) const;
 };
 
 class RegulaFalsiZeroFinder : public StepCountedZeroFinder {
@@ -70,18 +68,18 @@ public:
 
 	double findAlongX (double x0, double y0, double z0,
 	                   double x1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept override;
+	                   const SurfaceFunction &f) const override;
 	double findAlongY (double x0, double y0, double z0,
 	                   double y1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept override;
+	                   const SurfaceFunction &f) const override;
 	double findAlongZ (double x0, double y0, double z0,
 	                   double z1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept override;
+	                   const SurfaceFunction &f) const override;
 private:
 	template<size_t C>
 	double findAlongC (double x0, double y0, double z0,
 	                   double c1, double f0, double f1,
-	                   const SurfaceFunction &f) const noexcept;
+	                   const SurfaceFunction &f) const;
 };
 
 }

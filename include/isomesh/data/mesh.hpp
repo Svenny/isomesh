@@ -25,11 +25,13 @@ public:
 			position (p), normal (n), material (float (m)) {}
 		glm::vec3 position;
 		glm::vec3 normal;
-		/// Stored as float because GPU uses floating-point indexing
+		/** Material number is intended to be used in shaders as index into texture
+		 array. Array texture sampling such as texture3D() in GLSL uses floating
+		 point even for array index, so material needs to be converted to float. */
 		float material;
 	};
 
-	Isomesh () noexcept;
+	Isomesh () = default;
 
 	explicit Isomesh (size_t reserveVertices, size_t reserveIndices = 0);
 

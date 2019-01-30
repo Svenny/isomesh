@@ -12,7 +12,7 @@ namespace isomesh
 template<size_t C>
 double RegulaFalsiZeroFinder::findAlongC (double x0, double y0, double z0,
                                           double c1, double f0, double f1,
-                                          const SurfaceFunction &f) const noexcept {
+                                          const SurfaceFunction &f) const {
 	glm::dvec3 p (x0, y0, z0);
 	double c0 = std::get<C> (p);
 	int side = 0;
@@ -49,19 +49,19 @@ double RegulaFalsiZeroFinder::findAlongC (double x0, double y0, double z0,
 
 double RegulaFalsiZeroFinder::findAlongX (double x0, double y0, double z0,
                                           double x1, double f0, double f1,
-                                          const SurfaceFunction &f) const noexcept {
+                                          const SurfaceFunction &f) const {
 	return findAlongC<0> (x0, y0, z0, x1, f0, f1, f);
 }
 
 double RegulaFalsiZeroFinder::findAlongY (double x0, double y0, double z0,
                                           double y1, double f0, double f1,
-                                          const SurfaceFunction &f) const noexcept {
+                                          const SurfaceFunction &f) const {
 	return findAlongC<1> (x0, y0, z0, y1, f0, f1, f);
 }
 
 double RegulaFalsiZeroFinder::findAlongZ (double x0, double y0, double z0,
                                           double z1, double f0, double f1,
-                                          const SurfaceFunction &f) const noexcept {
+                                          const SurfaceFunction &f) const {
 	return findAlongC<2> (x0, y0, z0, z1, f0, f1, f);
 }
 

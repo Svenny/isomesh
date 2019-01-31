@@ -59,11 +59,11 @@ int main () {
 	auto mesh = isomesh::marchingCubes (G);
 	// TODO: add testing for vertices & normals placement
 	// For now do a simple sanity check
-	if (mesh.verticesCount () != 373 || mesh.indicesCount () != 2010) {
+	if (mesh.vertexCount () != 373 || mesh.indexCount () != 2010) {
 		cerr << "Marching cubes result differs from expected!" << endl;
 		cerr << "Expected 373 vertices and 2010 indices" << endl;
-		cerr << "Got " << mesh.verticesCount () << " vertices and "
-		     << mesh.indicesCount () << " indices" << endl;
+		cerr << "Got " << mesh.vertexCount () << " vertices and "
+		     << mesh.indexCount () << " indices" << endl;
 		return 2;
 	}
 

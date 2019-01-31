@@ -18,7 +18,7 @@ namespace isomesh
 	(one for vertices and one for indices). It keeps its contents in
 	a form suitable for direct sending to GPU (using graphics APIs).
 */
-class Isomesh {
+class Mesh {
 public:
 	struct alignas (4) Vertex {
 		Vertex (const glm::vec3 &p, const glm::vec3 &n, Material m) noexcept :
@@ -31,21 +31,21 @@ public:
 		float material;
 	};
 
-	Isomesh () = default;
+	Mesh () = default;
 
-	explicit Isomesh (size_t reserveVertices, size_t reserveIndices = 0);
+	explicit Mesh (size_t reserveVertices, size_t reserveIndices = 0);
 
-	Isomesh (Isomesh &&) = default;
-	Isomesh &operator = (Isomesh &&) = default;
+	Mesh (Mesh &&) = default;
+	Mesh &operator = (Mesh &&) = default;
 
-	Isomesh (const Isomesh &) = default;
-	Isomesh &operator = (const Isomesh &) = default;
+	Mesh (const Mesh &) = default;
+	Mesh &operator = (const Mesh &) = default;
 
 	/** \brief Insert a new vertex into the mesh
 		\param[in] pos Vertex position
 		\param[in] normal Vertex normal
 		\param[in] mat Vertex material
-		\return Index of newly created vertex
+		\return Index of newly created vertex, use it in \ref addTriangle
 	*/
 	uint32_t addVertex (const glm::vec3 &pos, const glm::vec3 &normal, Material mat);
 
@@ -53,22 +53,31 @@ public:
 		\param[in] i1 Index of the first vertex
 		\param[in] i2 Index of the second vertex
 		\paran[in] i3 Index of the third vertex
+		\note Vertex indices are returned from \ref addVertex
 		\note Don't forget about winding order
 	*/
 	void addTriangle (uint32_t i1, uint32_t i2, uint32_t i3);
 
+	/** \brief Clears mesh data
+
+		This removes all added vertices and indices.
+	*/
 	void clear () noexcept;
 
 	Vertex &operator [] (uint32_t index) { return m_vertices[index]; }
 	const Vertex &operator [] (uint32_t index) const { return m_vertices[index]; }
 
-	const void *vertices () const noexcept { return m_vertices.data (); }
-	const void *indices () const noexcept { return m_indices.data (); }
+	const void *vertexData () const noexcept { return m_vertices.data (); }
+	const void *indexData () const noexcept { return m_indices.data (); }
 
-	size_t verticesCount () const noexcept { return m_vertices.size (); }
-	size_t verticesSize () const noexcept { return m_vertices.size () * sizeof (Vertex); }
-	size_t indicesCount () const noexcept { return m_indices.size (); }
-	size_t indicesSize () const noexcept { return m_indices.size () * sizeof (uint32_t); }
+	/// Number of vertices in mesh
+	size_t vertexCount () const noexcept { return m_vertices.size (); }
+	/// Size of vertex data in bytes
+	size_t vertexBytes () const noexcept { return m_vertices.size () * sizeof (Vertex); }
+	/// Number of indices in mesh
+	size_t indexCount () const noexcept { return m_indices.size (); }
+	/// Size of index data in bytes
+	size_t indexBytes () const noexcept { return m_indices.size () * sizeof (uint32_t); }
 private:
 	std::vector<Vertex> m_vertices; ///< Vertices array
 	std::vector<uint32_t> m_indices; ///< Indices array

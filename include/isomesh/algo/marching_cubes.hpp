@@ -15,7 +15,7 @@ namespace isomesh
 
 	TBD
 */
-Isomesh marchingCubes (const UniformGrid &G);
+Mesh marchingCubes (const UniformGrid &G);
 
 }
 

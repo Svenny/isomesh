@@ -37,8 +37,8 @@ struct EdgeEntry {
 	bool operator < (const EdgeEntry &e) const noexcept { return cell_idx < e.cell_idx; }
 };
 
-Isomesh marchingCubes (const UniformGrid &G) {
-	Isomesh mesh;
+Mesh marchingCubes (const UniformGrid &G) {
+	Mesh mesh;
 	std::vector<EdgeEntry> edges;
 	const int32_t max_sz = G.maxCoord ();
 	const int32_t min_sz = G.minCoord ();

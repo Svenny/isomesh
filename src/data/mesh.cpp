@@ -8,12 +8,12 @@
 namespace isomesh
 {
 
-Isomesh::Isomesh (size_t reserveVertices, size_t reserveIndices) {
+Mesh::Mesh (size_t reserveVertices, size_t reserveIndices) {
 	m_vertices.reserve (reserveVertices);
 	m_indices.reserve (reserveIndices);
 }
 
-uint32_t Isomesh::addVertex (const glm::vec3 &pos, const glm::vec3 &normal, Material mat) {
+uint32_t Mesh::addVertex (const glm::vec3 &pos, const glm::vec3 &normal, Material mat) {
 	// This shouldn't happen in practice (> 2^32 vertices)
 	assert (m_vertices.size () <= std::numeric_limits<uint32_t>::max ());
 	// Construct vertex at the end of array
@@ -23,13 +23,14 @@ uint32_t Isomesh::addVertex (const glm::vec3 &pos, const glm::vec3 &normal, Mate
 	return uint32_t (index);
 }
 
-void Isomesh::addTriangle (uint32_t i1, uint32_t i2, uint32_t i3) {
+void Mesh::addTriangle (uint32_t i1, uint32_t i2, uint32_t i3) {
+	assert (i1 < m_vertices.size () && i2 < m_vertices.size () && i3 < m_vertices.size ());
 	m_indices.emplace_back (i1);
 	m_indices.emplace_back (i2);
 	m_indices.emplace_back (i3);
 }
 
-void Isomesh::clear () noexcept {
+void Mesh::clear () noexcept {
 	m_vertices.clear ();
 	m_indices.clear ();
 }

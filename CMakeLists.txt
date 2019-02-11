@@ -1,8 +1,10 @@
 cmake_minimum_required (VERSION 3.10 FATAL_ERROR)
 
-project (Isomesh VERSION 0.1.0 LANGUAGES CXX)
+project (isomesh VERSION 0.1.0 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+include (GNUInstallDirs)
 include (cotire)
 
 set (CMAKE_CXX_STANDARD_REQUIRED ON)

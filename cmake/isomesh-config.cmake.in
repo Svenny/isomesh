@@ -1,0 +1,7 @@
+set (ISOMESH_VERSION "@isomesh_VERSION@")
+
+@PACKAGE_INIT@
+
+set_and_check (ISOMESH_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+
+include ("${CMAKE_CURRENT_LIST_DIR}/isomesh-targets.cmake")

@@ -16,24 +16,30 @@ set (ISOMESH_HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/isomesh)
 set (ISOMESH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set (ISOMESH_HEADERS
-	${ISOMESH_HEADER_DIR}/common.hpp
-	${ISOMESH_HEADER_DIR}/algo/marching_cubes.hpp
-	${ISOMESH_HEADER_DIR}/data/grid.hpp
-	${ISOMESH_HEADER_DIR}/data/mesh.hpp
-	${ISOMESH_HEADER_DIR}/util/material_filter.hpp
-	${ISOMESH_HEADER_DIR}/util/material_selector.hpp
-	${ISOMESH_HEADER_DIR}/util/zero_finder.hpp
+	include/isomesh/common.hpp
+	include/isomesh/isomesh.hpp
+	include/isomesh/algo/marching_cubes.hpp
+	include/isomesh/algo/uniform_dual_contouring.hpp
+	include/isomesh/data/grid.hpp
+	include/isomesh/data/mesh.hpp
+	include/isomesh/qef/qef_solver_3d.hpp
+	include/isomesh/util/material_filter.hpp
+	include/isomesh/util/material_selector.hpp
+	include/isomesh/util/zero_finder.hpp
 )
 source_group (TREE ${ISOMESH_HEADER_DIR} PREFIX Headers FILES ${ISOMESH_HEADERS})
 
 set (ISOMESH_SOURCES
-	${ISOMESH_SOURCE_DIR}/algo/marching_cubes.cpp
-	${ISOMESH_SOURCE_DIR}/algo/marching_cubes_tables.h
-	${ISOMESH_SOURCE_DIR}/data/grid.cpp
-	${ISOMESH_SOURCE_DIR}/data/mesh.cpp
-	${ISOMESH_SOURCE_DIR}/util/bisection_zero_finder.cpp
-	${ISOMESH_SOURCE_DIR}/util/material_filter.cpp
-	${ISOMESH_SOURCE_DIR}/util/regula_falsi_zero_finder.cpp
+	src/algo/marching_cubes.cpp
+	src/algo/marching_cubes_tables.h
+	src/algo/uniform_dual_contouring.cpp
+	src/data/grid.cpp
+	src/data/mesh.cpp
+	src/qef/gradient_descent_qef_solver_3d.cpp
+	src/qef/qef_solver_3d.cpp
+	src/util/bisection_zero_finder.cpp
+	src/util/material_filter.cpp
+	src/util/regula_falsi_zero_finder.cpp
 )
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})
 

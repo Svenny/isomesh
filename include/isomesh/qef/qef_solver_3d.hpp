@@ -7,11 +7,6 @@
 namespace isomesh
 {
 
-struct QefSolution3D {
-	glm::vec3 point;
-	float error;
-};
-
 /** \brief Interface for Quadratic Error Function (QEF) minimizer
 */
 class QefSolver3D {
@@ -26,28 +21,45 @@ public:
 	
 		\param[in] minPoint Lower bound of solution space
 		\param[in] maxPoint Upper bound of solution space
-		\return Found solution and QEF value in that point
+		\return Point which minimizes QEF value
 	*/
-	virtual QefSolution3D solve (glm::vec3 minPoint, glm::vec3 maxPoint) = 0;
+	virtual glm::vec3 solve (glm::vec3 minPoint, glm::vec3 maxPoint) = 0;
+	/** \brief Evaluates QEF value at a given point
+
+		\param[in] point Point where QEF needs to be evaluated
+		\return Error value
+	*/
+	virtual float eval (glm::vec3 point) const = 0;
+	/** \brief Resets solver to initial statte
+	*/
+	virtual void reset () = 0;
 };
 
 class BaseQefSolver3D : public QefSolver3D {
 public:
-	virtual void addPlane (glm::vec3 normal, glm::vec3 point) final override;
-	
+	virtual void addPlane (glm::vec3 normal, glm::vec3 point) override;
+	virtual float eval (glm::vec3 point) const override;
+	virtual void reset () override;
+
 	const static int kMaxPlanes = 12;
 protected:
 	glm::vec3 m_normals[kMaxPlanes];
 	float m_coefs[kMaxPlanes];
+	/// Sum of added points
 	glm::vec3 m_massPoint = glm::vec3 (0);
 	int m_numPlanes = 0;
 };
 
 class GradientDescentQefSolver3D : public BaseQefSolver3D {
 public:
+	virtual glm::vec3 solve (glm::vec3 minPoint, glm::vec3 maxPoint) override;
 	
+	void setStepCount (int value) { m_stepCount = value; }
+	void setGradStep (float value) { m_gradStep = value; }
+
 protected:
 	int m_stepCount = 10;
+	float m_gradStep = 0.75f;
 };
 
 }

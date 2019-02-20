@@ -111,9 +111,11 @@ Mesh marchingCubes (const UniformGrid &G) {
 				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (1, 1, 0)), id, 5);
 		}
 	}
-	// Black magic
+	// Group edges by cell ids
 	std::sort (edges.begin (), edges.end ());
-	edges.emplace_back (uint32_t (~0), 0, 0);
+	// Add fake edge to make last cell processing work
+	// TODO: there is a cleaner way to do this
+	edges.emplace_back (~uint32_t (0), 0, 0);
 	uint32_t indices[12];
 	uint32_t edge_mask = 0;
 	uint32_t last_cell = 0;

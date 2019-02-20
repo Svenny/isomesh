@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <isomesh/util/material_filter.hpp>
 #include <isomesh/util/material_selector.hpp>
 #include <isomesh/util/zero_finder.hpp>
 #include <isomesh/algo/marching_cubes.hpp>

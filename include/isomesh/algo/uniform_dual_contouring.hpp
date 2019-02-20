@@ -5,9 +5,10 @@
 */
 #pragma once
 
-#include "../util/material_filter.hpp"
 #include "../data/grid.hpp"
 #include "../data/mesh.hpp"
+#include "../qef/qef_solver_3d.hpp"
+#include "../util/material_filter.hpp"
 
 namespace isomesh
 {
@@ -16,6 +17,6 @@ namespace isomesh
 
 	TBD
 */
-Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter);
+Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolver3D &solver);
 
 }

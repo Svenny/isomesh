@@ -72,6 +72,7 @@ write_basic_package_version_file (${CMAKE_CURRENT_BINARY_DIR}/isomesh-config-ver
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/cmake/isomesh-build-config.cmake.in
 	${CMAKE_CURRENT_BINARY_DIR}/isomesh-config.cmake @ONLY)
 export (EXPORT isomesh_targets FILE ${CMAKE_CURRENT_BINARY_DIR}/isomesh-targets.cmake)
+export (PACKAGE isomesh)
 
 # install tree package
 configure_package_config_file (${CMAKE_CURRENT_SOURCE_DIR}/cmake/isomesh-config.cmake.in

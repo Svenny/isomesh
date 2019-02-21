@@ -63,8 +63,7 @@ static uint32_t generateVertex
 	glm::vec3 upperBound = lowerBound + 1.0f;
 	glm::vec3 pos = solver.solve (lowerBound, upperBound);
 	avg_normal = glm::normalize (avg_normal);
-	// TODO: use filter
-	Material mat = Material::Stone;
+	Material mat = filter.select (G, G.rawIndexToPoint (cellId), 0xFF);
 	return out.addVertex (pos, avg_normal, mat);
 }
 
@@ -158,7 +157,7 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 			if (vtx3 == invalid_id)
 				vtx3 = vertex_ids[cell3] = generateVertex (G, filter, solver, cell3, edges, mesh);
 			bool flip = (G[lc] == Material::Empty);
-			if (flip) {
+			if (!flip) {
 				mesh.addTriangle (vtx0, vtx2, vtx1);
 				mesh.addTriangle (vtx1, vtx2, vtx3);
 			}
@@ -198,7 +197,7 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 			if (vtx3 == invalid_id)
 				vtx3 = vertex_ids[cell3] = generateVertex (G, filter, solver, cell3, edges, mesh);
 			bool flip = (G[lc] == Material::Empty);
-			if (flip) {
+			if (!flip) {
 				mesh.addTriangle (vtx0, vtx1, vtx2);
 				mesh.addTriangle (vtx1, vtx3, vtx2);
 			}
@@ -238,7 +237,7 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 			if (vtx3 == invalid_id)
 				vtx3 = vertex_ids[cell3] = generateVertex (G, filter, solver, cell3, edges, mesh);
 			bool flip = (G[lc] == Material::Empty);
-			if (flip) {
+			if (!flip) {
 				mesh.addTriangle (vtx0, vtx2, vtx1);
 				mesh.addTriangle (vtx1, vtx2, vtx3);
 			}

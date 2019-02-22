@@ -21,6 +21,7 @@ set (ISOMESH_HEADERS
 	include/isomesh/algo/marching_cubes.hpp
 	include/isomesh/algo/uniform_dual_contouring.hpp
 	include/isomesh/data/grid.hpp
+	include/isomesh/data/grid_edge_storage.hpp
 	include/isomesh/data/mesh.hpp
 	include/isomesh/qef/qef_solver_3d.hpp
 	include/isomesh/util/material_filter.hpp
@@ -50,7 +51,7 @@ target_include_directories (isomesh PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOU
 set_target_properties (isomesh PROPERTIES
 	DEBUG_POSTFIX _d
 	COTIRE_ADD_UNITY_BUILD FALSE
-	COTIRE_PREFIX_HEADER_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/deps
+	COTIRE_PREFIX_HEADER_INCLUDE_PATH ${GLM_INCLUDE_DIRS}
 )
 cotire (isomesh)
 

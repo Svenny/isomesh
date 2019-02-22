@@ -1,93 +1,17 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
 /** \file
-  \brief Defines uniform grid data storage for algorithms
+	\brief Uniform grid data storage for algorithms
 */
 #pragma once
 
-#include <iterator>
-#include <memory>
-
 #include "../common.hpp"
+#include "grid_edge_storage.hpp"
+
+#include <memory>
 
 namespace isomesh
 {
-
-struct UniformGridEdge {
-   /// Surface normal in zero-crossing point
-   glm::vec3 normal;
-   /// Normalized offset from lesser-coordinate endpoint (range 0..1)
-   float offset;
-};
-
-// Immutable edge storage
-class UniformGridEdgeStorage {
-private:
-	struct Edge {
-		//Edge (int8_t xx, int8_t yy, int8_t zz, const UniformGridEdge &d) noexcept :
-		//	x (xx), y (yy), z (zz), data (d) {}
-		int8_t x, y, z;
-		UniformGridEdge data;
-		
-		bool operator < (const Edge &b) const noexcept;
-	};
-public:
-	struct const_iterator {
-	public:
-		using difference_type = ptrdiff_t;
-		using value_type = UniformGridEdge;
-		using pointer = const UniformGridEdge *;
-		using reference = const UniformGridEdge &;
-		using iterator_category = std::random_access_iterator_tag;
-		
-		const_iterator () = default;
-		const_iterator (std::vector<Edge>::const_iterator iter) noexcept : m_iter (iter) {}
-		
-		const_iterator &operator ++ () noexcept { m_iter++; return *this; }
-		const_iterator operator ++ (int) noexcept { auto res = *this; ++(*this); return res; }
-		const_iterator &operator -- () noexcept { m_iter--; return *this; }
-		const_iterator operator -- (int) noexcept { auto res = *this; --(*this); return res; }
-		
-		difference_type operator - (const_iterator b) const noexcept { return m_iter - b.m_iter; }
-		
-		const_iterator operator + (difference_type d) const noexcept { return const_iterator (m_iter + d); }
-		const_iterator operator - (difference_type d) const noexcept { return const_iterator (m_iter - d); }
-		const_iterator &operator += (difference_type d) noexcept { m_iter += d; return *this; }
-		const_iterator &operator -= (difference_type d) noexcept { m_iter -= d; return *this; }
-		
-		bool operator < (const_iterator b) const noexcept { return m_iter < b.m_iter; }
-		bool operator <= (const_iterator b) const noexcept { return m_iter <= b.m_iter; }
-		bool operator > (const_iterator b) const noexcept { return m_iter > b.m_iter; }
-		bool operator >= (const_iterator b) const noexcept { return m_iter >= b.m_iter; }
-		bool operator == (const_iterator b) const noexcept { return m_iter == b.m_iter; }
-		bool operator != (const_iterator b) const noexcept { return m_iter != b.m_iter; }
-		
-		reference operator [] (difference_type d) const { return m_iter[d].data; }
-		reference operator * () const { return m_iter->data; }
-		pointer operator -> () const { return &m_iter->data; }
-		
-		glm::ivec3 localCoords () const { return glm::ivec3 (m_iter->x, m_iter->y, m_iter->z); }
-	private:
-		std::vector<Edge>::const_iterator m_iter;
-	};
-
-	size_t size () const noexcept { return m_edges.size (); }
-	const_iterator cbegin () const noexcept { return const_iterator (m_edges.begin ()); }
-	const_iterator cend () const noexcept { return const_iterator (m_edges.end ()); }
-private:
-	std::vector<Edge> m_edges;
-	void clear () noexcept { m_edges.clear (); }
-	void sort () noexcept;
-	void addEdge (int32_t x, int32_t y, int32_t z, const glm::dvec3 &normal, double offset);
-	
-	friend class UniformGrid;
-};
-
-// +/- overloads to complete the definition of const_iterator
-inline auto operator + (UniformGridEdgeStorage::const_iterator::difference_type d,
-	UniformGridEdgeStorage::const_iterator iter) noexcept { return iter + d; }
-inline auto operator - (UniformGridEdgeStorage::const_iterator::difference_type d,
-	UniformGridEdgeStorage::const_iterator iter) noexcept { return iter - d; }
 
 class ZeroFinder;
 class MaterialSelector;

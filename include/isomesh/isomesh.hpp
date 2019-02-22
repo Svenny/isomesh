@@ -18,6 +18,7 @@
 #include "common.hpp"
 
 #include "data/grid.hpp"
+#include "data/grid_edge_storage.hpp"
 #include "data/mesh.hpp"
 
 #include "qef/qef_solver_3d.hpp"

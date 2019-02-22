@@ -56,7 +56,7 @@ static uint32_t generateVertex
 		}
 		else assert (false);
 		glm::vec3 normal = edge_iter->normal;
-		solver.addPlane (normal, point);
+		solver.addPlane (point, normal);
 		avg_normal += normal;
 	}
 	glm::vec3 lowerBound = G.rawIndexToPoint (cellId);

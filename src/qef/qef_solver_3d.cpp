@@ -8,7 +8,7 @@
 namespace isomesh
 {
 
-void BaseQefSolver3D::addPlane (glm::vec3 normal, glm::vec3 point) {
+void BaseQefSolver3D::addPlane (glm::vec3 point, glm::vec3 normal) {
 	if (m_numPlanes >= kMaxPlanes)
 		throw std::runtime_error ("Maximal number of planes exceeded");
 	m_normals[m_numPlanes] = normal;

@@ -34,9 +34,9 @@ bool test1 (isomesh::QefSolver3D &solver) {
 	glm::vec3 n1 (1, 0, 0);
 	glm::vec3 n2 (0, 0, 1);
 	glm::vec3 n3 (0, 1, 0);
-	solver.addPlane (n1, { 0, 1, 0 });
-	solver.addPlane (n2, { 1, 0, 0 });
-	solver.addPlane (n3, { 0, 0, 1 });
+	solver.addPlane ({ 0, 1, 0 }, n1);
+	solver.addPlane ({ 1, 0, 0 }, n2);
+	solver.addPlane ({ 0, 0, 1 }, n3);
 	clog << "Test 1:" << endl;
 	return validate (solver, { 0, 0, 0 });
 }
@@ -47,10 +47,10 @@ bool test2 (isomesh::QefSolver3D &solver) {
 	glm::vec3 n2 (base.x, base.y, -base.x);
 	glm::vec3 n3 (-base.x, base.y, base.x);
 	glm::vec3 n4 (base.x, base.y, base.x);
-	solver.addPlane (glm::normalize (n1), { 0, 0, 0 });
-	solver.addPlane (glm::normalize (n2), { 1, 0, 0 });
-	solver.addPlane (glm::normalize (n3), { 0, 0, 1 });
-	solver.addPlane (glm::normalize (n4), { 1, 0, 1 });
+	solver.addPlane ({ 0, 0, 0 }, glm::normalize (n1));
+	solver.addPlane ({ 1, 0, 0 }, glm::normalize (n2));
+	solver.addPlane ({ 0, 0, 1 }, glm::normalize (n3));
+	solver.addPlane ({ 1, 0, 1 }, glm::normalize (n4));
 	clog << "Test 2:" << endl;
 	return validate (solver, { 0.5f, 0.01f, 0.5f });
 }
@@ -61,10 +61,10 @@ bool test3 (isomesh::QefSolver3D &solver) {
 	glm::vec3 n2 (base.x, base.y, -base.x);
 	glm::vec3 n3 (-base.x, base.y, base.x);
 	glm::vec3 n4 (base.x, base.y, base.x);
-	solver.addPlane (glm::normalize (n1), { 0, 0, 0 });
-	solver.addPlane (glm::normalize (n2), { 1, 0, 0 });
-	solver.addPlane (glm::normalize (n3), { 0, 0, 1 });
-	solver.addPlane (glm::normalize (n4), { 1, 0, 1 });
+	solver.addPlane ({ 0, 0, 0 }, glm::normalize (n1));
+	solver.addPlane ({ 1, 0, 0 }, glm::normalize (n2));
+	solver.addPlane ({ 0, 0, 1 }, glm::normalize (n3));
+	solver.addPlane ({ 1, 0, 1 }, glm::normalize (n4));
 	clog << "Test 3:" << endl;
 	return validate (solver, { 0.5f, 1, 0.5f });
 }

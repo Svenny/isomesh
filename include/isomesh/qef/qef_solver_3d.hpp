@@ -16,9 +16,14 @@ public:
 		\param[in] normal Normal vector of the plane, must have unit length
 		\param[in] point Any point belonging to the plane
 	*/
-	virtual void addPlane (glm::vec3 normal, glm::vec3 point) = 0;
-	/** \brief Solves QEF problem
+	virtual void addPlane (glm::vec3 point, glm::vec3 normal) = 0;
+	/** \brief Finds QEF minimizer
 	
+		Solution space is limited by a box [minPoint; maxPoint] to prevent 'spikes'
+		in the isosurface. You may still return a value outside of this box, just
+		remember of the possible consequences. In case of multiple solutions we advise
+		to prefer the one closest to the 'mass point' (average of all points added
+		through \ref addPlane). This makes the problem always have unique solution.
 		\param[in] minPoint Lower bound of solution space
 		\param[in] maxPoint Upper bound of solution space
 		\return Point which minimizes QEF value
@@ -30,14 +35,14 @@ public:
 		\return Error value
 	*/
 	virtual float eval (glm::vec3 point) const = 0;
-	/** \brief Resets solver to initial statte
+	/** \brief Resets solver to initial state
 	*/
 	virtual void reset () = 0;
 };
 
 class BaseQefSolver3D : public QefSolver3D {
 public:
-	virtual void addPlane (glm::vec3 normal, glm::vec3 point) override;
+	virtual void addPlane (glm::vec3 point, glm::vec3 normal) override;
 	virtual float eval (glm::vec3 point) const override;
 	virtual void reset () override;
 

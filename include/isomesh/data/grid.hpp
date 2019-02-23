@@ -1,7 +1,7 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
 /** \file
-	\brief Uniform grid data storage for algorithms
+	\brief Uniform grid data storage for use in algorithms
 */
 #pragma once
 
@@ -41,14 +41,10 @@ public:
 	Material operator [] (const glm::ivec3 &v) const;
 	// Raw indexing
 	const Material *data () const noexcept { return m_mat.get (); }
-	// Iterators to edge storages
-	// TODO: add search by key (edge position)
-	auto xEdgesBegin () const noexcept { return m_edgeX.cbegin (); }
-	auto xEdgesEnd () const noexcept { return m_edgeX.cend (); }
-	auto yEdgesBegin () const noexcept { return m_edgeY.cbegin (); }
-	auto yEdgesEnd () const noexcept { return m_edgeY.cend (); }
-	auto zEdgesBegin () const noexcept { return m_edgeZ.cbegin (); }
-	auto zEdgesEnd () const noexcept { return m_edgeZ.cend (); }
+	// Edge storages
+	const UniformGridEdgeStorage &xEdges () const noexcept { return m_edgeX; }
+	const UniformGridEdgeStorage &yEdges () const noexcept { return m_edgeY; }
+	const UniformGridEdgeStorage &zEdges () const noexcept { return m_edgeZ; }
 	// Properties
 	uint32_t dataSize () const noexcept { return (m_size + 1) * (m_size + 1) * (m_size + 1); }
 	uint32_t gridSize () const noexcept { return m_size; }

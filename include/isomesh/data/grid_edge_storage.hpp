@@ -46,6 +46,8 @@ struct UniformGridEdge {
 	glm::ivec3 lesserEndpoint () const noexcept;
 	/// Returns local coordinates of the bigger endpoint
 	glm::ivec3 biggerEndpoint () const noexcept;
+	/// Returns true if the lesser endpoint is solid, false otherwise
+	bool isLesserEndpointSolid () const noexcept { return !solidEndpoint; }
 
 private:
 	/** \brief Surface normal in zero-crossing point.

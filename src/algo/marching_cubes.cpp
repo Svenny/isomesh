@@ -44,17 +44,14 @@ Mesh marchingCubes (const UniformGrid &G) {
 	const int32_t min_sz = G.minCoord ();
 	// Collect X edges
 	{
-		auto iter = G.xEdgesBegin ();
-		auto last = G.xEdgesEnd ();
+		auto iter = G.xEdges ().begin ();
+		auto last = G.xEdges ().end ();
 		for (; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
-			glm::vec3 pos = glm::vec3 (lc);
-			pos.x += iter->offset;
-			glm::vec3 normal = iter->normal;
-			Material mat = G[lc];
-			if (mat == Material::Empty)
-				mat = G.at (lc.x + 1, lc.y, lc.z);
-			uint32_t id = mesh.addVertex (pos, normal, mat);
+			glm::ivec3 lc = iter->lesserEndpoint ();
+			glm::vec3 point = iter->surfacePoint ();
+			glm::vec3 normal = iter->surfaceNormal ();
+			Material mat = iter->solidEndpointMaterial ();
+			uint32_t id = mesh.addVertex (point, normal, mat);
 			if (lc.y < max_sz && lc.z < max_sz)
 				edges.emplace_back (G.pointToRawIndex (lc), id, 0);
 			if (lc.y < max_sz && lc.z > min_sz)
@@ -67,17 +64,14 @@ Mesh marchingCubes (const UniformGrid &G) {
 	}
 	// Collect Y edges
 	{
-		auto iter = G.yEdgesBegin ();
-		auto last = G.yEdgesEnd ();
+		auto iter = G.yEdges ().begin ();
+		auto last = G.yEdges ().end ();
 		for (; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
-			glm::vec3 pos = glm::vec3 (lc);
-			pos.y += iter->offset;
-			glm::vec3 normal = iter->normal;
-			Material mat = G[lc];
-			if (mat == Material::Empty)
-				mat = G.at (lc.x, lc.y + 1, lc.z);
-			uint32_t id = mesh.addVertex (pos, normal, mat);
+			glm::ivec3 lc = iter->lesserEndpoint ();
+			glm::vec3 point = iter->surfacePoint ();
+			glm::vec3 normal = iter->surfaceNormal ();
+			Material mat = iter->solidEndpointMaterial ();
+			uint32_t id = mesh.addVertex (point, normal, mat);
 			if (lc.x < max_sz && lc.z < max_sz)
 				edges.emplace_back (G.pointToRawIndex (lc), id, 8);
 			if (lc.x < max_sz && lc.z > min_sz)
@@ -90,16 +84,13 @@ Mesh marchingCubes (const UniformGrid &G) {
 	}
 	// Collect Z edges
 	{
-		auto iter = G.zEdgesBegin ();
-		auto last = G.zEdgesEnd ();
+		auto iter = G.zEdges ().begin ();
+		auto last = G.zEdges ().end ();
 		for (; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
-			glm::vec3 pos = glm::vec3 (lc);
-			pos.z += iter->offset;
-			glm::vec3 normal = iter->normal;
-			Material mat = G[lc];
-			if (mat == Material::Empty)
-				mat = G.at (lc.x, lc.y, lc.z + 1);
+			glm::ivec3 lc = iter->lesserEndpoint ();
+			glm::vec3 pos = iter->surfacePoint ();
+			glm::vec3 normal = iter->surfaceNormal ();
+			Material mat = iter->solidEndpointMaterial ();
 			uint32_t id = mesh.addVertex (pos, normal, mat);
 			if (lc.x < max_sz && lc.y < max_sz)
 				edges.emplace_back (G.pointToRawIndex (lc), id, 3);

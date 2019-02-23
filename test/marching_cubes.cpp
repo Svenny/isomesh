@@ -37,19 +37,19 @@ int main () {
 	isomesh::UniformGrid G (sz);
 	G.fill (f, solver, isomesh::TrivialMaterialSelector ());
 	// Separate grid-related bugs from algorithm-related
-	auto edge_count = std::distance (G.xEdgesBegin (), G.xEdgesEnd ());
+	auto edge_count = G.xEdges ().size ();
 	if (edge_count != 39) {
 		cerr << "Wrong uniform grid! X edges counts mismatch, "
 		     << edge_count << " found, 39 expected" << endl;
 		return 1;
 	}
-	edge_count = std::distance (G.yEdgesBegin (), G.yEdgesEnd ());
+	edge_count = G.yEdges ().size ();
 	if (edge_count != 289) {
 		cerr << "Wrong uniform grid! Y edges counts mismatch, "
 		     << edge_count << " found, 289 expected" << endl;
 		return 1;
 	}
-	edge_count = std::distance (G.zEdgesBegin (), G.zEdgesEnd ());
+	edge_count = G.zEdges ().size ();
 	if (edge_count != 45) {
 		cerr << "Wrong uniform grid! Z edges counts mismatch, "
 		     << edge_count << " found, 45 expected" << endl;

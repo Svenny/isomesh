@@ -12,32 +12,6 @@
 namespace isomesh
 {
 
-// Comparator for sorting edges
-// Sorts as <Y, X, Z> tuples
-bool UniformGridEdgeStorage::Edge::operator < (const UniformGridEdgeStorage::Edge &b) const noexcept {
-	if (y < b.y)
-		return true;
-	if (y == b.y) {
-		if (x < b.x)
-			return true;
-		if (x == b.x && z < b.z)
-			return true;
-	}
-	return false;
-}
-
-void UniformGridEdgeStorage::sort () noexcept {
-	std::sort (m_edges.begin (), m_edges.end ());
-}
-
-void UniformGridEdgeStorage::addEdge (int32_t x, int32_t y, int32_t z,
-                                      const glm::dvec3 &normal, double offset) {
-	assert (x <= 64 && y <= 64 && z <= 64);
-	assert (x >= -64 && y >= -64 && z >= -64);
-	Edge e { int8_t (x), int8_t (y), int8_t (z), { normal, float (offset) } };
-	m_edges.push_back (e);
-}
-
 UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double scale) :
 	m_size (size), m_halfSize (int32_t (size) / 2), m_globalPos (globalPos), m_scale (scale) {
 	if (size < 2)
@@ -93,9 +67,10 @@ void UniformGrid::fill (const SurfaceFunction &f,
 					double x0 = p.x;
 					double x1 = p.x + m_scale;
 					p.x = solver.findAlongX (x0, p.y, p.z, x1, values[idx1], values[idx2], f);
-					glm::dvec3 normal = glm::normalize (f.grad (p));
+					glm::dvec3 grad = f.grad (p);
 					double offset = (p.x - x0) / m_scale;
-					m_edgeX.addEdge (x, y, z, normal, offset);
+					Material mat = sign1 ? m_mat[idx1] : m_mat[idx2];
+					m_edgeX.addEdge (x, y, z, grad, offset, 0, sign1, mat);
 				}
 				idx1++;
 				idx2++;
@@ -118,9 +93,10 @@ void UniformGrid::fill (const SurfaceFunction &f,
 					double y0 = p.y;
 					double y1 = p.y + m_scale;
 					p.y = solver.findAlongY (p.x, y0, p.z, y1, values[idx1], values[idx2], f);
-					glm::dvec3 normal = glm::normalize (f.grad (p));
+					glm::dvec3 grad = f.grad (p);
 					double offset = (p.y - y0) / m_scale;
-					m_edgeY.addEdge (x, y, z, normal, offset);
+					Material mat = sign1 ? m_mat[idx1] : m_mat[idx2];
+					m_edgeY.addEdge (x, y, z, grad, offset, 1, sign1, mat);
 				}
 				idx1++;
 				idx2++;
@@ -141,9 +117,10 @@ void UniformGrid::fill (const SurfaceFunction &f,
 					double z0 = p.z;
 					double z1 = p.z + m_scale;
 					p.z = solver.findAlongZ (p.x, p.y, z0, z1, values[idx1], values[idx2], f);
-					glm::dvec3 normal = glm::normalize (f.grad (p));
+					glm::dvec3 grad = f.grad (p);
 					double offset = (p.z - z0) / m_scale;
-					m_edgeZ.addEdge (x, y, z, normal, offset);
+					Material mat = sign1 ? m_mat[idx1] : m_mat[idx2];
+					m_edgeZ.addEdge (x, y, z, grad, offset, 2, sign1, mat);
 				}
 				idx1++;
 				idx2++;

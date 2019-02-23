@@ -31,31 +31,22 @@ static uint32_t generateVertex
 	DualContouringEdgeEntry sample (cellId);
 	auto entry_begin = std::lower_bound (edgeEntries.begin (), edgeEntries.end (), sample);
 	auto entry_end = std::upper_bound (edgeEntries.begin (), edgeEntries.end (), sample);
-	auto x_begin = G.xEdgesBegin ();
-	auto y_begin = G.yEdgesBegin ();
-	auto z_begin = G.zEdgesBegin ();
+	auto x_begin = G.xEdges ().begin ();
+	auto y_begin = G.yEdges ().begin ();
+	auto z_begin = G.zEdges ().begin ();
 	solver.reset ();
 	glm::vec3 avg_normal (0);
 	for (auto iter = entry_begin; iter != entry_end; ++iter) {
 		decltype (x_begin) edge_iter;
-		glm::vec3 point;
-		if (iter->axis == 0) {
+		if (iter->axis == 0)
 			edge_iter = x_begin + iter->edge;
-			point = glm::vec3 (edge_iter.localCoords ());
-			point.x += edge_iter->offset;
-		}
-		else if (iter->axis == 1) {
+		else if (iter->axis == 1)
 			edge_iter = y_begin + iter->edge;
-			point = glm::vec3 (edge_iter.localCoords ());
-			point.y += edge_iter->offset;
-		}
-		else if (iter->axis == 2) {
+		else if (iter->axis == 2)
 			edge_iter = z_begin + iter->edge;
-			point = glm::vec3 (edge_iter.localCoords ());
-			point.z += edge_iter->offset;
-		}
 		else assert (false);
-		glm::vec3 normal = edge_iter->normal;
+		glm::vec3 point = edge_iter->surfacePoint ();
+		glm::vec3 normal = edge_iter->surfaceNormal ();
 		solver.addPlane (point, normal);
 		avg_normal += normal;
 	}
@@ -73,10 +64,10 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	const int32_t min_sz = G.minCoord ();
 	// Collect X edges
 	{
-		auto first = G.xEdgesBegin ();
-		auto last = G.xEdgesEnd ();
+		auto first = G.xEdges ().begin ();
+		auto last = G.xEdges ().end ();
 		for (auto iter = first; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
+			glm::ivec3 lc = iter->lesserEndpoint ();
 			uint32_t my_id = uint32_t (iter - first);
 			if (lc.y < max_sz && lc.z < max_sz)
 				edges.emplace_back (G.pointToRawIndex (lc), my_id, 0);
@@ -90,10 +81,10 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	}
 	// Collect Y edges
 	{
-		auto first = G.yEdgesBegin ();
-		auto last = G.yEdgesEnd ();
+		auto first = G.yEdges ().begin ();
+		auto last = G.yEdges ().end ();
 		for (auto iter = first; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
+			glm::ivec3 lc = iter->lesserEndpoint ();
 			uint32_t my_id = uint32_t (iter - first);
 			if (lc.x < max_sz && lc.z < max_sz)
 				edges.emplace_back (G.pointToRawIndex (lc), my_id, 1);
@@ -107,10 +98,10 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	}
 	// Collect Z edges
 	{
-		auto first = G.zEdgesBegin ();
-		auto last = G.zEdgesEnd ();
+		auto first = G.zEdges ().begin ();
+		auto last = G.zEdges ().end ();
 		for (auto iter = first; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
+			glm::ivec3 lc = iter->lesserEndpoint ();
 			uint32_t my_id = uint32_t (iter - first);
 			if (lc.x < max_sz && lc.y < max_sz)
 				edges.emplace_back (G.pointToRawIndex (lc), my_id, 2);
@@ -129,10 +120,10 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	Mesh mesh;
 	// Make quads around X-edges
 	{
-		auto first = G.xEdgesBegin ();
-		auto last = G.xEdgesEnd ();
+		auto first = G.xEdges ().begin ();
+		auto last = G.xEdges ().end ();
 		for (auto iter = first; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
+			glm::ivec3 lc = iter->lesserEndpoint ();
 			// Skip border edges
 			if (lc.y == min_sz || lc.y == max_sz)
 				continue;
@@ -156,7 +147,7 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 			uint32_t vtx3 = vertex_ids[cell3];
 			if (vtx3 == invalid_id)
 				vtx3 = vertex_ids[cell3] = generateVertex (G, filter, solver, cell3, edges, mesh);
-			bool flip = (G[lc] == Material::Empty);
+			bool flip = !iter->isLesserEndpointSolid ();
 			if (!flip) {
 				mesh.addTriangle (vtx0, vtx2, vtx1);
 				mesh.addTriangle (vtx1, vtx2, vtx3);
@@ -169,10 +160,10 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	}
 	// Make quads around Y-edges
 	{
-		auto first = G.yEdgesBegin ();
-		auto last = G.yEdgesEnd ();
+		auto first = G.yEdges ().begin ();
+		auto last = G.yEdges ().end ();
 		for (auto iter = first; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
+			glm::ivec3 lc = iter->lesserEndpoint ();
 			// Skip border edges
 			if (lc.x == min_sz || lc.x == max_sz)
 				continue;
@@ -196,7 +187,7 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 			uint32_t vtx3 = vertex_ids[cell3];
 			if (vtx3 == invalid_id)
 				vtx3 = vertex_ids[cell3] = generateVertex (G, filter, solver, cell3, edges, mesh);
-			bool flip = (G[lc] == Material::Empty);
+			bool flip = !iter->isLesserEndpointSolid ();
 			if (!flip) {
 				mesh.addTriangle (vtx0, vtx1, vtx2);
 				mesh.addTriangle (vtx1, vtx3, vtx2);
@@ -209,10 +200,10 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	}
 	// Make quads around Z-edges
 	{
-		auto first = G.zEdgesBegin ();
-		auto last = G.zEdgesEnd ();
+		auto first = G.zEdges ().begin ();
+		auto last = G.zEdges ().end ();
 		for (auto iter = first; iter != last; ++iter) {
-			glm::ivec3 lc = iter.localCoords ();
+			glm::ivec3 lc = iter->lesserEndpoint ();
 			// Skip border edges
 			if (lc.x == min_sz || lc.x == max_sz)
 				continue;
@@ -236,7 +227,7 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 			uint32_t vtx3 = vertex_ids[cell3];
 			if (vtx3 == invalid_id)
 				vtx3 = vertex_ids[cell3] = generateVertex (G, filter, solver, cell3, edges, mesh);
-			bool flip = (G[lc] == Material::Empty);
+			bool flip = !iter->isLesserEndpointSolid ();
 			if (!flip) {
 				mesh.addTriangle (vtx0, vtx2, vtx1);
 				mesh.addTriangle (vtx1, vtx2, vtx3);

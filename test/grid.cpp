@@ -35,11 +35,11 @@ template<int D>
 void printEdges (const UniformGrid &G, edge_iter_t iter, edge_iter_t last) {
 	for (; iter != last; ++iter) {
 		// Position of surface-crossing point on the edge
-		glm::dvec3 pos_local = iter.localCoords ();
-		std::get<D> (pos_local) += iter->offset;
+		glm::dvec3 pos_local = iter->surfacePoint ();
 		glm::dvec3 pos_global = G.localToGlobal (pos_local);
 		clog << "pos " << pos_global.x << ' ' << pos_global.y << ' ' << pos_global.z;
-		clog << " normal " << iter->normal.x << ' ' << iter->normal.y << ' ' << iter->normal.z << endl;
+		glm::vec3 normal = iter->surfaceNormal ();
+		clog << " normal " << normal.x << ' ' << normal.y << ' ' << normal.z << endl;
 	}
 }
 
@@ -50,14 +50,10 @@ bool validateEdges (const UniformGrid &G, const isomesh::SurfaceFunction &f,
 	// Use a very precise solver to find actual roots
 	isomesh::BisectionZeroFinder solver (50);
 	for (; iter != last; ++iter) {
-		// Lower-coordinate edge endpoint
-		glm::dvec3 p0 = iter.localCoords ();
-		// Higher-coordinate edge endpoint
-		glm::dvec3 p1 = p0;
-		std::get<D> (p1) += 1;
+		glm::dvec3 p0 = iter->lesserEndpoint ();
+		glm::dvec3 p1 = iter->biggerEndpoint ();
 		// Surface-crossing point
-		glm::dvec3 p = p0;
-		std::get<D> (p) += iter->offset;
+		glm::dvec3 p = iter->surfacePoint ();
 
 		p0 = G.localToGlobal (p0);
 		p1 = G.localToGlobal (p1);
@@ -114,25 +110,25 @@ int main () {
 	bool fail = false;
 
 	clog << "X edges:" << endl;
-	auto it1 = G.xEdgesBegin ();
-	auto it2 = G.xEdgesEnd ();
-	auto x_cnt = it2 - it1;
+	auto it1 = G.xEdges ().begin ();
+	auto it2 = G.xEdges ().end ();
+	auto x_cnt = G.xEdges ().size ();
 	printEdges<0> (G, it1, it2);
 	if (!validateEdges<0> (G, f, it1, it2))
 		fail = true;
 
 	clog << endl << "Y edges:" << endl;
-	it1 = G.yEdgesBegin ();
-	it2 = G.yEdgesEnd ();
-	auto y_cnt = it2 - it1;
+	it1 = G.yEdges ().begin ();
+	it2 = G.yEdges ().end ();
+	auto y_cnt = G.yEdges ().size ();
 	printEdges<1> (G, it1, it2);
 	if (!validateEdges<1> (G, f, it1, it2))
 		fail = true;
 
 	clog << endl << "Z edges:" << endl;
-	it1 = G.zEdgesBegin ();
-	it2 = G.zEdgesEnd ();
-	auto z_cnt = it2 - it1;
+	it1 = G.zEdges ().begin ();
+	it2 = G.zEdges ().end ();
+	auto z_cnt = G.zEdges ().size ();
 	printEdges<2> (G, it1, it2);
 	if (!validateEdges<2> (G, f, it1, it2))
 		fail = true;

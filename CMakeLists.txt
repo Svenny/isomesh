@@ -35,6 +35,7 @@ set (ISOMESH_SOURCES
 	src/algo/marching_cubes_tables.h
 	src/algo/uniform_dual_contouring.cpp
 	src/data/grid.cpp
+	src/data/grid_edge_storage.cpp
 	src/data/mesh.cpp
 	src/qef/gradient_descent_qef_solver_3d.cpp
 	src/qef/qef_solver_3d.cpp

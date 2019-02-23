@@ -56,12 +56,13 @@ glm::ivec3 UniformGridEdge::biggerEndpoint () const noexcept {
 }
 
 bool UniformGridEdgeStorage::edgeLess (const UniformGridEdge &a, const UniformGridEdge &b) noexcept {
-	if (a.lesserX < b.lesserX)
+	// Compare as (Y, X, Z) tuples
+	if (a.lesserY < b.lesserY)
 		return true;
-	if (a.lesserX == b.lesserX) {
-		if (a.lesserY < b.lesserY)
+	if (a.lesserY == b.lesserY) {
+		if (a.lesserX < b.lesserX)
 			return true;
-		if (a.lesserY == b.lesserY)
+		if (a.lesserX == b.lesserX)
 			return a.lesserZ < b.lesserZ;
 	}
 	return false;

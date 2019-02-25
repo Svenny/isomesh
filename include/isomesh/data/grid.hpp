@@ -28,7 +28,7 @@ class MaterialSelector;
  which has a range of [-128;127], which doesn't fit 256 (which is [-128;128]). */
 class UniformGrid {
 public:
-	explicit UniformGrid (uint32_t size, const glm::dvec3 &globalPos = glm::dvec3 (0.0), double scale = 1.0);
+	explicit UniformGrid (uint32_t size, const glm::dvec3 &globalPos = glm::dvec3 (0.0), double gridStep = 1.0);
 	// Fills grid using given surface function & material selection method
 	void fill (const SurfaceFunction &f, const ZeroFinder &solver, const MaterialSelector &material);
 	// Converts local-coordinates point to YXZ-order traversal (raw) index
@@ -51,10 +51,10 @@ public:
 	int32_t maxCoord () const noexcept { return m_halfSize; }
 	int32_t minCoord () const noexcept { return -m_halfSize; }
 	glm::dvec3 globalPosition () const noexcept { return m_globalPos; }
-	double scale () const noexcept { return m_scale; }
+	double gridStep () const noexcept { return m_gridStep; }
 	// Coordinate system conversions
-	glm::dvec3 localToGlobal (const glm::dvec3 &L) const noexcept { return L * m_scale + m_globalPos; }
-	glm::dvec3 globalToLocal (const glm::dvec3 &G) const noexcept { return (G - m_globalPos) / m_scale; }
+	glm::dvec3 localToGlobal (const glm::dvec3 &L) const noexcept { return L * m_gridStep + m_globalPos; }
+	glm::dvec3 globalToLocal (const glm::dvec3 &G) const noexcept { return (G - m_globalPos) / m_gridStep; }
 private:
 	const uint32_t m_size;
 	const int32_t m_halfSize;
@@ -64,7 +64,7 @@ private:
 	UniformGridEdgeStorage m_edgeX, m_edgeY, m_edgeZ;
 
 	glm::dvec3 m_globalPos;
-	double m_scale;
+	double m_gridStep;
 	
 	// Checks whether point (x,y,z) lies in valid local coordinates
 	void checkPoint (int32_t x, int32_t y, int32_t z) const;

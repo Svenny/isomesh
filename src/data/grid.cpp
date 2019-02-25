@@ -12,8 +12,8 @@
 namespace isomesh
 {
 
-UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double scale) :
-	m_size (size), m_halfSize (int32_t (size) / 2), m_globalPos (globalPos), m_scale (scale) {
+UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double gridStep) :
+	m_size (size), m_halfSize (int32_t (size) / 2), m_globalPos (globalPos), m_gridStep (gridStep) {
 	if (size < 2)
 		throw std::invalid_argument ("Grid size should be at least two");
 	if (size & (size - 1))
@@ -43,11 +43,11 @@ void UniformGrid::fill (const SurfaceFunction &f,
 				else
 					m_mat[idx] = material.select (call_pos, values[idx]);
 				idx++;
-				call_pos.z += m_scale;
+				call_pos.z += m_gridStep;
 			}
-			call_pos.x += m_scale;
+			call_pos.x += m_gridStep;
 		}
-		call_pos.y += m_scale;
+		call_pos.y += m_gridStep;
 	}
 	/* Find zero intersections on grid edges.
 	 Different signs on edge endpoints means there is at least
@@ -65,10 +65,10 @@ void UniformGrid::fill (const SurfaceFunction &f,
 				if (sign1 != sign2) {
 					glm::dvec3 p = localToGlobal (glm::dvec3 (x, y, z));
 					double x0 = p.x;
-					double x1 = p.x + m_scale;
+					double x1 = p.x + m_gridStep;
 					p.x = solver.findAlongX (x0, p.y, p.z, x1, values[idx1], values[idx2], f);
 					glm::dvec3 grad = f.grad (p);
-					double offset = (p.x - x0) / m_scale;
+					double offset = (p.x - x0) / m_gridStep;
 					Material mat = sign1 ? m_mat[idx1] : m_mat[idx2];
 					m_edgeX.addEdge (x, y, z, grad, offset, 0, sign1, mat);
 				}
@@ -91,10 +91,10 @@ void UniformGrid::fill (const SurfaceFunction &f,
 				if (sign1 != sign2) {
 					glm::dvec3 p = localToGlobal (glm::dvec3 (x, y, z));
 					double y0 = p.y;
-					double y1 = p.y + m_scale;
+					double y1 = p.y + m_gridStep;
 					p.y = solver.findAlongY (p.x, y0, p.z, y1, values[idx1], values[idx2], f);
 					glm::dvec3 grad = f.grad (p);
-					double offset = (p.y - y0) / m_scale;
+					double offset = (p.y - y0) / m_gridStep;
 					Material mat = sign1 ? m_mat[idx1] : m_mat[idx2];
 					m_edgeY.addEdge (x, y, z, grad, offset, 1, sign1, mat);
 				}
@@ -115,10 +115,10 @@ void UniformGrid::fill (const SurfaceFunction &f,
 				if (sign1 != sign2) {
 					glm::dvec3 p = localToGlobal (glm::dvec3 (x, y, z));
 					double z0 = p.z;
-					double z1 = p.z + m_scale;
+					double z1 = p.z + m_gridStep;
 					p.z = solver.findAlongZ (p.x, p.y, z0, z1, values[idx1], values[idx2], f);
 					glm::dvec3 grad = f.grad (p);
-					double offset = (p.z - z0) / m_scale;
+					double offset = (p.z - z0) / m_gridStep;
 					Material mat = sign1 ? m_mat[idx1] : m_mat[idx2];
 					m_edgeZ.addEdge (x, y, z, grad, offset, 2, sign1, mat);
 				}

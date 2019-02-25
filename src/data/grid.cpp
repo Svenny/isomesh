@@ -18,8 +18,8 @@ UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double gri
 		throw std::invalid_argument ("Grid size should be at least two");
 	if (size & (size - 1))
 		throw std::invalid_argument ("Grid size is not a power of two");
-	if (size > 128)
-		throw std::length_error ("Too large grid size (> 128)");
+	if (size > 256)
+		throw std::length_error ("Too large grid size (> 256)");
 
 	m_mat.reset (new Material[(size + 1) * (size + 1) * (size + 1)]);
 }

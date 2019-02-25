@@ -30,9 +30,9 @@ struct EdgeEntry {
 	// Index of cell this edge belongs to
 	uint32_t cell_idx;
 	// Index of the corresponding vertex in output mesh
-	uint32_t vertex_idx : 24;
+	uint32_t vertex_idx : 28;
 	// Marching cubes index of the edge inside a cell
-	uint32_t vertex_pos : 8;
+	uint32_t vertex_pos : 4;
 	// Sorting array of these structs will group them by cell id
 	bool operator < (const EdgeEntry &e) const noexcept { return cell_idx < e.cell_idx; }
 };

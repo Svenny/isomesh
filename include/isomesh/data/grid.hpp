@@ -21,11 +21,11 @@ class MaterialSelector;
 // Global coordinates define point position in the world
 // Size must be a power of two (size >= 2 and size <= 128), this is needed
 // to make adaptive compression algorithms (like octree) work on grids
-/* Size can't be made more than 128, it's a technical limitation. I use 24-bit vertex
- indexing in some places, so the grid shouldn't have more than 2^24 vertices. As the
- grid has (size + 1)^3 vertices, the maximal size meeting this limit is 255. Therefore
- the largest suitable power of two is 128. Compressed edge storage uses 8-bit indexing
- which has a range of [-128;127], which doesn't fit 256 (which is [-128;128]). */
+/* Size can't be bigger than 256, it's a technical limitation. I use 28-bit surface-crossing edge
+ indexing in some places, so the grid shouldn't have more than 2^28 surface-crossing edges. As the
+ grid has at most 3*size*(size + 1)^2 edges, the maximal size meeting this limit is 446, therefore the
+ largest suitable power of two is 256. However, grid sizes of 256 and higher are too impractical,
+ therefore this limitation shouldn't cause any issues. */
 class UniformGrid {
 public:
 	explicit UniformGrid (uint32_t size, const glm::dvec3 &globalPos = glm::dvec3 (0.0), double gridStep = 1.0);

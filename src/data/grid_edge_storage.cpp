@@ -33,7 +33,8 @@ UniformGridEdge::UniformGridEdge (int32_t lesserX, int32_t lesserY, int32_t less
 }
 
 glm::vec3 UniformGridEdge::surfaceNormal () const noexcept {
-	float normalY = glm::sqrt (1.0f - normalX * normalX - normalZ * normalZ);
+	float y_squared = 1.0f - normalX * normalX - normalZ * normalZ;
+	float normalY = glm::sqrt (glm::max (0.0f, y_squared));
 	if (normalYSign)
 		normalY = -normalY;
 	return { normalX, normalY, normalZ };

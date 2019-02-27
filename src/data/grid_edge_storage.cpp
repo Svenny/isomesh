@@ -28,7 +28,7 @@ UniformGridEdge::UniformGridEdge (int32_t lesserX, int32_t lesserY, int32_t less
 	this->normalYSign = (gradient.y < 0);
 	this->offset = float (offset);
 	this->axis = uint8_t (axis);
-	this->solidEndpoint = uint8_t (isLesserEndpointSolid);
+	this->solidEndpoint = uint8_t (!isLesserEndpointSolid);
 	this->material = solidMaterial;
 }
 

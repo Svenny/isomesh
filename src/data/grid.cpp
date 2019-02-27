@@ -52,7 +52,7 @@ void UniformGrid::fill (const SurfaceFunction &f,
 	/* Find zero intersections on grid edges.
 	 Different signs on edge endpoints means there is at least
 	 one zero intersection on this edge. We assume that there is
-	 exactly one and find it using supplied solver. */
+	 exactly one and find it using the provided solver. */
 	// Along X
 	m_edgeX.clear ();
 	uint32_t idx1 = 0;
@@ -132,7 +132,7 @@ void UniformGrid::fill (const SurfaceFunction &f,
 }
 
 uint32_t UniformGrid::pointToRawIndex (int32_t x, int32_t y, int32_t z) const {
-	checkPoint (x, y, z);
+	assert (isVertexInGrid ({ x, y, z }));
 	uint32_t idx = uint32_t (y + m_halfSize) * (m_size + 1);
 	idx = (idx + uint32_t (x + m_halfSize)) * (m_size + 1);
 	idx += uint32_t (z + m_halfSize);
@@ -153,7 +153,7 @@ glm::ivec3 UniformGrid::rawIndexToPoint (uint32_t idx) const noexcept {
 }
 
 Material UniformGrid::at (int32_t x, int32_t y, int32_t z) const {
-	checkPoint (x, y, z);
+	assert (isVertexInGrid ({ x, y, z }));
 	return m_mat[pointToRawIndex (x, y, z)];
 }
 
@@ -161,9 +161,114 @@ Material UniformGrid::operator [] (const glm::ivec3 &v) const {
 	return at (v.x, v.y, v.z);
 }
 
-void UniformGrid::checkPoint (int32_t x, int32_t y, int32_t z) const {
-	assert (x >= -m_halfSize && y >= -m_halfSize && z >= -m_halfSize);
-	assert (x <= m_halfSize && y <= m_halfSize && z <= m_halfSize);
+// ---------------------------------------
+// -------------- NEW API ----------------
+// ---------------------------------------
+
+uint32_t UniformGrid::pointToIndex (int32_t x, int32_t y, int32_t z) const noexcept {
+	assert (isVertexInGrid ({ x, y, z }));
+	uint32_t idx = uint32_t (y + m_halfSize) * (m_size + 1);
+	idx = (idx + uint32_t (x + m_halfSize)) * (m_size + 1);
+	idx += uint32_t (z + m_halfSize);
+	return idx;
+}
+
+glm::ivec3 UniformGrid::indexToPoint (uint32_t idx) const noexcept {
+	assert (idx < (m_size + 1) * (m_size + 1) * (m_size + 1));
+	int32_t z = int32_t (idx % (m_size + 1)) - m_halfSize;
+	idx /= (m_size + 1);
+	int32_t x = int32_t (idx % (m_size + 1)) - m_halfSize;
+	idx /= (m_size + 1);
+	int32_t y = int32_t (idx) - m_halfSize;
+	return glm::ivec3 (x, y, z);
+}
+
+// -------------------------
+// Operations on vertices
+// -------------------------
+
+bool UniformGrid::isVertexInGrid (int32_t x, int32_t y, int32_t z) const noexcept {
+	if (glm::abs (x) > m_halfSize)
+		return false;
+	if (glm::abs (y) > m_halfSize)
+		return false;
+	if (glm::abs (z) > m_halfSize)
+		return false;
+	return true;
+}
+
+bool UniformGrid::isVertexOnBorder (int32_t x, int32_t y, int32_t z) const noexcept {
+	if (glm::abs (x) == m_halfSize)
+		return true;
+	if (glm::abs (y) == m_halfSize)
+		return true;
+	if (glm::abs (z) == m_halfSize)
+		return true;
+	return false;
+}
+
+// -----------------------
+// Operations on edges
+// -----------------------
+
+template<>
+std::array<uint32_t, 4> UniformGrid::adjacentCellsForEdge<0> (const glm::ivec3 &edgePos) const noexcept {
+	const uint32_t dy = (m_size + 1) * (m_size + 1);
+	const uint32_t dz = 1;
+	std::array<uint32_t, 4> cells;
+	cells[2] = pointToIndex (edgePos);
+	cells[0] = cells[2] - dy - dz;
+	cells[1] = cells[2] - dz;
+	cells[3] = cells[2] - dy;
+	if (edgePos.y == -m_halfSize)
+		cells[0] = cells[3] = kBadIndex;
+	if (edgePos.y == m_halfSize)
+		cells[1] = cells[2] = kBadIndex;
+	if (edgePos.z == -m_halfSize)
+		cells[0] = cells[1] = kBadIndex;
+	if (edgePos.z == m_halfSize)
+		cells[2] = cells[3] = kBadIndex;
+	return cells;
+}
+
+template<>
+std::array<uint32_t, 4> UniformGrid::adjacentCellsForEdge<1> (const glm::ivec3 &edgePos) const noexcept {
+	const uint32_t dx = (m_size + 1);
+	const uint32_t dz = 1;
+	std::array<uint32_t, 4> cells;
+	cells[2] = pointToIndex (edgePos);
+	cells[0] = cells[2] - dx - dz;
+	cells[1] = cells[2] - dx;
+	cells[3] = cells[2] - dz;
+	if (edgePos.x == -m_halfSize)
+		cells[0] = cells[1] = kBadIndex;
+	if (edgePos.x == m_halfSize)
+		cells[2] = cells[3] = kBadIndex;
+	if (edgePos.z == -m_halfSize)
+		cells[0] = cells[3] = kBadIndex;
+	if (edgePos.z == m_halfSize)
+		cells[1] = cells[2] = kBadIndex;
+	return cells;
+}
+
+template<>
+std::array<uint32_t, 4> UniformGrid::adjacentCellsForEdge<2> (const glm::ivec3 &edgePos) const noexcept {
+	const uint32_t dx = (m_size + 1);
+	const uint32_t dy = (m_size + 1) * (m_size + 1);
+	std::array<uint32_t, 4> cells;
+	cells[2] = pointToIndex (edgePos);
+	cells[0] = cells[2] - dx - dy;
+	cells[1] = cells[2] - dy;
+	cells[3] = cells[2] - dx;
+	if (edgePos.x == -m_halfSize)
+		cells[0] = cells[3] = kBadIndex;
+	if (edgePos.x == m_halfSize)
+		cells[1] = cells[2] = kBadIndex;
+	if (edgePos.y == -m_halfSize)
+		cells[0] = cells[1] = kBadIndex;
+	if (edgePos.y == m_halfSize)
+		cells[2] = cells[3] = kBadIndex;
+	return cells;
 }
 
 }

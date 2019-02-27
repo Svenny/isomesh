@@ -45,8 +45,11 @@ namespace isomesh {
 			m_data = stbi_load(image_path.string().c_str(), &m_width, &m_height, &m_bpp, 1);
 			if (!m_data)
 				throw std::runtime_error("file " + image_path.string() + " not image file");
-			else if (m_bpp != 1)
+			else if (m_bpp != 1) {
+				stbi_image_free(m_data);
+				m_data = nullptr;
 				throw std::runtime_error("file " + image_path.string() + " not 8bit grayscale image file");
+			}
 		}
 		else {
 			m_data = nullptr;

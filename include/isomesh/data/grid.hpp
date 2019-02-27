@@ -20,13 +20,13 @@ class MaterialSelector;
 // YXZ traversal order (to match Voxen's layout)
 // Local coordinates are [-size/2; size/2]
 // Global coordinates define point position in the world
-// Size must be a power of two (size >= 2 and size <= 128), this is needed
+// Size must be a power of two (size >= 2 and size <= 1024), this is needed
 // to make adaptive compression algorithms (like octree) work on grids
-/* Size can't be bigger than 256, it's a technical limitation. I use 28-bit surface-crossing edge
- indexing in some places, so the grid shouldn't have more than 2^28 surface-crossing edges. As the
- grid has at most 3*size*(size + 1)^2 edges, the maximal size meeting this limit is 446, therefore the
- largest suitable power of two is 256. However, grid sizes of 256 and higher are too impractical,
- therefore this limitation shouldn't cause any issues. */
+/* Size can't be bigger than 1024, because using larger sizes will overflow 32-bit integers, which are
+ used everywhere throughout the library. However, grid sizes of 256 and higher are impractical because of
+ their huge RAM and computing power requirements, therefore this limitation shouldn't cause any issues.
+ Running some algorithm on a 1024 grid will require ~10 GB (!) of RAM (and nearly infinite time if your
+ computer runs out of RAM and begins using swapfile). */
 class UniformGrid {
 public:
 	explicit UniformGrid (uint32_t size, const glm::dvec3 &globalPos = glm::dvec3 (0.0), double gridStep = 1.0);

@@ -47,6 +47,7 @@ source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES}
 
 add_library (isomesh STATIC ${ISOMESH_HEADERS} ${ISOMESH_SOURCES})
 target_link_libraries (isomesh PUBLIC glm stdc++fs)
+target_link_libraries (isomesh PRIVATE $<$<CXX_COMPILER_ID:GNU>:stdc++fs>)
 target_include_directories (isomesh PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 set_target_properties (isomesh PROPERTIES

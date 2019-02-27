@@ -179,8 +179,11 @@ std::array<uint32_t, 2> UniformGrid::adjacentVerticesForEdge<1> (const glm::ivec
 template<>
 std::array<uint32_t, 2> UniformGrid::adjacentVerticesForEdge<2> (const glm::ivec3 &edgePos) const noexcept;
 
-template<> inline const UniformGridEdgeStorage &UniformGrid::edges<0> () const noexcept { return m_edgeX; }
-template<> inline const UniformGridEdgeStorage &UniformGrid::edges<1> () const noexcept { return m_edgeY; }
-template<> inline const UniformGridEdgeStorage &UniformGrid::edges<2> () const noexcept { return m_edgeZ; }
+template<>
+inline const UniformGridEdgeStorage &UniformGrid::edges<0> () const noexcept { return m_edgeX; }
+template<>
+inline const UniformGridEdgeStorage &UniformGrid::edges<1> () const noexcept { return m_edgeY; }
+template<>
+inline const UniformGridEdgeStorage &UniformGrid::edges<2> () const noexcept { return m_edgeZ; }
 
 }

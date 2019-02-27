@@ -271,4 +271,36 @@ std::array<uint32_t, 4> UniformGrid::adjacentCellsForEdge<2> (const glm::ivec3 &
 	return cells;
 }
 
+std::array<uint32_t, 8> UniformGrid::adjacentVerticesForCell (uint32_t cellIdx) const noexcept {
+	const uint32_t dx = (m_size + 1);
+	const uint32_t dy = (m_size + 1) * (m_size + 1);
+	const uint32_t dz = 1;
+	std::array<uint32_t, 8> vertices;
+	vertices[0] = cellIdx;
+	vertices[1] = cellIdx + dz;
+	vertices[2] = cellIdx + dx;
+	vertices[3] = cellIdx + dx + dz;
+	vertices[4] = cellIdx + dy;
+	vertices[5] = cellIdx + dy + dz;
+	vertices[6] = cellIdx + dx + dy;
+	vertices[7] = cellIdx + dx + dy + dz;
+	return vertices;
+}
+
+std::array<Material, 8> UniformGrid::materialsOfCell (uint32_t cellIdx) const noexcept {
+	const uint32_t dx = (m_size + 1);
+	const uint32_t dy = (m_size + 1) * (m_size + 1);
+	const uint32_t dz = 1;
+	std::array<Material, 8> mats;
+	mats[0] = m_mat[cellIdx];
+	mats[1] = m_mat[cellIdx + dz];
+	mats[2] = m_mat[cellIdx + dx];
+	mats[3] = m_mat[cellIdx + dx + dz];
+	mats[4] = m_mat[cellIdx + dy];
+	mats[5] = m_mat[cellIdx + dy + dz];
+	mats[6] = m_mat[cellIdx + dx + dy];
+	mats[7] = m_mat[cellIdx + dx + dy + dz];
+	return mats;
+}
+
 }

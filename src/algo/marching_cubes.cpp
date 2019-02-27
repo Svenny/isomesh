@@ -10,123 +10,105 @@
 namespace isomesh
 {
 
-static uint32_t getVertexMask (const UniformGrid &G, int32_t x, int32_t y, int32_t z) {
-	uint32_t mask = 0;
-	if (G.at (x + 0, y + 0, z + 0) != Material::Empty) mask |= 1;
-	if (G.at (x + 1, y + 0, z + 0) != Material::Empty) mask |= 2;
-	if (G.at (x + 1, y + 0, z + 1) != Material::Empty) mask |= 4;
-	if (G.at (x + 0, y + 0, z + 1) != Material::Empty) mask |= 8;
-	if (G.at (x + 0, y + 1, z + 0) != Material::Empty) mask |= 16;
-	if (G.at (x + 1, y + 1, z + 0) != Material::Empty) mask |= 32;
-	if (G.at (x + 1, y + 1, z + 1) != Material::Empty) mask |= 64;
-	if (G.at (x + 0, y + 1, z + 1) != Material::Empty) mask |= 128;
-	return mask;
-}
+namespace mc_detail
+{
 
 // Edge-cell relationship information for surface-crossing edges
 struct EdgeEntry {
-	EdgeEntry (uint32_t cell, uint32_t vertex, uint8_t pos) noexcept :
-		cell_idx (cell), vertex_idx (vertex), vertex_pos (pos) {}
+	EdgeEntry (uint32_t cell_idx) noexcept :
+		cellIndex (cell_idx) {}
+	EdgeEntry (uint32_t cell_idx, uint32_t vertex_idx) noexcept :
+		cellIndex (cell_idx), vertexIndex (vertex_idx) {}
 	// Index of cell this edge belongs to
-	uint32_t cell_idx;
-	// Index of the corresponding vertex in output mesh
-	uint32_t vertex_idx : 28;
-	// Marching cubes index of the edge inside a cell
-	uint32_t vertex_pos : 4;
+	uint32_t cellIndex;
+	// Index of surface-crossing vertex in mesh
+	uint32_t vertexIndex;
 	// Sorting array of these structs will group them by cell id
-	bool operator < (const EdgeEntry &e) const noexcept { return cell_idx < e.cell_idx; }
+	bool operator < (const EdgeEntry &e) const noexcept { return cellIndex < e.cellIndex; }
 };
+
+uint32_t getVertexMask (const UniformGrid &G, uint32_t cell_idx) {
+	auto materials = G.materialsOfCell (cell_idx);
+	uint32_t mask = 0;
+	if (materials[0] != Material::Empty) mask |= uint32_t (1 << 0);
+	if (materials[1] != Material::Empty) mask |= uint32_t (1 << 3);
+	if (materials[2] != Material::Empty) mask |= uint32_t (1 << 1);
+	if (materials[3] != Material::Empty) mask |= uint32_t (1 << 2);
+	if (materials[4] != Material::Empty) mask |= uint32_t (1 << 4);
+	if (materials[5] != Material::Empty) mask |= uint32_t (1 << 7);
+	if (materials[6] != Material::Empty) mask |= uint32_t (1 << 5);
+	if (materials[7] != Material::Empty) mask |= uint32_t (1 << 6);
+	return mask;
+}
+
+template<int D>
+void collectCellEdges (std::vector<EdgeEntry> &cell_edges_0, std::vector<EdgeEntry> &cell_edges_1,
+                       std::vector<EdgeEntry> &cell_edges_2, std::vector<EdgeEntry> &cell_edges_3,
+                       Mesh &mesh, const UniformGrid &G) {
+	for (const auto &edge : G.edges<D> ()) {
+		// Add this edge's vertex to mesh
+		glm::vec3 point = edge.surfacePoint ();
+		glm::vec3 normal = edge.surfaceNormal ();
+		Material mat = edge.solidEndpointMaterial ();
+		uint32_t vertex_idx = mesh.addVertex (point, normal, mat);
+		// Add this edge to adjacent cells
+		glm::ivec3 edge_pos = edge.lesserEndpoint ();
+		auto cells = G.adjacentCellsForEdge<D> (edge_pos);
+		if (cells[0] != G.kBadIndex)
+			cell_edges_0.emplace_back (cells[0], vertex_idx);
+		if (cells[1] != G.kBadIndex)
+			cell_edges_1.emplace_back (cells[1], vertex_idx);
+		if (cells[2] != G.kBadIndex)
+			cell_edges_2.emplace_back (cells[2], vertex_idx);
+		if (cells[3] != G.kBadIndex)
+			cell_edges_3.emplace_back (cells[3], vertex_idx);
+	}
+}
+
+}
+
+using namespace mc_detail;
 
 Mesh marchingCubes (const UniformGrid &G) {
 	Mesh mesh;
-	std::vector<EdgeEntry> edges;
-	const int32_t max_sz = G.maxCoord ();
-	const int32_t min_sz = G.minCoord ();
-	// Collect X edges
-	{
-		auto iter = G.xEdges ().begin ();
-		auto last = G.xEdges ().end ();
-		for (; iter != last; ++iter) {
-			glm::ivec3 lc = iter->lesserEndpoint ();
-			glm::vec3 point = iter->surfacePoint ();
-			glm::vec3 normal = iter->surfaceNormal ();
-			Material mat = iter->solidEndpointMaterial ();
-			uint32_t id = mesh.addVertex (point, normal, mat);
-			if (lc.y < max_sz && lc.z < max_sz)
-				edges.emplace_back (G.pointToRawIndex (lc), id, 0);
-			if (lc.y < max_sz && lc.z > min_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (0, 0, 1)), id, 2);
-			if (lc.y > min_sz && lc.z < max_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (0, 1, 0)), id, 4);
-			if (lc.y > min_sz && lc.z > min_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (0, 1, 1)), id, 6);
-		}
-	}
-	// Collect Y edges
-	{
-		auto iter = G.yEdges ().begin ();
-		auto last = G.yEdges ().end ();
-		for (; iter != last; ++iter) {
-			glm::ivec3 lc = iter->lesserEndpoint ();
-			glm::vec3 point = iter->surfacePoint ();
-			glm::vec3 normal = iter->surfaceNormal ();
-			Material mat = iter->solidEndpointMaterial ();
-			uint32_t id = mesh.addVertex (point, normal, mat);
-			if (lc.x < max_sz && lc.z < max_sz)
-				edges.emplace_back (G.pointToRawIndex (lc), id, 8);
-			if (lc.x < max_sz && lc.z > min_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (0, 0, 1)), id, 11);
-			if (lc.x > min_sz && lc.z < max_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (1, 0, 0)), id, 9);
-			if (lc.x > min_sz && lc.z > min_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (1, 0, 1)), id, 10);
-		}
-	}
-	// Collect Z edges
-	{
-		auto iter = G.zEdges ().begin ();
-		auto last = G.zEdges ().end ();
-		for (; iter != last; ++iter) {
-			glm::ivec3 lc = iter->lesserEndpoint ();
-			glm::vec3 pos = iter->surfacePoint ();
-			glm::vec3 normal = iter->surfaceNormal ();
-			Material mat = iter->solidEndpointMaterial ();
-			uint32_t id = mesh.addVertex (pos, normal, mat);
-			if (lc.x < max_sz && lc.y < max_sz)
-				edges.emplace_back (G.pointToRawIndex (lc), id, 3);
-			if (lc.x < max_sz && lc.y > min_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (0, 1, 0)), id, 7);
-			if (lc.x > min_sz && lc.y < max_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (1, 0, 0)), id, 1);
-			if (lc.x > min_sz && lc.y > min_sz)
-				edges.emplace_back (G.pointToRawIndex (lc - glm::ivec3 (1, 1, 0)), id, 5);
-		}
-	}
+	std::vector<EdgeEntry> cell_edges[12];
+	collectCellEdges<0> (cell_edges[6], cell_edges[2], cell_edges[0], cell_edges[4], mesh, G); // X
+	collectCellEdges<1> (cell_edges[10], cell_edges[9], cell_edges[8], cell_edges[11], mesh, G); // Y
+	collectCellEdges<2> (cell_edges[5], cell_edges[7], cell_edges[3], cell_edges[1], mesh, G); // Z
+	std::vector<EdgeEntry>::const_iterator cell_edge_iters[12];
 	// Group edges by cell ids
-	std::sort (edges.begin (), edges.end ());
-	// Add fake edge to make last cell processing work
-	// TODO: there is a cleaner way to do this
-	edges.emplace_back (~uint32_t (0), 0, 0);
-	uint32_t indices[12];
-	uint32_t edge_mask = 0;
-	uint32_t last_cell = 0;
-	for (const auto &e : edges) {
-		if (e.cell_idx != last_cell) {
-			auto pos = G.rawIndexToPoint (last_cell);
-			uint32_t vertex_mask = getVertexMask (G, pos.x, pos.y, pos.z);
-			assert (edge_mask == edgeTable[vertex_mask]);
-			for (int i = 0; triTable[vertex_mask][i] != -1; i += 3) {
-				int i1 = triTable[vertex_mask][i];
-				int i2 = triTable[vertex_mask][i + 1];
-				int i3 = triTable[vertex_mask][i + 2];
-				mesh.addTriangle (indices[i1], indices[i2], indices[i3]);
-			}
-			last_cell = e.cell_idx;
-			vertex_mask = 0;
-			edge_mask = 0;
+	for (int i = 0; i < 12; i++) {
+		std::sort (cell_edges[i].begin (), cell_edges[i].end ());
+		cell_edge_iters[i] = cell_edges[i].begin ();
+	}
+	while (true) {
+		uint32_t min_unprocessed_cell = G.kBadIndex;
+		for (int i = 0; i < 12; i++) {
+			if (cell_edge_iters[i] != cell_edges[i].end ())
+				min_unprocessed_cell = glm::min (min_unprocessed_cell, cell_edge_iters[i]->cellIndex);
 		}
-		indices[e.vertex_pos] = e.vertex_idx;
-		edge_mask |= (1 << e.vertex_pos);
+		// All cells are processed
+		if (min_unprocessed_cell == G.kBadIndex)
+			break;
+		uint32_t cell_idx = min_unprocessed_cell;
+		uint32_t vertex_idx[12];
+		uint32_t edge_mask = 0;
+		for (int i = 0; i < 12; i++) {
+			auto &iter = cell_edge_iters[i];
+			if (iter != cell_edges[i].end () && iter->cellIndex == cell_idx) {
+				vertex_idx[i] = iter->vertexIndex;
+				edge_mask |= uint32_t (1 << i);
+				++iter;
+			}
+		}
+		uint32_t vertex_mask = getVertexMask (G, cell_idx);
+		assert (edge_mask == edgeTable[vertex_mask]);
+		for (int i = 0; triTable[vertex_mask][i] != -1; i += 3) {
+			int i1 = triTable[vertex_mask][i];
+			int i2 = triTable[vertex_mask][i + 1];
+			int i3 = triTable[vertex_mask][i + 2];
+			mesh.addTriangle (vertex_idx[i1], vertex_idx[i2], vertex_idx[i3]);
+		}
 	}
 	return mesh;
 }

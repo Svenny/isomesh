@@ -16,6 +16,7 @@ using namespace std::experimental::filesystem;
 
 namespace isomesh {
 	HeightMapImporter::HeightMapImporter(pair<double, double> height_range, glm::dvec3 center, double pixel_size):
+		m_data(nullptr),
 		m_heightRange(height_range),
 		m_center(center),
 		m_pixelSize(pixel_size)

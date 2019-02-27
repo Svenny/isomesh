@@ -6,6 +6,7 @@
 #include <cmath>
 #include <algorithm>
 #include <exception>
+#include <experimental/filesystem>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../3dparty/stb_image.h"
@@ -30,7 +31,11 @@ namespace isomesh {
 		return SurfaceFunction{bind(&HeightMapImporter::f, heightmap, placeholders::_1), bind(&HeightMapImporter::grad, heightmap, placeholders::_1)};
 	}
 
-	void HeightMapImporter::loadGrayscale8bitMap(path image_path){
+	void HeightMapImporter::loadGrayscale8bitMap(string image_filename){
+		path image_path(image_filename);
+		if (m_data)
+			stbi_image_free(m_data);
+
 		if (exists(image_path)) {
 			m_data = stbi_load(image_path.string().c_str(), &m_width, &m_height, &m_bpp, 1);
 			if (!m_data)

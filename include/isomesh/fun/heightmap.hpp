@@ -2,7 +2,6 @@
    Copyright (c) 2019 Nikita Sirgienko (warquark@gmail.com) */
 #pragma once
 
-#include <experimental/filesystem>
 #include <memory>
 
 #include "../common.hpp"
@@ -32,7 +31,7 @@ namespace isomesh {
 		glm::dvec3 center() {return m_center;};
 		
 		// Loads heightmap
-		void loadGrayscale8bitMap(std::experimental::filesystem::path image_path);
+		void loadGrayscale8bitMap(std::string image_path);
 
 
 		static SurfaceFunction buildSurfaceFunction(std::shared_ptr<HeightMapImporter> heightmap);

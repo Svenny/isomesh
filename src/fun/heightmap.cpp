@@ -54,6 +54,9 @@ namespace isomesh {
 	}
 
 	double isomesh::HeightMapImporter::f(glm::dvec3 P) const {
+		if (!m_data)
+			throw std::logic_error("use surface function without data loading");
+
 		glm::dvec2 p(toMinPixCoords(P));
 		double x = (P.x - m_center.x) / m_pixelSize + m_width/2;
 		double y = (P.z - m_center.z) / m_pixelSize + m_height/2;

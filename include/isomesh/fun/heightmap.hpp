@@ -33,6 +33,7 @@ namespace isomesh {
 		// Loads heightmap
 		void loadGrayscale8bitMap(std::string image_path);
 
+		bool isDataLoaded() {return m_data != nullptr;};
 
 		static SurfaceFunction buildSurfaceFunction(std::shared_ptr<HeightMapImporter> heightmap);
 	private:

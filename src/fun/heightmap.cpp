@@ -23,8 +23,10 @@ namespace isomesh {
 	}
 
 	HeightMapImporter::~HeightMapImporter() {
-		if (m_data)
+		if (m_data) {
 			stbi_image_free(m_data);
+			m_data = nullptr;
+		}
 	}
 
 	SurfaceFunction HeightMapImporter::buildSurfaceFunction(shared_ptr<HeightMapImporter> heightmap) {
@@ -33,8 +35,10 @@ namespace isomesh {
 
 	void HeightMapImporter::loadGrayscale8bitMap(string image_filename){
 		path image_path(image_filename);
-		if (m_data)
+		if (m_data) {
 			stbi_image_free(m_data);
+			m_data = nullptr;
+		}
 
 		if (exists(image_path)) {
 			m_data = stbi_load(image_path.string().c_str(), &m_width, &m_height, &m_bpp, 1);

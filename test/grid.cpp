@@ -32,32 +32,27 @@ void printGridLayout (const UniformGrid &G) {
 }
 
 template<int D>
-void printEdges (const UniformGrid &G, edge_iter_t iter, edge_iter_t last) {
-	for (; iter != last; ++iter) {
+void printEdges (const UniformGrid &G) {
+	for (const auto &edge : G.edges<D> ()) {
 		// Position of surface-crossing point on the edge
-		glm::dvec3 pos_local = iter.localCoords ();
-		std::get<D> (pos_local) += iter->offset;
+		glm::dvec3 pos_local = edge.surfacePoint ();
 		glm::dvec3 pos_global = G.localToGlobal (pos_local);
 		clog << "pos " << pos_global.x << ' ' << pos_global.y << ' ' << pos_global.z;
-		clog << " normal " << iter->normal.x << ' ' << iter->normal.y << ' ' << iter->normal.z << endl;
+		glm::vec3 normal = edge.surfaceNormal ();
+		clog << " normal " << normal.x << ' ' << normal.y << ' ' << normal.z << endl;
 	}
 }
 
 // Check edge op
 template<int D>
-bool validateEdges (const UniformGrid &G, const isomesh::SurfaceFunction &f,
-                    edge_iter_t iter, edge_iter_t last) {
+bool validateEdges (const UniformGrid &G, const isomesh::SurfaceFunction &f) {
 	// Use a very precise solver to find actual roots
 	isomesh::BisectionZeroFinder solver (50);
-	for (; iter != last; ++iter) {
-		// Lower-coordinate edge endpoint
-		glm::dvec3 p0 = iter.localCoords ();
-		// Higher-coordinate edge endpoint
-		glm::dvec3 p1 = p0;
-		std::get<D> (p1) += 1;
+	for (const auto &edge : G.edges<D> ()) {
+		glm::dvec3 p0 = edge.lesserEndpoint ();
+		glm::dvec3 p1 = edge.biggerEndpoint ();
 		// Surface-crossing point
-		glm::dvec3 p = p0;
-		std::get<D> (p) += iter->offset;
+		glm::dvec3 p = edge.surfacePoint ();
 
 		p0 = G.localToGlobal (p0);
 		p1 = G.localToGlobal (p1);
@@ -114,27 +109,21 @@ int main () {
 	bool fail = false;
 
 	clog << "X edges:" << endl;
-	auto it1 = G.xEdgesBegin ();
-	auto it2 = G.xEdgesEnd ();
-	auto x_cnt = it2 - it1;
-	printEdges<0> (G, it1, it2);
-	if (!validateEdges<0> (G, f, it1, it2))
+	auto x_cnt = G.edges<0> ().size ();
+	printEdges<0> (G);
+	if (!validateEdges<0> (G, f))
 		fail = true;
 
 	clog << endl << "Y edges:" << endl;
-	it1 = G.yEdgesBegin ();
-	it2 = G.yEdgesEnd ();
-	auto y_cnt = it2 - it1;
-	printEdges<1> (G, it1, it2);
-	if (!validateEdges<1> (G, f, it1, it2))
+	auto y_cnt = G.edges<1> ().size ();
+	printEdges<1> (G);
+	if (!validateEdges<1> (G, f))
 		fail = true;
 
 	clog << endl << "Z edges:" << endl;
-	it1 = G.zEdgesBegin ();
-	it2 = G.zEdgesEnd ();
-	auto z_cnt = it2 - it1;
-	printEdges<2> (G, it1, it2);
-	if (!validateEdges<2> (G, f, it1, it2))
+	auto z_cnt = G.edges<2> ().size ();
+	printEdges<2> (G);
+	if (!validateEdges<2> (G, f))
 		fail = true;
 
 	// Very rough check, but this is enough to catch trivial bugs

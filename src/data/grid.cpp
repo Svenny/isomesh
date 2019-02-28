@@ -12,6 +12,9 @@
 namespace isomesh
 {
 
+constexpr static int kOtherDimension1[3] = { 1, 0, 0 };
+constexpr static int kOtherDimension2[3] = { 2, 2, 1 };
+
 UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double gridStep) :
 	m_size (size), m_halfSize (int32_t (size) / 2), m_globalPos (globalPos), m_gridStep (gridStep) {
 	if (size < 2)
@@ -191,6 +194,66 @@ bool UniformGrid::isVertexOnBorder (int32_t x, int32_t y, int32_t z) const noexc
 // -----------------------
 
 template<>
+bool UniformGrid::isEdgeInGrid<0> (const glm::ivec3 &edgePos) const noexcept {
+	if (edgePos.x < -m_halfSize || edgePos.x >= m_halfSize)
+		return false;
+	if (glm::abs (edgePos.y) > m_halfSize)
+		return false;
+	if (glm::abs (edgePos.z) > m_halfSize)
+		return false;
+	return true;
+}
+
+template<>
+bool UniformGrid::isEdgeInGrid<1> (const glm::ivec3 &edgePos) const noexcept {
+	if (edgePos.y < -m_halfSize || edgePos.y >= m_halfSize)
+		return false;
+	if (glm::abs (edgePos.x) > m_halfSize)
+		return false;
+	if (glm::abs (edgePos.z) > m_halfSize)
+		return false;
+	return true;
+}
+
+template<>
+bool UniformGrid::isEdgeInGrid<2> (const glm::ivec3 &edgePos) const noexcept {
+	if (edgePos.z < -m_halfSize || edgePos.z >= m_halfSize)
+		return false;
+	if (glm::abs (edgePos.x) > m_halfSize)
+		return false;
+	if (glm::abs (edgePos.y) > m_halfSize)
+		return false;
+	return true;
+}
+
+template<>
+bool UniformGrid::isEdgeOnBorder<0> (const glm::ivec3 &edgePos) const noexcept {
+	if (glm::abs (edgePos.y) == m_halfSize)
+		return true;
+	if (glm::abs (edgePos.z) == m_halfSize)
+		return true;
+	return false;
+}
+
+template<>
+bool UniformGrid::isEdgeOnBorder<1> (const glm::ivec3 &edgePos) const noexcept {
+	if (glm::abs (edgePos.x) == m_halfSize)
+		return true;
+	if (glm::abs (edgePos.z) == m_halfSize)
+		return true;
+	return false;
+}
+
+template<>
+bool UniformGrid::isEdgeOnBorder<2> (const glm::ivec3 &edgePos) const noexcept {
+	if (glm::abs (edgePos.x) == m_halfSize)
+		return true;
+	if (glm::abs (edgePos.y) == m_halfSize)
+		return true;
+	return false;
+}
+
+template<>
 std::array<uint32_t, 4> UniformGrid::adjacentCellsForEdge<0> (const glm::ivec3 &edgePos) const noexcept {
 	const uint32_t dy = (m_size + 1) * (m_size + 1);
 	const uint32_t dz = 1;
@@ -248,6 +311,84 @@ std::array<uint32_t, 4> UniformGrid::adjacentCellsForEdge<2> (const glm::ivec3 &
 	if (edgePos.y == m_halfSize)
 		cells[2] = cells[3] = kBadIndex;
 	return cells;
+}
+
+// -----------------------
+// Operations on faces
+// -----------------------
+
+template<>
+bool UniformGrid::isFaceInGrid<0> (const glm::ivec3 &facePos) const noexcept {
+	if (glm::abs (facePos.x) > m_halfSize)
+		return false;
+	if (facePos.y < -m_halfSize || facePos.y >= m_halfSize)
+		return false;
+	if (facePos.z < -m_halfSize || facePos.z >= m_halfSize)
+		return false;
+	return true;
+}
+
+template<>
+bool UniformGrid::isFaceInGrid<1> (const glm::ivec3 &facePos) const noexcept {
+	if (glm::abs (facePos.y) > m_halfSize)
+		return false;
+	if (facePos.x < -m_halfSize || facePos.x >= m_halfSize)
+		return false;
+	if (facePos.z < -m_halfSize || facePos.z >= m_halfSize)
+		return false;
+	return true;
+}
+
+template<>
+bool UniformGrid::isFaceInGrid<2> (const glm::ivec3 &facePos) const noexcept {
+	if (glm::abs (facePos.z) > m_halfSize)
+		return false;
+	if (facePos.x < -m_halfSize || facePos.x >= m_halfSize)
+		return false;
+	if (facePos.y < -m_halfSize || facePos.y >= m_halfSize)
+		return false;
+	return true;
+}
+
+template<>
+bool UniformGrid::isFaceOnBorder<0> (const glm::ivec3 &facePos) const noexcept {
+	if (glm::abs (facePos.x) == m_halfSize)
+		return true;
+	return false;
+}
+
+template<>
+bool UniformGrid::isFaceOnBorder<1> (const glm::ivec3 &facePos) const noexcept {
+	if (glm::abs (facePos.y) == m_halfSize)
+		return true;
+	return false;
+}
+
+template<>
+bool UniformGrid::isFaceOnBorder<2> (const glm::ivec3 &facePos) const noexcept {
+	if (glm::abs (facePos.z) == m_halfSize)
+		return true;
+	return false;
+}
+
+// -----------------------
+// Operations on cells
+// -----------------------
+
+bool UniformGrid::isCellInGrid (const glm::ivec3 &cellPos) const noexcept {
+	if (cellPos.x < -m_halfSize || cellPos.y < -m_halfSize || cellPos.z < -m_halfSize)
+		return false;
+	if (cellPos.x >= m_halfSize || cellPos.y >= m_halfSize || cellPos.z >= m_halfSize)
+		return false;
+	return true;
+}
+
+bool UniformGrid::isCellOnBorder (const glm::ivec3 &cellPos) const noexcept {
+	if (cellPos.x == -m_halfSize || cellPos.y == -m_halfSize || cellPos.z == -m_halfSize)
+		return true;
+	if (cellPos.x == m_halfSize - 1 || cellPos.y == m_halfSize - 1 || cellPos.z == m_halfSize - 1)
+		return true;
+	return false;
 }
 
 std::array<uint32_t, 8> UniformGrid::adjacentVerticesForCell (uint32_t cellIdx) const noexcept {

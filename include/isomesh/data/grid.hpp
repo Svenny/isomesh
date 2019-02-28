@@ -71,25 +71,10 @@ public:
 	// Operations on edges
 	// -----------------------
 	template<int D>
-	bool isEdgeInGrid (const glm::ivec3 &edgePos) const noexcept {
-		const int32_t &d = std::get<D> (edgePos);
-		if (d < -m_halfSize || d >= m_halfSize)
-			return false;
-		if (glm::abs (std::get<kOtherDimension1[D]> (edgePos)) > m_halfSize)
-			return false;
-		if (glm::abs (std::get<kOtherDimension2[D]> (edgePos)) > m_halfSize)
-			return false;
-		return true;
-	}
+	bool isEdgeInGrid (const glm::ivec3 &edgePos) const noexcept;
 	// Returns whether an edge lies on the grid border, i.e. it has less than four adjacent cells
 	template<int D>
-	bool isEdgeOnBorder (const glm::ivec3 &edgePos) const noexcept {
-		if (glm::abs (std::get<kOtherDimension1[D]> (edgePos)) == m_halfSize)
-			return true;
-		if (glm::abs (std::get<kOtherDimension2[D]> (edgePos)) == m_halfSize)
-			return true;
-		return false;
-	}
+	bool isEdgeOnBorder (const glm::ivec3 &edgePos) const noexcept;
 	// Returns indices of (up to four) cells adjacent to this edge
 	template<int D>
 	std::array<uint32_t, 4> adjacentCellsForEdge (const glm::ivec3 &edgePos) const noexcept;
@@ -100,39 +85,14 @@ public:
 	// Operations on faces
 	// -----------------------
 	template<int D>
-	bool isFaceInGrid (const glm::ivec3 &facePos) const noexcept {
-		if (glm::abs (std::get<D> (facePos)) > m_halfSize)
-			return false;
-		const int32_t &d1 = std::get<kOtherDimension1[D]> (facePos);
-		if (d1 < -m_halfSize || d1 >= m_halfSize)
-			return false;
-		const int32_t &d2 = std::get<kOtherDimension2[D]> (facePos);
-		if (d2 < -m_halfSize || d2 >= m_halfSize)
-			return false;
-	}
+	bool isFaceInGrid (const glm::ivec3 &facePos) const noexcept;
 	template<int D>
-	bool isFaceOnBorder (const glm::ivec3 &facePos) const noexcept {
-		if (glm::abs (std::get<D> (facePos)) == m_halfSize)
-			return true;
-		return false;
-	}
+	bool isFaceOnBorder (const glm::ivec3 &facePos) const noexcept;
 	// -----------------------
 	// Operations on cells
 	// -----------------------
-	bool isCellInGrid (const glm::ivec3 &cellPos) const noexcept {
-		if (cellPos.x < -m_halfSize || cellPos.y < -m_halfSize || cellPos.z < -m_halfSize)
-			return false;
-		if (cellPos.x >= m_halfSize || cellPos.y >= m_halfSize || cellPos.z >= m_halfSize)
-			return false;
-		return true;
-	}
-	bool isCellOnBorder (const glm::ivec3 &cellPos) const noexcept {
-		if (cellPos.x == -m_halfSize || cellPos.y == -m_halfSize || cellPos.z == -m_halfSize)
-			return true;
-		if (cellPos.x == m_halfSize - 1 || cellPos.y == m_halfSize - 1 || cellPos.z == m_halfSize - 1)
-			return true;
-		return false;
-	}
+	bool isCellInGrid (const glm::ivec3 &cellPos) const noexcept;
+	bool isCellOnBorder (const glm::ivec3 &cellPos) const noexcept;
 	std::array<uint32_t, 8> adjacentVerticesForCell (uint32_t cellIdx) const noexcept;
 	std::array<Material, 8> materialsOfCell (uint32_t cellIdx) const noexcept;
 	// Edge storages access
@@ -150,11 +110,21 @@ private:
 
 	glm::dvec3 m_globalPos;
 	double m_gridStep;
-
-	constexpr static int kOtherDimension1[3] = { 1, 0, 0 };
-	constexpr static int kOtherDimension2[3] = { 2, 2, 1 };
 };
 
+template<>
+bool UniformGrid::isEdgeInGrid<0> (const glm::ivec3 &edgePos) const noexcept;
+template<>
+bool UniformGrid::isEdgeInGrid<1> (const glm::ivec3 &edgePos) const noexcept;
+template<>
+bool UniformGrid::isEdgeInGrid<2> (const glm::ivec3 &edgePos) const noexcept;
+
+template<>
+bool UniformGrid::isEdgeOnBorder<0> (const glm::ivec3 &edgePos) const noexcept;
+template<>
+bool UniformGrid::isEdgeOnBorder<1> (const glm::ivec3 &edgePos) const noexcept;
+template<>
+bool UniformGrid::isEdgeOnBorder<2> (const glm::ivec3 &edgePos) const noexcept;
 
 template<>
 std::array<uint32_t, 4> UniformGrid::adjacentCellsForEdge<0> (const glm::ivec3 &edgePos) const noexcept;
@@ -169,6 +139,20 @@ template<>
 std::array<uint32_t, 2> UniformGrid::adjacentVerticesForEdge<1> (const glm::ivec3 &edgePos) const noexcept;
 template<>
 std::array<uint32_t, 2> UniformGrid::adjacentVerticesForEdge<2> (const glm::ivec3 &edgePos) const noexcept;
+
+template<>
+bool UniformGrid::isFaceInGrid<0> (const glm::ivec3 &facePos) const noexcept;
+template<>
+bool UniformGrid::isFaceInGrid<1> (const glm::ivec3 &facePos) const noexcept;
+template<>
+bool UniformGrid::isFaceInGrid<2> (const glm::ivec3 &facePos) const noexcept;
+
+template<>
+bool UniformGrid::isFaceOnBorder<0> (const glm::ivec3 &facePos) const noexcept;
+template<>
+bool UniformGrid::isFaceOnBorder<1> (const glm::ivec3 &facePos) const noexcept;
+template<>
+bool UniformGrid::isFaceOnBorder<2> (const glm::ivec3 &facePos) const noexcept;
 
 template<>
 inline const UniformGridEdgeStorage &UniformGrid::edges<0> () const noexcept { return m_edgeX; }

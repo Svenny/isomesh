@@ -6,7 +6,7 @@
 
 #include "../common.hpp"
 
-typedef unsigned char stbi_uc; // from stb_image
+typedef unsigned short stbi_us; // from stb_image
 
 namespace isomesh {
 	class HeightMapImporter {
@@ -30,8 +30,8 @@ namespace isomesh {
 		void setCenter(glm::dvec3 center) {m_center = center;};
 		glm::dvec3 center() {return m_center;};
 		
-		// Loads heightmap
-		void loadGrayscale8bitMap(std::string image_path);
+		// Load grayscale heightmap with 8-bit or 16-bit on color channel
+		void loadGrayscaleMap(std::string image_path);
 
 		bool isDataLoaded() {return m_data != nullptr;};
 
@@ -46,7 +46,7 @@ namespace isomesh {
 
 		double heightVal(int x, int z) const;
 	private:
-		stbi_uc* m_data;
+		stbi_us* m_data;
 		int m_width, m_height, m_bpp;
 		std::pair<double, double> m_heightRange;
 		double m_pixelSize;

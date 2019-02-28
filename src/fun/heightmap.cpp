@@ -34,7 +34,7 @@ namespace isomesh {
 		return SurfaceFunction{bind(&HeightMapImporter::f, heightmap, placeholders::_1), bind(&HeightMapImporter::grad, heightmap, placeholders::_1)};
 	}
 
-	void HeightMapImporter::loadGrayscale8bitMap(string image_filename){
+	void HeightMapImporter::loadGrayscaleMap(string image_filename){
 		path image_path(image_filename);
 		if (m_data) {
 			stbi_image_free(m_data);
@@ -42,7 +42,7 @@ namespace isomesh {
 		}
 
 		if (exists(image_path)) {
-			m_data = stbi_load(image_path.string().c_str(), &m_width, &m_height, &m_bpp, 1);
+			m_data = stbi_load_16(image_path.string().c_str(), &m_width, &m_height, &m_bpp, 1);
 			if (!m_data)
 				throw std::runtime_error("file " + image_path.string() + " not image file");
 			else if (m_bpp != 1) {
@@ -94,7 +94,7 @@ namespace isomesh {
 	}
 	
 	double isomesh::HeightMapImporter::heightVal(int x, int y) const {
-		stbi_uc color = m_data[clamp(x, 0, m_height-1) * m_width + clamp(y, 0, m_width-1)];
-		return m_heightRange.first + color * (m_heightRange.second - m_heightRange.first) / 256.0;
+		stbi_us color = m_data[clamp(x, 0, m_height-1) * m_width + clamp(y, 0, m_width-1)];
+		return m_heightRange.first + color * (m_heightRange.second - m_heightRange.first) / 65536.0;
 	}
 }

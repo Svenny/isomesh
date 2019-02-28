@@ -95,14 +95,19 @@ void generateQuads (const std::vector<uint32_t> &dual_vertex_ids, Mesh &mesh, co
 using namespace dc_detail;
 
 Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolver3D &solver) {
+	size_t edges_count = G.edges<0> ().size () + G.edges<1> ().size () + G.edges<2> ().size ();
 	std::vector<EdgeEntry> cell_edges;
+	// Each edge provides up to four entries
+	cell_edges.reserve (4 * edges_count);
 	collectCellEdges<0> (cell_edges, G); // X
 	collectCellEdges<1> (cell_edges, G); // Y
 	collectCellEdges<2> (cell_edges, G); // Z
 	// Group edges by cell ids
 	std::sort (cell_edges.begin (), cell_edges.end ());
 	std::vector<uint32_t> dual_vertex_ids (G.dataSize (), G.kBadIndex);
-	Mesh mesh;
+	// Rough estimation that vertices count is equal to edges count
+	// and each vertex is shared by six triangles
+	Mesh mesh (edges_count, 6 * edges_count);
 	generateDualVertices (G, filter, solver, cell_edges, dual_vertex_ids, mesh);
 	generateQuads<0> (dual_vertex_ids, mesh, G); // X
 	generateQuads<1> (dual_vertex_ids, mesh, G); // Y

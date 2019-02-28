@@ -32,20 +32,11 @@ public:
 	explicit UniformGrid (uint32_t size, const glm::dvec3 &globalPos = glm::dvec3 (0.0), double gridStep = 1.0);
 	// Fills grid using given surface function & material selection method
 	void fill (const SurfaceFunction &f, const ZeroFinder &solver, const MaterialSelector &material);
-	// Converts local-coordinates point to YXZ-order traversal (raw) index
-	uint32_t pointToRawIndex (int32_t x, int32_t y, int32_t z) const;
-	uint32_t pointToRawIndex (const glm::ivec3 &v) const;
-	// Converts YXZ-order traversal (raw) index to local-coordinates point
-	glm::ivec3 rawIndexToPoint (uint32_t idx) const noexcept;
 	// Local-coordinates indexing
 	Material at (int32_t x, int32_t y, int32_t z) const;
 	Material operator [] (const glm::ivec3 &v) const;
 	// Raw indexing
 	const Material *data () const noexcept { return m_mat.get (); }
-	// Edge storages access
-	const UniformGridEdgeStorage &xEdges () const noexcept { return m_edgeX; }
-	const UniformGridEdgeStorage &yEdges () const noexcept { return m_edgeY; }
-	const UniformGridEdgeStorage &zEdges () const noexcept { return m_edgeZ; }
 	// Properties
 	uint32_t dataSize () const noexcept { return (m_size + 1) * (m_size + 1) * (m_size + 1); }
 	uint32_t gridSize () const noexcept { return m_size; }

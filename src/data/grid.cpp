@@ -131,30 +131,9 @@ void UniformGrid::fill (const SurfaceFunction &f,
 	}
 }
 
-uint32_t UniformGrid::pointToRawIndex (int32_t x, int32_t y, int32_t z) const {
-	assert (isVertexInGrid ({ x, y, z }));
-	uint32_t idx = uint32_t (y + m_halfSize) * (m_size + 1);
-	idx = (idx + uint32_t (x + m_halfSize)) * (m_size + 1);
-	idx += uint32_t (z + m_halfSize);
-	return idx;
-}
-
-uint32_t UniformGrid::pointToRawIndex (const glm::ivec3 &v) const {
-	return pointToRawIndex (v.x, v.y, v.z);
-}
-
-glm::ivec3 UniformGrid::rawIndexToPoint (uint32_t idx) const noexcept {
-	int32_t z = int32_t (idx % (m_size + 1)) - m_halfSize;
-	idx /= (m_size + 1);
-	int32_t x = int32_t (idx % (m_size + 1)) - m_halfSize;
-	idx /= (m_size + 1);
-	int32_t y = int32_t (idx) - m_halfSize;
-	return glm::ivec3 (x, y, z);
-}
-
 Material UniformGrid::at (int32_t x, int32_t y, int32_t z) const {
 	assert (isVertexInGrid ({ x, y, z }));
-	return m_mat[pointToRawIndex (x, y, z)];
+	return m_mat[pointToIndex (x, y, z)];
 }
 
 Material UniformGrid::operator [] (const glm::ivec3 &v) const {

@@ -45,6 +45,11 @@ template<int D>
 void collectCellEdges (std::vector<EdgeEntry> &cell_edges_0, std::vector<EdgeEntry> &cell_edges_1,
                        std::vector<EdgeEntry> &cell_edges_2, std::vector<EdgeEntry> &cell_edges_3,
                        Mesh &mesh, const UniformGrid &G) {
+	size_t edges_count = G.edges<D> ().size ();
+	cell_edges_0.reserve (edges_count);
+	cell_edges_1.reserve (edges_count);
+	cell_edges_2.reserve (edges_count);
+	cell_edges_3.reserve (edges_count);
 	for (const auto &edge : G.edges<D> ()) {
 		// Add this edge's vertex to mesh
 		glm::vec3 point = edge.surfacePoint ();
@@ -70,7 +75,9 @@ void collectCellEdges (std::vector<EdgeEntry> &cell_edges_0, std::vector<EdgeEnt
 using namespace mc_detail;
 
 Mesh marchingCubes (const UniformGrid &G) {
-	Mesh mesh;
+	size_t edges_count = G.edges<0> ().size () + G.edges<1> ().size () + G.edges<2> ().size ();
+	// Each edge generates one vertex, and we assume that each vertex is shared by six triangles
+	Mesh mesh (edges_count, 6 * edges_count);
 	std::vector<EdgeEntry> cell_edges[12];
 	collectCellEdges<0> (cell_edges[6], cell_edges[2], cell_edges[0], cell_edges[4], mesh, G); // X
 	collectCellEdges<1> (cell_edges[10], cell_edges[9], cell_edges[8], cell_edges[11], mesh, G); // Y

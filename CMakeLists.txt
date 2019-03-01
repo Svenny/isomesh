@@ -23,6 +23,7 @@ set (ISOMESH_HEADERS
 	include/isomesh/data/grid.hpp
 	include/isomesh/data/grid_edge_storage.hpp
 	include/isomesh/data/mesh.hpp
+	include/isomesh/field/scalar_field.hpp
 	include/isomesh/qef/qef_solver_3d.hpp
 	include/isomesh/util/material_filter.hpp
 	include/isomesh/util/material_selector.hpp

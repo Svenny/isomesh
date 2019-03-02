@@ -25,7 +25,7 @@ namespace isomesh {
 		m_data = nullptr;
 	}
 
-	SurfaceFunction HeightMapImporter::buildSurfaceFunction() {
+	SurfaceFunction HeightMapImporter::buildSurfaceFunction() const {
 		if (!m_data)
 			throw std::logic_error("use surface function without data loading");
 

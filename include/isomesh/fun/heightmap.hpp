@@ -19,19 +19,19 @@ namespace isomesh {
 		~HeightMapImporter();
 
 		// Getters, setters
-		void setHeightRange(std::pair<double, double> range) {m_heightRange = range;} noexcept;
-		std::pair<double, double> heightRange() {return m_heightRange;} const noexcept;
+		void setHeightRange(std::pair<double, double> range) noexcept {m_heightRange = range;};
+		std::pair<double, double> heightRange()  const noexcept {return m_heightRange;};
 
-		void setPixelSize(double pixelSize) {m_pixelSize = pixelSize;} noexcept;
-		double pixelSize() {return m_pixelSize;} const noexcept;
+		void setPixelSize(double pixelSize) noexcept {m_pixelSize = pixelSize;};
+		double pixelSize() const noexcept {return m_pixelSize;};
 
-		void setCenter(glm::dvec3 center) {m_center = center;} noexcept;
-		glm::dvec3 center() {return m_center;} const noexcept;
+		void setCenter(glm::dvec3 center) noexcept {m_center = center;};
+		glm::dvec3 center() const noexcept {return m_center;};
 
 		// Load grayscale heightmap with 8-bit or 16-bit on color channel
 		void loadGrayscaleMap(std::string filename);
 
-		bool isDataLoaded() {return m_data != nullptr;} const noexcept;
+		bool isDataLoaded() const noexcept {return m_data != nullptr;};
 
 		SurfaceFunction buildSurfaceFunction() const;
 	private:

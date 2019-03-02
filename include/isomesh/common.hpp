@@ -6,26 +6,12 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
+#include <tuple>
 
 #include <glm/glm.hpp>
 
 namespace isomesh
 {
-
-/** \brief Isosurface function wrapper
-
-	This is a thin wrapper structure that packs together an isosurface defining
-	function and its gradient. An isosurface function should have these properties:
-	- Be continuous over R^3
-	- Have its gradient (or at least some approximation) defined everywhere
-	- Have negative sign inside the surface and positive outside
-*/
-struct SurfaceFunction {
-	std::function<double (glm::dvec3)> f;
-	std::function<glm::dvec3 (glm::dvec3)> grad;
-	double operator () (glm::dvec3 p) const { return f (p); }
-};
 
 /** \brief Voxel materials enumeration
 

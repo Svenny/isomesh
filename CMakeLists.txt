@@ -44,6 +44,7 @@ set (ISOMESH_SOURCES
 	src/util/material_filter.cpp
 	src/util/regula_falsi_zero_finder.cpp
 	src/fun/heightmap.cpp
+	src/private/stbi_data.cpp
 )
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})
 

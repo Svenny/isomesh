@@ -4,42 +4,41 @@
 
 #include <memory>
 
-#include "../common.hpp"
+#include <isomesh/field/scalar_field.hpp>
 
 class STBImageData;
 
 namespace isomesh {
-	class HeightMapImporter {
+	class Heightmap: public ScalarField {
 	public:
-		HeightMapImporter(
+		Heightmap(
 			std::pair<double, double> height_range,
 			glm::dvec3 center = glm::dvec3(0,0,0),
 			double pixel_size = 1.0
 		);
-		~HeightMapImporter();
+		~Heightmap();
 
-		// Getters, setters
-		void setHeightRange(std::pair<double, double> range) noexcept {m_heightRange = range;};
-		std::pair<double, double> heightRange()  const noexcept {return m_heightRange;};
+		/// ScalarField overridings
+		double value(double x, double y, double z) const noexcept override;
+		glm::dvec3 grad(double x, double y, double z) const noexcept override;
 
-		void setPixelSize(double pixelSize) noexcept {m_pixelSize = pixelSize;};
-		double pixelSize() const noexcept {return m_pixelSize;};
+		/// Getters, setters for parameters
+		void setHeightRange(std::pair<double, double> range) noexcept;
+		std::pair<double, double> heightRange()  const noexcept;
+		void setPixelSize(double pixelSize) noexcept;
+		double pixelSize() const noexcept;
+		void setCenter(glm::dvec3 center) noexcept;
+		glm::dvec3 center() const noexcept;
 
-		void setCenter(glm::dvec3 center) noexcept {m_center = center;};
-		glm::dvec3 center() const noexcept {return m_center;};
-
-		// Load grayscale heightmap with 8-bit or 16-bit on color channel
+		// Members for data manipulation
+		/// Load grayscale heightmap with 8-bit or 16-bit on color channel
 		void loadGrayscaleMap(std::string filename);
 
+		/// If data not loaded, Heightmap::value throw the logic_exception
 		bool isDataLoaded() const noexcept {return m_data != nullptr;};
 
-		SurfaceFunction buildSurfaceFunction() const;
 	private:
-		static double f(std::shared_ptr<STBImageData> data, std::pair<double, double> heightRange, double pixelSize,
-		glm::dvec3 center, glm::dvec3 P);
-		static glm::dvec3 grad(std::shared_ptr<STBImageData> data, std::pair<double, double> heightRange, double pixelSize,
-		glm::dvec3 center, glm::dvec3 P);
-		static double heightVal(std::shared_ptr<STBImageData> data, std::pair<double, double> heightRange, int x, int z);
+		double heightVal(int x, int z) const;
 
 	private:
 		std::shared_ptr<STBImageData> m_data;

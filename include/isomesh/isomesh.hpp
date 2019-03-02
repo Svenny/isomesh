@@ -22,6 +22,7 @@
 #include "data/grid_edge_storage.hpp"
 #include "data/mesh.hpp"
 
+#include "field/heightmap.hpp"
 #include "field/scalar_field.hpp"
 
 #include "qef/qef_solver_3d.hpp"

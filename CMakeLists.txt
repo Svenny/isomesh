@@ -23,12 +23,12 @@ set (ISOMESH_HEADERS
 	include/isomesh/data/grid.hpp
 	include/isomesh/data/grid_edge_storage.hpp
 	include/isomesh/data/mesh.hpp
+	include/isomesh/field/heightmap.hpp
 	include/isomesh/field/scalar_field.hpp
 	include/isomesh/qef/qef_solver_3d.hpp
 	include/isomesh/util/material_filter.hpp
 	include/isomesh/util/material_selector.hpp
 	include/isomesh/util/zero_finder.hpp
-	include/isomesh/fun/heightmap.hpp
 )
 source_group (TREE ${ISOMESH_HEADER_DIR} PREFIX Headers FILES ${ISOMESH_HEADERS})
 
@@ -39,12 +39,12 @@ set (ISOMESH_SOURCES
 	src/data/grid.cpp
 	src/data/grid_edge_storage.cpp
 	src/data/mesh.cpp
+	src/field/heightmap.cpp
 	src/qef/gradient_descent_qef_solver_3d.cpp
 	src/qef/qef_solver_3d.cpp
 	src/util/bisection_zero_finder.cpp
 	src/util/material_filter.cpp
 	src/util/regula_falsi_zero_finder.cpp
-	src/fun/heightmap.cpp
 	src/private/stbi_data.cpp
 )
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})

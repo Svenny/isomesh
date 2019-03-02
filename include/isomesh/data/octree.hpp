@@ -22,16 +22,27 @@ public:
 	~DMC_Octree () noexcept;
 	
 	void build (const ScalarField &field, const MaterialSelector &material,
-	            QefSolver4D &solver, const float epsilon);
+	            QefSolver4D &solver, float epsilon);
 	Mesh contour () const;
+
+	// Mappings between local and global coordinate spaces
+	glm::dvec3 localToGlobal (const glm::dvec3 &L) const noexcept { return L * m_globalScale + m_globalPos; }
+	glm::dvec3 globalToLocal (const glm::dvec3 &G) const noexcept { return (G - m_globalPos) / m_globalScale; }
 private:
 	const glm::dvec3 m_globalPos;
 	const double m_globalScale;
 	const int32_t m_rootSize;
 	
-	DMC_OctreeNode *root;
+	DMC_OctreeNode *m_root;
 
-	
+	struct BuildArgs {
+		const ScalarField &field;
+		const MaterialSelector &material;
+		QefSolver4D &solver;
+		float epsilon;
+	};
+
+	void buildNode (DMC_OctreeNode *node, BuildArgs &args);
 };
 
 }

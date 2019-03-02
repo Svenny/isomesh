@@ -11,11 +11,20 @@ namespace isomesh
 {
 
 struct DMC_OctreeNode {
-	DMC_OctreeNode () noexcept;
+	DMC_OctreeNode (glm::ivec3 min_corner, int32_t size) noexcept;
 	~DMC_OctreeNode () noexcept;
-	
-	DMC_OctreeNode *children[8];
+
+	void subdivide ();
+	void collapse ();
+
+	DMC_OctreeNode *operator[] (int num) const noexcept { return children[num]; }
+
 	glm::vec4 dualVertex;
+	const glm::ivec3 minCorner;
+	const int32_t size;
+private:
+	bool hasChildren;
+	DMC_OctreeNode *children[8];
 };
 
 }

@@ -45,7 +45,7 @@ void printEdges (const UniformGrid &G) {
 
 // Check edge op
 template<int D>
-bool validateEdges (const UniformGrid &G, const isomesh::SurfaceFunction &f) {
+bool validateEdges (const UniformGrid &G, const isomesh::ScalarField &f) {
 	// Use a very precise solver to find actual roots
 	isomesh::BisectionZeroFinder solver (50);
 	for (const auto &edge : G.edges<D> ()) {
@@ -88,19 +88,26 @@ bool validateEdges (const UniformGrid &G, const isomesh::SurfaceFunction &f) {
 	return true;
 }
 
+class PlaneScalarField : public isomesh::ScalarField {
+public:
+	virtual double value (double x, double y, double z) const noexcept override {
+		return x + y + z - 0.6;
+	}
+	virtual glm::dvec3 grad (double x, double y, double z) const noexcept override {
+		return glm::dvec3 (1, 1, 1);
+	}
+};
+
 int main () {
 	/* Code below will create a grid and fill it using a simple
 	 plane function. The grid then may be checked for correctness,
 	 as the expected grid structure is known in advance. */
 	isomesh::BisectionZeroFinder solver;
-	// This function defines a plane
-	isomesh::SurfaceFunction f;
-	f.f = [] (glm::dvec3 p) { return p.x + p.y + p.z - 0.6; };
-	f.grad = [] (glm::dvec3) { return glm::dvec3 (1.0, 1.0, 1.0); };
+	PlaneScalarField F;
 	// Create and fill uniform grid
 	const int sz = 4;
 	UniformGrid G (sz);
-	G.fill (f, solver, isomesh::TrivialMaterialSelector ());
+	G.fill (F, solver, isomesh::TrivialMaterialSelector ());
 
 	clog << "Grid layout map:" << endl;
 	printGridLayout (G);
@@ -111,19 +118,19 @@ int main () {
 	clog << "X edges:" << endl;
 	auto x_cnt = G.edges<0> ().size ();
 	printEdges<0> (G);
-	if (!validateEdges<0> (G, f))
+	if (!validateEdges<0> (G, F))
 		fail = true;
 
 	clog << endl << "Y edges:" << endl;
 	auto y_cnt = G.edges<1> ().size ();
 	printEdges<1> (G);
-	if (!validateEdges<1> (G, f))
+	if (!validateEdges<1> (G, F))
 		fail = true;
 
 	clog << endl << "Z edges:" << endl;
 	auto z_cnt = G.edges<2> ().size ();
 	printEdges<2> (G);
-	if (!validateEdges<2> (G, f))
+	if (!validateEdges<2> (G, F))
 		fail = true;
 
 	// Very rough check, but this is enough to catch trivial bugs

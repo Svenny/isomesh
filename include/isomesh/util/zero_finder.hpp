@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../common.hpp"
+#include "../field/scalar_field.hpp"
 
 namespace isomesh
 {
@@ -16,17 +17,17 @@ public:
 	// f1 = f (x1, y0, z0)
 	virtual double findAlongX (double x0, double y0, double z0,
 	                           double x1, double f0, double f1,
-	                           const SurfaceFunction &f) const = 0;
+	                           const ScalarField &f) const = 0;
 	// f0 = f (x0, y0, z0)
 	// f1 = f (x0, y1, z0)
 	virtual double findAlongY (double x0, double y0, double z0,
 	                           double y1, double f0, double f1,
-	                           const SurfaceFunction &f) const = 0;
+	                           const ScalarField &f) const = 0;
 	// f0 = f (x0, y0, z0)
 	// f1 = f (x0, y0, z1)
 	virtual double findAlongZ (double x0, double y0, double z0,
 	                           double z1, double f0, double f1,
-	                           const SurfaceFunction &f) const = 0;
+	                           const ScalarField &f) const = 0;
 };
 
 class StepCountedZeroFinder : public ZeroFinder {
@@ -47,18 +48,18 @@ public:
 
 	double findAlongX (double x0, double y0, double z0,
 	                   double x1, double f0, double f1,
-	                   const SurfaceFunction &f) const override;
+	                   const ScalarField &f) const override;
 	double findAlongY (double x0, double y0, double z0,
 	                   double y1, double f0, double f1,
-	                   const SurfaceFunction &f) const override;
+	                   const ScalarField &f) const override;
 	double findAlongZ (double x0, double y0, double z0,
 	                   double z1, double f0, double f1,
-	                   const SurfaceFunction &f) const override;
+	                   const ScalarField &f) const override;
 private:
 	template<size_t C>
 	double findAlongC (double x0, double y0, double z0,
 	                   double c1, double f0, double f1,
-	                   const SurfaceFunction &f) const;
+	                   const ScalarField &f) const;
 };
 
 class RegulaFalsiZeroFinder : public StepCountedZeroFinder {
@@ -68,18 +69,18 @@ public:
 
 	double findAlongX (double x0, double y0, double z0,
 	                   double x1, double f0, double f1,
-	                   const SurfaceFunction &f) const override;
+	                   const ScalarField &f) const override;
 	double findAlongY (double x0, double y0, double z0,
 	                   double y1, double f0, double f1,
-	                   const SurfaceFunction &f) const override;
+	                   const ScalarField &f) const override;
 	double findAlongZ (double x0, double y0, double z0,
 	                   double z1, double f0, double f1,
-	                   const SurfaceFunction &f) const override;
+	                   const ScalarField &f) const override;
 private:
 	template<size_t C>
 	double findAlongC (double x0, double y0, double z0,
 	                   double c1, double f0, double f1,
-	                   const SurfaceFunction &f) const;
+	                   const ScalarField &f) const;
 };
 
 }

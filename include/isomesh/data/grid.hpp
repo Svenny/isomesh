@@ -6,6 +6,8 @@
 #pragma once
 
 #include "../common.hpp"
+#include "../field/scalar_field.hpp"
+#include "../util/zero_finder.hpp"
 #include "grid_edge_storage.hpp"
 
 #include <array>
@@ -14,7 +16,6 @@
 namespace isomesh
 {
 
-class ZeroFinder;
 class MaterialSelector;
 
 // YXZ traversal order (to match Voxen's layout)
@@ -30,8 +31,13 @@ class MaterialSelector;
 class UniformGrid {
 public:
 	explicit UniformGrid (uint32_t size, const glm::dvec3 &globalPos = glm::dvec3 (0.0), double gridStep = 1.0);
-	// Fills grid using given surface function & material selection method
-	void fill (const SurfaceFunction &f, const ZeroFinder &solver, const MaterialSelector &material);
+	/** \brief Fills the grid using provided scalar field
+	
+		\param[in] field Scalar field to sample data from
+		\param[in] solver Solver to find zeros along grid edges
+		\param[in] material Material selector
+	*/
+	void fill (const ScalarField &field, const ZeroFinder &solver, const MaterialSelector &material);
 	// Local-coordinates indexing
 	Material at (int32_t x, int32_t y, int32_t z) const;
 	Material operator [] (const glm::ivec3 &v) const;

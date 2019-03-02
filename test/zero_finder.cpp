@@ -1,6 +1,7 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
 // Tests for default Isomesh zero finders
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -22,21 +23,39 @@ isomesh::RegulaFalsiZeroFinder regula;
 // might fail in some rare cases. It will converge to the root nonetheless.
 const double kMaxError = 1.0 / 256.0;
 
-bool testX (isomesh::SurfaceFunction &f, double x0, double x1, vector<double> roots);
-bool testY (isomesh::SurfaceFunction &f, double y0, double y1, vector<double> roots);
-bool testZ (isomesh::SurfaceFunction &f, double z0, double z1, vector<double> roots);
+bool testX (const isomesh::ScalarField &f, double x0, double x1, vector<double> roots);
+bool testY (const isomesh::ScalarField &f, double y0, double y1, vector<double> roots);
+bool testZ (const isomesh::ScalarField &f, double z0, double z1, vector<double> roots);
+
+class TestScalarField : public isomesh::ScalarField {
+public:
+	using ValueFunction = std::function<double (double, double, double)>;
+	using GradFunction = std::function<glm::dvec3 (double, double, double)>;
+
+	TestScalarField (ValueFunction fun, GradFunction grad) : m_fun (fun), m_grad (grad) {}
+
+	virtual double value (double x, double y, double z) const noexcept override {
+		if (m_fun)
+			return m_fun (x, y, z);
+		return 0;
+	}
+	virtual glm::dvec3 grad (double x, double y, double z) const noexcept override {
+		if (m_grad)
+			return m_grad (x, y, z);
+		return glm::dvec3 (0);
+	}
+private:
+	ValueFunction m_fun;
+	GradFunction m_grad;
+};
 
 // Polynomials
 bool testPoly () {
 	{
 		clog << "Testing f(x) = x^2 - 8x + 15" << endl;
-		isomesh::SurfaceFunction poly2;
-		poly2.f = [] (glm::dvec3 p) {
-			return p.x * p.x - 8.0 * p.x + 15.0;
-		};
-		poly2.grad = [] (glm::dvec3 p) {
-			return glm::dvec3 (2.0 * p.x - 8.0, 0, 0);
-		};
+		TestScalarField poly2 (
+			[] (double x, double y, double z) { return x * x - 8.0 * x + 15.0; },
+			[] (double x, double y, double z) { return glm::dvec3 (2.0 * x - 8.0, 0, 0); });
 		if (!testX (poly2, 0.0, 4.0, { 3.0 })) return false;
 		if (!testX (poly2, 3.0, 4.0, { 3.0 })) return false;
 		if (!testX (poly2, 4.0, 5.0, { 5.0 })) return false;
@@ -44,13 +63,9 @@ bool testPoly () {
 	}
 	{
 		clog << "Testing f(x) = x^3 - 6x^2 + 11x - 6" << endl;
-		isomesh::SurfaceFunction poly3;
-		poly3.f = [] (glm::dvec3 p) {
-			return p.x * p.x * p.x - 6.0 * p.x * p.x + 11.0 * p.x - 6.0;
-		};
-		poly3.grad = [] (glm::dvec3 p) {
-			return glm::dvec3 (3.0 * p.x * p.x - 12.0 * p.x + 11.0, 0, 0);
-		};
+		TestScalarField poly3 (
+			[] (double x, double y, double z) { return x * x * x - 6.0 * x * x + 11.0 * x - 6.0; },
+			[] (double x, double y, double z) { return glm::dvec3 (3.0 * x * x - 12.0 * x + 11.0, 0, 0); });
 		if (!testX (poly3, 0.0, 1.5, { 1.0 })) return false;
 		if (!testX (poly3, 1.5, 2.5, { 2.0 })) return false;
 		if (!testX (poly3, 2.5, 3.5, { 3.0 })) return false;
@@ -65,13 +80,9 @@ bool testPoly () {
 bool testExp () {
 	{
 		clog << "Testing f(y, z) = e^y + e^z - 4" << endl;
-		isomesh::SurfaceFunction f;
-		f.f = [] (glm::dvec3 p) {
-			return exp (p.y) + exp (p.z) - 4.0;
-		};
-		f.grad = [] (glm::dvec3 p) {
-			return glm::dvec3 (0, exp (p.y), exp (p.z));
-		};
+		TestScalarField f (
+			[] (double x, double y, double z) { return exp (y) + exp (z) - 4.0; },
+			[] (double x, double y, double z) { return glm::dvec3 (0, exp (y), exp (z)); });
 		if (!testY (f, 1.0, 2.0, { log (3.0) })) return false;
 		if (!testZ (f, 1.0, 2.0, { log (3.0) })) return false;
 	}
@@ -80,17 +91,17 @@ bool testExp () {
 		// Looking at its plot you can see that its linear interpolation
 		// gives results far off from the actual root, slowing down convergence.
 		clog << "Testing f(z) = ln(z) if z <= 1, else 1 - exp(-1.9*(z-1))" << endl;
-		isomesh::SurfaceFunction f;
-		f.f = [] (glm::dvec3 p) {
-			if (p.z <= 1.0)
-				return log (p.z);
-			return 1.0 - exp (-1.9 * (p.z - 1.0));
-		};
-		f.grad = [] (glm::dvec3 p) {
-			if (p.z <= 1.0)
-				return glm::dvec3 (0, 0, 1.0 / p.z);
-			return glm::dvec3 (0, 0, 1.9 * (p.z - 1.0) * exp (-1.9 * (p.z - 1.0)));
-		};
+		TestScalarField f (
+			[] (double x, double y, double z) {
+				if (z <= 1.0)
+					return log (z);
+				return 1.0 - exp (-1.9 * (z - 1.0));
+			},
+			[] (double x, double y, double z) {
+				if (z <= 1.0)
+					return glm::dvec3 (0, 0, 1.0 / z);
+				return glm::dvec3 (0, 0, 1.9 * (z - 1.0) * exp (-1.9 * (z - 1.0)));
+			});
 		if (!testZ (f, 0.5, 1.5, { 1.0 })) return false;
 		if (!testZ (f, 0.25, 3.0, { 1.0 })) return false;
 		if (!testZ (f, 0.9, 10.0, { 1.0 })) return false;
@@ -116,7 +127,7 @@ int main () {
 	return 0;
 }
 
-bool testX (isomesh::SurfaceFunction &f, double x0, double x1, vector<double> roots) {
+bool testX (const isomesh::ScalarField &f, double x0, double x1, vector<double> roots) {
 	clog << std::defaultfloat << "Along X from " << x0 << " to " << x1;
 	if (roots.size () == 1) clog << ", root is " << roots[0] << endl;
 	else {
@@ -152,7 +163,7 @@ bool testX (isomesh::SurfaceFunction &f, double x0, double x1, vector<double> ro
 	return true;
 };
 
-bool testY (isomesh::SurfaceFunction &f, double y0, double y1, vector<double> roots) {
+bool testY (const isomesh::ScalarField &f, double y0, double y1, vector<double> roots) {
 	clog << std::defaultfloat << "Along Y from " << y0 << " to " << y1;
 	if (roots.size () == 1) clog << ", root is " << roots[0] << endl;
 	else {
@@ -188,7 +199,7 @@ bool testY (isomesh::SurfaceFunction &f, double y0, double y1, vector<double> ro
 	return true;
 };
 
-bool testZ (isomesh::SurfaceFunction &f, double z0, double z1, vector<double> roots) {
+bool testZ (const isomesh::ScalarField &f, double z0, double z1, vector<double> roots) {
 	clog << std::defaultfloat << "Along Z from " << z0 << " to " << z1;
 	if (roots.size () == 1) clog << ", root is " << roots[0] << endl;
 	else {

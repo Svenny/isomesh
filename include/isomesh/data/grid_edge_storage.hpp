@@ -8,6 +8,7 @@
 #include "../common.hpp"
 
 #include <iterator>
+#include <vector>
 
 namespace isomesh
 {

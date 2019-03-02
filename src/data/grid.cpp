@@ -6,14 +6,10 @@
 #include <stdexcept>
 
 #include <isomesh/util/material_selector.hpp>
-#include <isomesh/util/zero_finder.hpp>
 #include <isomesh/data/grid.hpp>
 
 namespace isomesh
 {
-
-constexpr static int kOtherDimension1[3] = { 1, 0, 0 };
-constexpr static int kOtherDimension2[3] = { 2, 2, 1 };
 
 UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double gridStep) :
 	m_size (size), m_halfSize (int32_t (size) / 2), m_globalPos (globalPos), m_gridStep (gridStep) {
@@ -27,7 +23,7 @@ UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double gri
 	m_mat.reset (new Material[(size + 1) * (size + 1) * (size + 1)]);
 }
 
-void UniformGrid::fill (const SurfaceFunction &f,
+void UniformGrid::fill (const ScalarField &f,
                         const ZeroFinder &solver,
                         const MaterialSelector &material) {
 	std::vector<double> values (dataSize ());

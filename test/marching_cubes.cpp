@@ -4,38 +4,39 @@
 #include <iostream>
 #include <fstream>
 
-#include <isomesh/util/material_selector.hpp>
-#include <isomesh/util/zero_finder.hpp>
-#include <isomesh/algo/marching_cubes.hpp>
+#include <isomesh/isomesh.hpp>
 
 using std::cerr;
 using std::clog;
 using std::endl;
 
-int main () {
-	isomesh::SurfaceFunction f;
-	isomesh::BisectionZeroFinder solver;
-	// Waves (or hills?)
-	{
-		const double freq_x = 0.3;
-		const double freq_z1 = 0.4;
-		const double freq_z2 = 0.2;
-		f.f = [=](glm::dvec3 p) {
-			return sin (freq_x * p.x) + p.y - sin (freq_z1 * p.z) * cos (freq_z2 * p.z);
-		};
-		f.grad = [=](glm::dvec3 p) {
-			double dx = freq_x * cos (freq_x * p.x);
-			double dy = 1;
-			double dz = freq_z2 * sin (freq_z1 * p.z) * sin (freq_z2 * p.z)
-			          - freq_z1 * cos (freq_z1 * p.z) * cos (freq_z2 * p.z);
-			return glm::dvec3 (dx, dy, dz);
-		};
+// Waves (or hills?)
+class WavesScalarField : public isomesh::ScalarField {
+public:
+	virtual double value (double x, double y, double z) const noexcept override {
+		return sin (freq_x * x) + y - sin (freq_z1 * z) * cos (freq_z2 * z);
 	}
+	virtual glm::dvec3 grad (double x, double y, double z) const noexcept override {
+		double dx = freq_x * cos (freq_x * x);
+		double dy = 1;
+		double dz = freq_z2 * sin (freq_z1 * z) * sin (freq_z2 * z)
+			- freq_z1 * cos (freq_z1 * z) * cos (freq_z2 * z);
+		return glm::dvec3 (dx, dy, dz);
+	}
+private:
+	constexpr static double freq_x = 0.3;
+	constexpr static double freq_z1 = 0.4;
+	constexpr static double freq_z2 = 0.2;
+};
+
+int main () {
+	WavesScalarField F;
+	isomesh::BisectionZeroFinder solver;
 	// Generate a surface chunk from this function,
 	// then check it against a manually validated result
 	const int sz = 16;
 	isomesh::UniformGrid G (sz);
-	G.fill (f, solver, isomesh::TrivialMaterialSelector ());
+	G.fill (F, solver, isomesh::TrivialMaterialSelector ());
 	// Separate grid-related bugs from algorithm-related
 	auto edge_count = G.edges<0> ().size ();
 	if (edge_count != 39) {

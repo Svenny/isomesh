@@ -61,6 +61,15 @@ target_link_libraries (isomesh PUBLIC glm)
 target_link_libraries (isomesh PRIVATE $<$<CXX_COMPILER_ID:GNU>:stdc++fs>)
 target_include_directories (isomesh PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
+# For more strict warnings
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  target_compile_options(isomesh PRIVATE "-Wall")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  target_compile_options(isomesh PRIVATE "-Wall")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  target_compile_options(isomesh PRIVATE "/W4")
+endif()
+
 set_target_properties (isomesh PROPERTIES
 	DEBUG_POSTFIX _d
 	COTIRE_ADD_UNITY_BUILD FALSE

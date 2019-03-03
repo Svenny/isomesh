@@ -40,7 +40,7 @@ namespace isomesh {
 		if (m_data) {
 			double x = (px - m_center.x) / m_pixelSize + m_data->width()/2;
 			double y = (pz - m_center.z) / m_pixelSize + m_data->height()/2;
-			glm::dvec2 p(floor(x), floor(y));
+			glm::ivec2 p(floor(x), floor(y));
 
 			double q11 = heightVal(p.x, p.y);
 			double q12 = heightVal(p.x, p.y + 1);
@@ -48,7 +48,7 @@ namespace isomesh {
 			double q22 = heightVal(p.x + 1, p.y + 1);
 
 			// Bilinear interpolation
-			double h =
+			h =
 				q11 * (p.x+1 - x) * (p.y+1 - y)
 				+ q21 * (x - p.x) * (p.y+1 - y)
 				+ q12 * (p.x+1 - x) * (y - p.y)

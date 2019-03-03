@@ -75,5 +75,33 @@ namespace isomesh {
 		stbi_us color = m_data->operator[](clamp(x, 0, m_data->height()-1) * m_data->width() + clamp(y, 0, m_data->width()-1));
 		return m_heightRange.first + color * (m_heightRange.second - m_heightRange.first) / 65536.0;
 	}
+
+	void Heightmap::setHeightRange(std::pair<double, double> range) noexcept {
+		m_heightRange = range;
+	}
+
+	std::pair<double, double> Heightmap::heightRange()  const noexcept {
+		return m_heightRange;
+	}
+
+	void Heightmap::setPixelSize(double pixelSize) noexcept {
+		m_pixelSize = pixelSize;
+	}
+
+	double Heightmap::pixelSize() const noexcept {
+		return m_pixelSize;
+	}
+
+	void Heightmap::setCenter(glm::dvec3 center) noexcept {
+		m_center = center;
+	}
+
+	glm::dvec3 Heightmap::center() const noexcept {
+		return m_center;
+	}
+
+	bool Heightmap::isDataLoaded() const noexcept {
+		return m_data != nullptr;
+	}
 }
 

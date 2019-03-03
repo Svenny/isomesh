@@ -35,7 +35,7 @@ namespace isomesh {
 		void loadGrayscaleMap(std::string filename);
 
 		/// If data not loaded, Heightmap::value throw the logic_exception
-		bool isDataLoaded() const noexcept {return m_data != nullptr;};
+		bool isDataLoaded() const noexcept;
 
 	private:
 		double heightVal(int x, int z) const;

@@ -16,10 +16,13 @@ struct DMC_OctreeNode {
 
 	void subdivide ();
 	void collapse ();
+	bool isSubdivided () const noexcept { return hasChildren; }
 
 	DMC_OctreeNode *operator[] (int num) const noexcept { return children[num]; }
 
 	glm::vec4 dualVertex;
+	glm::vec3 normal;
+	Material material;
 	const glm::ivec3 minCorner;
 	const int32_t size;
 private:

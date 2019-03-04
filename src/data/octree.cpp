@@ -13,29 +13,22 @@ namespace isomesh
 {
 
 DMC_Octree::DMC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_scale) :
-	m_rootSize (root_size), m_globalPos (global_pos), m_globalScale (global_scale) {
+	m_globalPos (global_pos), m_globalScale (global_scale), m_rootSize (root_size),
+	m_root (glm::ivec3 (-root_size) / 2, root_size) {
 	if (root_size <= 0 || (root_size & (root_size - 1)))
 		throw std::invalid_argument ("Octree size is not a power of two");
-	m_root = nullptr;
-}
-
-DMC_Octree::~DMC_Octree () noexcept {
-	delete m_root;
 }
 
 void DMC_Octree::build (const ScalarField &field, const MaterialSelector &material,
                         QefSolver4D &solver, float epsilon) {
-	glm::ivec3 min_corner = glm::ivec3 (-m_rootSize) / 2;
 	BuildArgs args { field, material, solver, epsilon };
 	try {
-		delete m_root;
-		m_root = new DMC_OctreeNode (min_corner, m_rootSize);
-		buildNode (m_root, args);
+		m_root.collapse ();
+		buildNode (&m_root, args);
 	}
 	catch (...) {
 		auto e = std::current_exception ();
-		delete m_root;
-		m_root = nullptr;
+		m_root.collapse ();
 		std::rethrow_exception (e);
 	}
 }
@@ -44,24 +37,21 @@ namespace dmc_detail
 {
 
 struct NodeHash {
-	size_t operator ()(const std::pair<DMC_OctreeNode *, DMC_OctreeNode *> &node) const noexcept {
+	size_t operator ()(const std::pair<const DMC_OctreeNode *, const DMC_OctreeNode *> &node) const noexcept {
 		uintptr_t h1 = uintptr_t (node.first);
 		uintptr_t h2 = uintptr_t (node.second);
 		return h1 ^ (h2 << 1);
 	}
 };
 
-using VertexMap = std::unordered_map<std::pair<DMC_OctreeNode *, DMC_OctreeNode *>, uint32_t, NodeHash>;
+using VertexMap = std::unordered_map<std::pair<const DMC_OctreeNode *, const DMC_OctreeNode *>,
+                                     uint32_t, NodeHash>;
 
-glm::vec3 lerp (const glm::vec4 &a, const glm::vec4 &b) {
-	float w_a = glm::abs (a.w);
-	float w_b = glm::abs (b.w);
-	glm::vec3 p_a (a.x, a.y, a.z);
-	glm::vec3 p_b (b.x, b.y, b.z);
-	return (p_a * w_b + p_b * w_a) / (w_a + w_b);
+glm::vec3 lerp (const glm::vec3 &a, float w_a, const glm::vec3 &b, float w_b) {
+	return (a * w_b + b * w_a) / (w_a + w_b);
 }
 
-void vertProc (std::array<DMC_OctreeNode *, 8> nodes, VertexMap &vtx_map, Mesh &mesh) {
+void vertProc (std::array<const DMC_OctreeNode *, 8> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int octreeToMcOrder[8] = { 0, 3, 1, 2, 4, 7, 5, 6 };
 	constexpr int mcOrderEdges[12][2] = {
 		{ 0, 2 }, { 2, 3 }, { 1, 3 }, { 0, 1 }, { 4, 6 }, { 6, 7 },
@@ -69,10 +59,10 @@ void vertProc (std::array<DMC_OctreeNode *, 8> nodes, VertexMap &vtx_map, Mesh &
 	};
 	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3] &&
 	        nodes[4] && nodes[5] && nodes[6] && nodes[7]);
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	bool has_lesser = false;
 	for (int i = 0; i < 8; i++) {
-		DMC_OctreeNode *n = nodes[i];
+		const DMC_OctreeNode *n = nodes[i];
 		if (n->isSubdivided ()) {
 			sub[i] = (*n)[7 - i];
 			has_lesser = true;
@@ -99,11 +89,13 @@ void vertProc (std::array<DMC_OctreeNode *, 8> nodes, VertexMap &vtx_map, Mesh &
 			int i1 = mcOrderEdges[i][0];
 			int i2 = mcOrderEdges[i][1];
 			auto subs = std::minmax (sub[i1], sub[i2]);
-			std::pair<DMC_OctreeNode *, DMC_OctreeNode *> edge (subs.first, subs.second);
+			std::pair<const DMC_OctreeNode *, const DMC_OctreeNode *> edge (subs.first, subs.second);
 			auto iter = vtx_map.find (edge);
 			if (iter == vtx_map.end ()) {
-				glm::vec3 point = lerp (sub[i1]->dualVertex, sub[i2]->dualVertex);
-				glm::vec3 normal = glm::normalize (sub[i1]->normal + sub[i2]->normal);
+				float w1 = glm::abs (sub[i1]->dualVertex.w);
+				float w2 = glm::abs (sub[i2]->dualVertex.w);
+				glm::vec3 point = lerp (sub[i1]->dualVertex, w1, sub[i2]->dualVertex, w2);
+				glm::vec3 normal = glm::normalize (lerp (sub[i1]->normal, w1, sub[i2]->normal, w2));
 				Material mat = sub[i1]->material == Material::Empty ? sub[i2]->material : sub[i1]->material;
 				uint32_t idx = mesh.addVertex (point, normal, mat);
 				std::tie (iter, std::ignore) = vtx_map.emplace (edge, idx);
@@ -126,16 +118,16 @@ constexpr int edgeTableX[2][4] = { { 0, 4, 5, 1 }, { 2, 6, 7, 3 } };
 constexpr int edgeTableY[2][4] = { { 0, 1, 3, 2 }, { 4, 5, 7, 6 } };
 constexpr int edgeTableZ[2][4] = { { 0, 2, 6, 4 }, { 1, 3, 7, 5 } };
 
-void edgeProcX (std::array<DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh &mesh) {
+void edgeProcX (std::array<const DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		{ 0, 5 }, { 3, 4 }, { 0, 7 }, { 3, 6 },
 		{ 1, 1 }, { 2, 0 }, { 1, 3 }, { 2, 2 }
 	};
 	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3]);
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	bool has_lesser = false;
 	for (int i = 0; i < 8; i++) {
-		DMC_OctreeNode *n = nodes[subTable[i][0]];
+		const DMC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
 			sub[i] = (*n)[subTable[i][1]];
 			has_lesser = true;
@@ -154,16 +146,16 @@ void edgeProcX (std::array<DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh 
 	vertProc ({ sub[0], sub[1], sub[2], sub[3], sub[4], sub[5], sub[6], sub[7] }, vtx_map, mesh);
 }
 
-void edgeProcY (std::array<DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh &mesh) {
+void edgeProcY (std::array<const DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		{ 0, 3 }, { 1, 2 }, { 3, 1 }, { 2, 0 },
 		{ 0, 7 }, { 1, 6 }, { 3, 5 }, { 2, 4 }
 	};
 	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3]);
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	bool has_lesser = false;
 	for (int i = 0; i < 8; i++) {
-		DMC_OctreeNode *n = nodes[subTable[i][0]];
+		const DMC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
 			sub[i] = (*n)[subTable[i][1]];
 			has_lesser = true;
@@ -182,16 +174,16 @@ void edgeProcY (std::array<DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh 
 	vertProc ({ sub[0], sub[1], sub[2], sub[3], sub[4], sub[5], sub[6], sub[7] }, vtx_map, mesh);
 }
 
-void edgeProcZ (std::array<DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh &mesh) {
+void edgeProcZ (std::array<const DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		 { 0, 6 }, { 0, 7 }, { 1, 4 }, { 1, 5 },
 		{ 3, 2 }, { 3, 3 }, { 2, 0 }, { 2, 1 }
 	};
 	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3]);
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	bool has_lesser = false;
 	for (int i = 0; i < 8; i++) {
-		DMC_OctreeNode *n = nodes[subTable[i][0]];
+		const DMC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
 			sub[i] = (*n)[subTable[i][1]];
 			has_lesser = true;
@@ -214,16 +206,16 @@ constexpr int faceTableX[4][2] = { { 0, 2 }, { 4, 6 }, { 5, 7 }, { 1, 3 } };
 constexpr int faceTableY[4][2] = { { 0, 4 }, { 1, 5 }, { 3, 7 }, { 2, 6 } };
 constexpr int faceTableZ[4][2] = { { 0, 1 }, { 2, 3 }, { 6, 7 }, { 4, 5 } };
 
-void faceProcX (std::array<DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh &mesh) {
+void faceProcX (std::array<const DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		{ 0, 2 }, { 0, 3 }, { 1, 0 }, { 1, 1 },
 		{ 0, 6 }, { 0, 7 }, { 1, 4 }, { 1, 5 }
 	};
 	assert (nodes[0] && nodes[1]);
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	bool has_lesser = false;
 	for (int i = 0; i < 8; i++) {
-		DMC_OctreeNode *n = nodes[subTable[i][0]];
+		const DMC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
 			sub[i] = (*n)[subTable[i][1]];
 			has_lesser = true;
@@ -255,16 +247,16 @@ void faceProcX (std::array<DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh 
 }
 
 
-void faceProcY (std::array<DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh &mesh) {
+void faceProcY (std::array<const DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		{ 0, 4 }, { 0, 5 }, { 0, 6 }, { 0, 7 },
 		{ 1, 0 }, { 1, 1 }, { 1, 2 }, { 1, 3 }
 	};
 	assert (nodes[0] && nodes[1]);
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	bool has_lesser = false;
 	for (int i = 0; i < 8; i++) {
-		DMC_OctreeNode *n = nodes[subTable[i][0]];
+		const DMC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
 			sub[i] = (*n)[subTable[i][1]];
 			has_lesser = true;
@@ -295,16 +287,16 @@ void faceProcY (std::array<DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh 
 	vertProc ({ sub[0], sub[1], sub[2], sub[3], sub[4], sub[5], sub[6], sub[7] }, vtx_map, mesh);
 }
 
-void faceProcZ (std::array<DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh &mesh) {
+void faceProcZ (std::array<const DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		{ 0, 1 }, { 1, 0 }, { 0, 3 }, { 1, 2 },
 		{ 0, 5 }, { 1, 4 }, { 0, 7 }, { 1, 6 }
 	};
 	assert (nodes[0] && nodes[1]);
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	bool has_lesser = false;
 	for (int i = 0; i < 8; i++) {
-		DMC_OctreeNode *n = nodes[subTable[i][0]];
+		const DMC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
 			sub[i] = (*n)[subTable[i][1]];
 			has_lesser = true;
@@ -335,11 +327,11 @@ void faceProcZ (std::array<DMC_OctreeNode *, 2> nodes, VertexMap &vtx_map, Mesh 
 	vertProc ({ sub[0], sub[1], sub[2], sub[3], sub[4], sub[5], sub[6], sub[7] }, vtx_map, mesh);
 }
 
-void cellProc (DMC_OctreeNode *node, VertexMap &vtx_map, Mesh &mesh) {
+void cellProc (const DMC_OctreeNode *node, VertexMap &vtx_map, Mesh &mesh) {
 	assert (node);
 	if (!node->isSubdivided ())
 		return;
-	DMC_OctreeNode *sub[8];
+	const DMC_OctreeNode *sub[8];
 	for (int i = 0; i < 8; i++) {
 		sub[i] = (*node)[i];
 		cellProc (sub[i], vtx_map, mesh);
@@ -366,17 +358,15 @@ using namespace dmc_detail;
 
 Mesh DMC_Octree::contour () const {
 	Mesh mesh;
-	if (m_root) {
-		VertexMap vertex_map;
-		cellProc (m_root, vertex_map, mesh);
-	}
+	VertexMap vertex_map;
+	cellProc (&m_root, vertex_map, mesh);
 	return mesh;
 }
 
 void DMC_Octree::buildNode (DMC_OctreeNode *node, BuildArgs &args) {
 	assert (node);
 	// Perform unconditional subdivision up to some depth
-	if (node->size > 1 && node->size * 8 >= m_rootSize) {
+	if (node->size > 1 && node->size * 2 >= m_rootSize) {
 		node->subdivide ();
 		for (int i = 0; i < 8; i++)
 			buildNode ((*node)[i], args);
@@ -384,7 +374,7 @@ void DMC_Octree::buildNode (DMC_OctreeNode *node, BuildArgs &args) {
 	}
 	// TODO: this is a oversimplified debug version
 	// TODO: fix commented code below and remove this
-	{
+	if (false) {
 		if (node->size > 1) {
 			node->subdivide ();
 			for (int i = 0; i < 8; i++)
@@ -399,61 +389,43 @@ void DMC_Octree::buildNode (DMC_OctreeNode *node, BuildArgs &args) {
 		node->material = args.material.select (point_global, value);
 		return;
 	}
-	/*
-	// Sample field at some points
-	float offset = float (node->size) * 0.8f;
-	glm::vec3 base = glm::vec3 (node->minCorner) + 0.5f * (1.0f - offset);
-	const glm::vec3 offset_table[8] = {
-		glm::vec3 (0, 0, 0) * offset,
-		glm::vec3 (0, 0, 1) * offset,
-		glm::vec3 (1, 0, 0) * offset,
-		glm::vec3 (1, 0, 1) * offset,
-		glm::vec3 (0, 1, 0) * offset,
-		glm::vec3 (0, 1, 1) * offset,
-		glm::vec3 (1, 1, 0) * offset,
-		glm::vec3 (1, 1, 1) * offset
-	};
+	// Sample field at some points, then find dual vertex
 	QefSolver4D &solver = args.solver;
 	const ScalarField &field = args.field;
+	const float offset = float (node->size) * 0.75f;
+	const float min_point_offset = 0.5f * (float (node->size) - offset);
+	const glm::vec3 min_point = glm::vec3 (node->minCorner) + min_point_offset;
 	solver.reset ();
 	glm::vec3 avg_normal (0);
+	// Sample eight points inside a cell
 	for (int i = 0; i < 8; i++) {
-		glm::vec3 local_pos = base + offset_table[i];
-		glm::dvec3 global_pos = localToGlobal (local_pos);
-		float value = float (field (global_pos));
-		glm::vec3 grad = glm::vec3 (field.grad (global_pos));
+		glm::vec3 point_local = min_point + offset * glm::vec3 (DMC_OctreeNode::kCornerOffset[i]);
+		glm::dvec3 point_global = localToGlobal (point_local);
+		float value = float (field (point_global));
+		glm::vec3 grad = glm::vec3 (field.grad (point_global));
 		avg_normal += grad;
-		glm::vec4 point (local_pos, value);
-		glm::vec4 normal (grad, -1.0f);
-		normal = glm::normalize (normal);
-		solver.addPlane (point, normal);
+		glm::vec4 point_4d (point_local, value);
+		glm::vec4 normal_4d = glm::normalize (glm::vec4 (grad, -1.0f));
+		solver.addPlane (point_4d, normal_4d);
 	}
+	node->normal = glm::normalize (avg_normal);
 	constexpr float min_value = std::numeric_limits<float>::lowest ();
 	constexpr float max_value = std::numeric_limits<float>::max ();
 	glm::vec4 lower_bound (node->minCorner, min_value);
 	glm::vec4 upper_bound (node->minCorner + node->size, max_value);
 	node->dualVertex = solver.solve (lower_bound, upper_bound);
+	glm::dvec3 dual_vertex_global = localToGlobal (node->dualVertex);
+	node->dualVertex.w = float (field (dual_vertex_global));
+	node->material = args.material.select (dual_vertex_global, node->dualVertex.w);
+	// Push vertices to the isosurface (sliver elimination)
 	if (glm::abs (node->dualVertex.w) < args.epsilon)
 		node->dualVertex.w = 0;
-	node->normal = glm::normalize (avg_normal);
 	float error = solver.eval (node->dualVertex);
-	float estim_value = node->dualVertex.w;
-	float real_value;
-	{
-		glm::dvec3 global_dual_vtx = localToGlobal (node->dualVertex);
-		double value = node->dualVertex.w;
-		double realValue = field (global_dual_vtx);
-		node->material = args.material.select (global_dual_vtx, value);
-		node->dualVertex.w = float (realValue);
-		real_value = float (realValue);
-	}
-	float error2 = solver.eval (node->dualVertex);
 	if (node->size > 1 && error > args.epsilon) {
 		node->subdivide ();
 		for (int i = 0; i < 8; i++)
 			buildNode ((*node)[i], args);
 	}
-	*/
 }
 
 }

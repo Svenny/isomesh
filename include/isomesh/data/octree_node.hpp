@@ -15,7 +15,7 @@ struct DMC_OctreeNode {
 	~DMC_OctreeNode () noexcept;
 
 	void subdivide ();
-	void collapse ();
+	void collapse () noexcept;
 	bool isSubdivided () const noexcept { return hasChildren; }
 
 	DMC_OctreeNode *operator[] (int num) const noexcept { return children[num]; }
@@ -25,6 +25,17 @@ struct DMC_OctreeNode {
 	Material material;
 	const glm::ivec3 minCorner;
 	const int32_t size;
+
+	inline const static glm::ivec3 kCornerOffset[8] = {
+		glm::ivec3 (0, 0, 0),
+		glm::ivec3 (0, 0, 1),
+		glm::ivec3 (1, 0, 0),
+		glm::ivec3 (1, 0, 1),
+		glm::ivec3 (0, 1, 0),
+		glm::ivec3 (0, 1, 1),
+		glm::ivec3 (1, 1, 0),
+		glm::ivec3 (1, 1, 1)
+	};
 private:
 	bool hasChildren;
 	DMC_OctreeNode *children[8];

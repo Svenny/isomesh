@@ -25,19 +25,9 @@ void DMC_OctreeNode::subdivide () {
 	if (hasChildren)
 		throw std::logic_error ("Octree node is already subdivided");
 	int32_t new_size = size / 2;
-	const glm::ivec3 offset_table[8] = {
-		glm::ivec3 (0, 0, 0) * new_size,
-		glm::ivec3 (0, 0, 1) * new_size,
-		glm::ivec3 (1, 0, 0) * new_size,
-		glm::ivec3 (1, 0, 1) * new_size,
-		glm::ivec3 (0, 1, 0) * new_size,
-		glm::ivec3 (0, 1, 1) * new_size,
-		glm::ivec3 (1, 1, 0) * new_size,
-		glm::ivec3 (1, 1, 1) * new_size
-	};
 	try {
 		for (int i = 0; i < 8; i++)
-			children[i] = new DMC_OctreeNode (minCorner + offset_table[i], new_size);
+			children[i] = new DMC_OctreeNode (minCorner + kCornerOffset[i] * new_size, new_size);
 		hasChildren = true;
 	}
 	catch (std::bad_alloc &e) {
@@ -50,7 +40,7 @@ void DMC_OctreeNode::subdivide () {
 	}
 }
 
-void DMC_OctreeNode::collapse () {
+void DMC_OctreeNode::collapse () noexcept {
 	for (int i = 0; i < 8; i++) {
 		delete children[i];
 		children[i] = nullptr;

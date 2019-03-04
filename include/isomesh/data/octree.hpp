@@ -19,7 +19,6 @@ namespace isomesh
 class DMC_Octree {
 public:
 	explicit DMC_Octree (int32_t root_size, glm::dvec3 global_pos = glm::dvec3 (0), double global_scale = 1);
-	~DMC_Octree () noexcept;
 	
 	void build (const ScalarField &field, const MaterialSelector &material,
 	            QefSolver4D &solver, float epsilon);
@@ -33,7 +32,7 @@ private:
 	const double m_globalScale;
 	const int32_t m_rootSize;
 	
-	DMC_OctreeNode *m_root;
+	DMC_OctreeNode m_root;
 
 	struct BuildArgs {
 		const ScalarField &field;

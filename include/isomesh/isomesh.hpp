@@ -19,13 +19,14 @@
 #include "common.hpp"
 
 #include "data/grid.hpp"
-#include "data/grid_edge_storage.hpp"
 #include "data/mesh.hpp"
+#include "data/octree.hpp"
 
 #include "field/heightmap.hpp"
 #include "field/scalar_field.hpp"
 
 #include "qef/qef_solver_3d.hpp"
+#include "qef/qef_solver_4d.hpp"
 
 #include "util/material_filter.hpp"
 #include "util/material_selector.hpp"

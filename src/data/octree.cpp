@@ -13,18 +13,21 @@ namespace isomesh
 {
 
 DMC_Octree::DMC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_scale) :
-	m_globalPos (global_pos), m_globalScale (global_scale), m_rootSize (root_size),
-	m_root (glm::ivec3 (-root_size) / 2, root_size) {
+	m_globalPos (global_pos), m_globalScale (global_scale), m_rootSize (root_size) {
 	if (root_size <= 0 || (root_size & (root_size - 1)))
 		throw std::invalid_argument ("Octree size is not a power of two");
 }
 
 void DMC_Octree::build (const ScalarField &field, const MaterialSelector &material,
                         QefSolver4D &solver, float epsilon) {
-	BuildArgs args { field, material, solver, epsilon };
+	// Scale epsilon according to QEF scale (when translating from global coordinates to
+	// local QEF value is scaled by 1/(scale^2))
+	float scaled_epsilon = epsilon / float (m_globalScale * m_globalScale);
+	BuildArgs args { field, material, solver, scaled_epsilon };
 	try {
 		m_root.collapse ();
-		buildNode (&m_root, args);
+		glm::ivec3 min_corner (-m_rootSize / 2);
+		buildNode (&m_root, min_corner, m_rootSize, args);
 	}
 	catch (...) {
 		auto e = std::current_exception ();
@@ -363,69 +366,74 @@ Mesh DMC_Octree::contour () const {
 	return mesh;
 }
 
-void DMC_Octree::buildNode (DMC_OctreeNode *node, BuildArgs &args) {
+void DMC_Octree::buildNode (DMC_OctreeNode *node, glm::ivec3 min_corner,
+                            int32_t size, BuildArgs &args) {
 	assert (node);
-	// Perform unconditional subdivision up to some depth
-	if (node->size > 1 && node->size * 2 >= m_rootSize) {
-		node->subdivide ();
-		for (int i = 0; i < 8; i++)
-			buildNode ((*node)[i], args);
-		return;
-	}
-	// TODO: this is a oversimplified debug version
-	// TODO: fix commented code below and remove this
-	if (false) {
-		if (node->size > 1) {
-			node->subdivide ();
-			for (int i = 0; i < 8; i++)
-				buildNode ((*node)[i], args);
+	// Perform dual vertex generation only after some unconditional subdivison
+	if (size == 1 || size * 8 < m_rootSize)
+		if (generateDualVertex (node, min_corner, size, args))
 			return;
-		}
-		glm::vec3 point_local = glm::vec3 (node->minCorner) + 0.5f * float (node->size);
-		glm::dvec3 point_global = localToGlobal (point_local);
-		float value = float (args.field (point_global));
-		node->dualVertex = glm::vec4 (point_local, value);
-		node->normal = glm::vec3 (args.field.grad (point_global));
-		node->material = args.material.select (point_global, value);
+	if (size == 1)
 		return;
+	node->subdivide ();
+	int32_t child_size = size / 2;
+	for (int i = 0; i < 8; i++) {
+		glm::ivec3 child_min_corner = min_corner + child_size * DMC_OctreeNode::kCornerOffset[i];
+		buildNode ((*node)[i], child_min_corner, child_size, args);
 	}
-	// Sample field at some points, then find dual vertex
+}
+
+bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner,
+                                     int32_t size, BuildArgs &args) {
+	const float min_offset = 0.25f * float (size);
+	const float max_offset = float (size) - min_offset;
+	const glm::vec3 sample_offset_table[8] = {
+		glm::vec3 (min_offset, min_offset, min_offset),
+		glm::vec3 (min_offset, min_offset, max_offset),
+		glm::vec3 (max_offset, min_offset, min_offset),
+		glm::vec3 (max_offset, min_offset, max_offset),
+		glm::vec3 (min_offset, max_offset, min_offset),
+		glm::vec3 (min_offset, max_offset, max_offset),
+		glm::vec3 (max_offset, max_offset, min_offset),
+		glm::vec3 (max_offset, max_offset, max_offset)
+	};
+	const glm::vec3 base_point = glm::vec3 (min_corner);
 	QefSolver4D &solver = args.solver;
 	const ScalarField &field = args.field;
-	const float offset = float (node->size) * 0.75f;
-	const float min_point_offset = 0.5f * (float (node->size) - offset);
-	const glm::vec3 min_point = glm::vec3 (node->minCorner) + min_point_offset;
+	const MaterialSelector &material = args.material;
 	solver.reset ();
-	glm::vec3 avg_normal (0);
-	// Sample eight points inside a cell
+	glm::dvec3 avg_normal (0);
+	// Sample some points in a cell
 	for (int i = 0; i < 8; i++) {
-		glm::vec3 point_local = min_point + offset * glm::vec3 (DMC_OctreeNode::kCornerOffset[i]);
+		glm::vec3 point_local = base_point + sample_offset_table[i];
 		glm::dvec3 point_global = localToGlobal (point_local);
-		float value = float (field (point_global));
-		glm::vec3 grad = glm::vec3 (field.grad (point_global));
-		avg_normal += grad;
-		glm::vec4 point_4d (point_local, value);
-		glm::vec4 normal_4d = glm::normalize (glm::vec4 (grad, -1.0f));
+		double value_global = field (point_global);
+		float value_local = float (value_global / m_globalScale);
+		glm::dvec3 grad = field.grad (point_global);
+		glm::vec4 point_4d (point_local, value_local);
+		glm::vec4 normal_4d (glm::vec4 (glm::normalize (glm::dvec4 (grad, -1.0))));
 		solver.addPlane (point_4d, normal_4d);
+		avg_normal += grad;
 	}
-	node->normal = glm::normalize (avg_normal);
-	constexpr float min_value = std::numeric_limits<float>::lowest ();
-	constexpr float max_value = std::numeric_limits<float>::max ();
-	glm::vec4 lower_bound (node->minCorner, min_value);
-	glm::vec4 upper_bound (node->minCorner + node->size, max_value);
+	node->normal = glm::vec3 (glm::normalize (avg_normal));
+	// Solve constrained QEF first (for sliver elimination)
+	glm::vec4 lower_bound (min_corner, 0);
+	glm::vec4 upper_bound (min_corner + size, 0);
 	node->dualVertex = solver.solve (lower_bound, upper_bound);
-	glm::dvec3 dual_vertex_global = localToGlobal (node->dualVertex);
-	node->dualVertex.w = float (field (dual_vertex_global));
-	node->material = args.material.select (dual_vertex_global, node->dualVertex.w);
-	// Push vertices to the isosurface (sliver elimination)
-	if (glm::abs (node->dualVertex.w) < args.epsilon)
-		node->dualVertex.w = 0;
 	float error = solver.eval (node->dualVertex);
-	if (node->size > 1 && error > args.epsilon) {
-		node->subdivide ();
-		for (int i = 0; i < 8; i++)
-			buildNode ((*node)[i], args);
+	if (error > args.epsilon) {
+		// Constrained QEF failed, solve unconstrained one
+		lower_bound.w = std::numeric_limits<float>::lowest ();
+		upper_bound.w = std::numeric_limits<float>::max ();
+		node->dualVertex = solver.solve (lower_bound, upper_bound);
+		error = solver.eval (node->dualVertex);
 	}
+	double estimated_value_global = node->dualVertex.w * m_globalScale;
+	if (estimated_value_global <= 0) {
+		glm::dvec3 dual_vertex_global = localToGlobal (node->dualVertex);
+		node->material = material.select (dual_vertex_global, estimated_value_global);
+	}
+	return error <= args.epsilon;
 }
 
 }

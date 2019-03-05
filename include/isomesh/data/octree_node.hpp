@@ -11,20 +11,18 @@ namespace isomesh
 {
 
 struct DMC_OctreeNode {
-	DMC_OctreeNode (glm::ivec3 min_corner, int32_t size) noexcept;
+	DMC_OctreeNode () noexcept;
 	~DMC_OctreeNode () noexcept;
 
 	void subdivide ();
 	void collapse () noexcept;
-	bool isSubdivided () const noexcept { return hasChildren; }
+	bool isSubdivided () const noexcept { return children != nullptr; }
 
-	DMC_OctreeNode *operator[] (int num) const noexcept { return children[num]; }
+	DMC_OctreeNode *operator[] (int num) const noexcept { return children + num; }
 
 	glm::vec4 dualVertex;
 	glm::vec3 normal;
 	Material material;
-	const glm::ivec3 minCorner;
-	const int32_t size;
 
 	inline const static glm::ivec3 kCornerOffset[8] = {
 		glm::ivec3 (0, 0, 0),
@@ -37,8 +35,7 @@ struct DMC_OctreeNode {
 		glm::ivec3 (1, 1, 1)
 	};
 private:
-	bool hasChildren;
-	DMC_OctreeNode *children[8];
+	DMC_OctreeNode *children;
 };
 
 }

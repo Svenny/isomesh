@@ -41,7 +41,8 @@ private:
 		float epsilon;
 	};
 
-	void buildNode (DMC_OctreeNode *node, BuildArgs &args);
+	void buildNode (DMC_OctreeNode *node, glm::ivec3 min_corner, int32_t size, BuildArgs &args);
+	bool generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner, int32_t size, BuildArgs &args);
 };
 
 }

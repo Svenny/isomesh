@@ -46,7 +46,7 @@ public:
 	virtual float eval (glm::vec4 point) const override;
 	virtual void reset () override;
 
-	const static int kMaxPlanes = 12;
+	const static int kMaxPlanes = 200;
 protected:
 	glm::vec4 m_normals[kMaxPlanes];
 	float m_coefs[kMaxPlanes];
@@ -63,8 +63,8 @@ public:
 	void setGradStep (float value) { m_gradStep = value; }
 
 protected:
-	int m_stepCount = 10;
-	float m_gradStep = 0.75f;
+	int m_stepCount = 20;
+	float m_gradStep = 0.25f;
 };
 
 }

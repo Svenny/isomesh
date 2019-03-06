@@ -19,11 +19,11 @@ DMC_Octree::DMC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_
 }
 
 void DMC_Octree::build (const ScalarField &field, const MaterialSelector &material,
-                        QefSolver4D &solver, float epsilon) {
+                        QefSolver4D &solver, float epsilon, uint32_t seed) {
 	// Scale epsilon according to QEF scale (when translating from global coordinates to
 	// local QEF value is scaled by 1/(scale^2))
 	float scaled_epsilon = epsilon / float (m_globalScale * m_globalScale);
-	BuildArgs args { field, material, solver, scaled_epsilon };
+	BuildArgs args { field, material, solver, scaled_epsilon, std::mt19937 (seed) };
 	try {
 		m_root.collapse ();
 		glm::ivec3 min_corner (-m_rootSize / 2);
@@ -385,7 +385,7 @@ void DMC_Octree::buildNode (DMC_OctreeNode *node, glm::ivec3 min_corner,
 
 bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner,
                                      int32_t size, BuildArgs &args) {
-	const float min_offset = 0.25f * float (size);
+	/*const float min_offset = 0.25f * float (size);
 	const float max_offset = float (size) - min_offset;
 	const glm::vec3 sample_offset_table[8] = {
 		glm::vec3 (min_offset, min_offset, min_offset),
@@ -396,7 +396,7 @@ bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner
 		glm::vec3 (min_offset, max_offset, max_offset),
 		glm::vec3 (max_offset, max_offset, min_offset),
 		glm::vec3 (max_offset, max_offset, max_offset)
-	};
+	};*/
 	const glm::vec3 base_point = glm::vec3 (min_corner);
 	QefSolver4D &solver = args.solver;
 	const ScalarField &field = args.field;
@@ -404,8 +404,13 @@ bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner
 	solver.reset ();
 	glm::dvec3 avg_normal (0);
 	// Sample some points in a cell
-	for (int i = 0; i < 8; i++) {
-		glm::vec3 point_local = base_point + sample_offset_table[i];
+	int points_cnt = int (10.0 * glm::sqrt (size));
+	for (int i = 0; i < points_cnt; i++) {
+		float ox = std::generate_canonical<float, 24> (args.rng);
+		float oy = std::generate_canonical<float, 24> (args.rng);
+		float oz = std::generate_canonical<float, 24> (args.rng);
+		glm::vec3 offset (ox, oy, oz);
+		glm::vec3 point_local = base_point + float (size) * offset; // + sample_offset_table[i];
 		glm::dvec3 point_global = localToGlobal (point_local);
 		double value_global = field (point_global);
 		float value_local = float (value_global / m_globalScale);

@@ -12,6 +12,8 @@
 #include "../util/material_selector.hpp"
 #include "octree_node.hpp"
 
+#include <random>
+
 namespace isomesh
 {
 
@@ -21,7 +23,7 @@ public:
 	explicit DMC_Octree (int32_t root_size, glm::dvec3 global_pos = glm::dvec3 (0), double global_scale = 1);
 	
 	void build (const ScalarField &field, const MaterialSelector &material,
-	            QefSolver4D &solver, float epsilon);
+	            QefSolver4D &solver, float epsilon, uint32_t seed = 0xDEADBEEF);
 	Mesh contour () const;
 
 	// Mappings between local and global coordinate spaces
@@ -39,6 +41,7 @@ private:
 		const MaterialSelector &material;
 		QefSolver4D &solver;
 		float epsilon;
+		std::mt19937 rng;
 	};
 
 	void buildNode (DMC_OctreeNode *node, glm::ivec3 min_corner, int32_t size, BuildArgs &args);

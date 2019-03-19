@@ -11,6 +11,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_STANDARD 17)
 
 find_package (glm CONFIG REQUIRED)
+find_package (tinyply CONFIG REQUIRED)
 
 set (ISOMESH_HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/isomesh)
 set (ISOMESH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -32,6 +33,7 @@ set (ISOMESH_HEADERS
 	include/isomesh/util/material_filter.hpp
 	include/isomesh/util/material_selector.hpp
 	include/isomesh/util/zero_finder.hpp
+	include/isomesh/util/ply_mesh.hpp
 )
 source_group (TREE ${ISOMESH_HEADER_DIR} PREFIX Headers FILES ${ISOMESH_HEADERS})
 
@@ -52,12 +54,14 @@ set (ISOMESH_SOURCES
 	src/util/bisection_zero_finder.cpp
 	src/util/material_filter.cpp
 	src/util/regula_falsi_zero_finder.cpp
+	src/util/ply_mesh.cpp
 	src/private/stbi_data.cpp
+	src/private/ply_data.cpp
 )
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})
 
 add_library (isomesh STATIC ${ISOMESH_HEADERS} ${ISOMESH_SOURCES})
-target_link_libraries (isomesh PUBLIC glm)
+target_link_libraries (isomesh PUBLIC glm tinyply)
 target_link_libraries (isomesh PRIVATE $<$<CXX_COMPILER_ID:GNU>:stdc++fs>)
 target_include_directories (isomesh PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 

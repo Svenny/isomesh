@@ -11,15 +11,19 @@ public:
 
 	void load(std::string filename);
 
-	glm::vec3 vertex(const size_t idx);
-	size_t verticesCount() noexcept;
+	glm::vec3 vertex(const size_t idx) const;
+	size_t verticesCount() const noexcept;
 
-	std::array<glm::vec3, 3> triangle(const size_t idx);
-	glm::ivec3 triangleIndexs(const size_t idx);
-	size_t trianglesCount() noexcept;
+	std::array<glm::vec3, 3> triangle(const size_t idx) const;
+	glm::ivec3 triangleIndexs(const size_t idx) const;
+	size_t trianglesCount() const noexcept;
 
-	bool loaded() noexcept;
+	bool loaded() const noexcept;
+private:
+	void calcCenter() noexcept;
+
 private:
 	bool m_loaded;
 	std::shared_ptr<tinyply::PlyData> m_vertices, m_faces;
+	glm::vec3 m_center;
 };

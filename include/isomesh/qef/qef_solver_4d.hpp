@@ -67,4 +67,14 @@ protected:
 	float m_gradStep = 0.25f;
 };
 
+class QrQefSolver4D : public BaseQefSolver4D {
+public:
+	virtual glm::vec4 solve (glm::vec4 minPoint, glm::vec4 maxPoint) override;
+
+	void setTolerance (float value) noexcept { m_tolerance = value; }
+
+protected:
+	float m_tolerance = 0.05f;
+};
+
 }

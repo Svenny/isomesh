@@ -51,6 +51,7 @@ set (ISOMESH_SOURCES
 	src/qef/gradient_descent_qef_solver_4d.cpp
 	src/qef/qef_solver_3d.cpp
 	src/qef/qef_solver_4d.cpp
+	src/qef/qr_qef_solver_4d.cpp
 	src/util/bisection_zero_finder.cpp
 	src/util/material_filter.cpp
 	src/util/regula_falsi_zero_finder.cpp

@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <unordered_map>
 
+#include <glm/gtc/constants.hpp>
+
 #include "../algo/marching_cubes_tables.h"
 
 namespace isomesh
@@ -19,11 +21,13 @@ DMC_Octree::DMC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_
 }
 
 void DMC_Octree::build (const ScalarField &field, const MaterialSelector &material,
-                        QefSolver4D &solver, float epsilon, uint32_t seed) {
+                        QefSolver4D &solver, float epsilon, bool use_simple_split_policy,
+                        bool use_random_sampling, bool use_early_split_stop, uint32_t seed) {
 	// Scale epsilon according to QEF scale (when translating from global coordinates to
 	// local QEF value is scaled by 1/(scale^2))
 	float scaled_epsilon = epsilon / float (m_globalScale * m_globalScale);
-	BuildArgs args { field, material, solver, scaled_epsilon, std::mt19937 (seed) };
+	BuildArgs args { field, material, solver, scaled_epsilon, use_simple_split_policy,
+	                 use_random_sampling, use_early_split_stop, std::mt19937 (seed) };
 	try {
 		m_root.collapse ();
 		glm::ivec3 min_corner (-m_rootSize / 2);
@@ -369,76 +373,219 @@ Mesh DMC_Octree::contour () const {
 void DMC_Octree::buildNode (DMC_OctreeNode *node, glm::ivec3 min_corner,
                             int32_t size, BuildArgs &args) {
 	assert (node);
-	// Perform dual vertex generation only after some unconditional subdivison
-	if (size == 1 || size * 8 < m_rootSize)
-		if (generateDualVertex (node, min_corner, size, args))
-			return;
-	if (size == 1)
+	if (size == 1) {
+		generateDualVertex (node, min_corner, size, args);
 		return;
-	node->subdivide ();
-	int32_t child_size = size / 2;
-	for (int i = 0; i < 8; i++) {
-		glm::ivec3 child_min_corner = min_corner + child_size * DMC_OctreeNode::kCornerOffset[i];
-		buildNode ((*node)[i], child_min_corner, child_size, args);
+	}
+	if (args.use_early_split_stop) {
+		if (shouldStopSplitting (min_corner, size, args)) {
+			generateDualVertex (node, min_corner, size, args);
+			return;
+		}
+	}
+	if (args.use_simple_split_policy) {
+		if (size == m_rootSize || shouldSplit (min_corner, size, args)) {
+			node->subdivide ();
+			int32_t child_size = size / 2;
+			for (int i = 0; i < 8; i++) {
+				glm::ivec3 child_min_corner = min_corner + child_size * DMC_OctreeNode::kCornerOffset[i];
+				buildNode ((*node)[i], child_min_corner, child_size, args);
+			}
+			return;
+		}
+		generateDualVertex (node, min_corner, size, args);
+	}
+	else {
+		// Perform dual vertex generation only after some unconditional subdivison
+		if (size * 8 < m_rootSize)
+			if (generateDualVertex (node, min_corner, size, args))
+				return;
+		node->subdivide ();
+		int32_t child_size = size / 2;
+		for (int i = 0; i < 8; i++) {
+			glm::ivec3 child_min_corner = min_corner + child_size * DMC_OctreeNode::kCornerOffset[i];
+			buildNode ((*node)[i], child_min_corner, child_size, args);
+		}
 	}
 }
 
 bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner,
                                      int32_t size, BuildArgs &args) {
-	/*const float min_offset = 0.25f * float (size);
-	const float max_offset = float (size) - min_offset;
-	const glm::vec3 sample_offset_table[8] = {
-		glm::vec3 (min_offset, min_offset, min_offset),
-		glm::vec3 (min_offset, min_offset, max_offset),
-		glm::vec3 (max_offset, min_offset, min_offset),
-		glm::vec3 (max_offset, min_offset, max_offset),
-		glm::vec3 (min_offset, max_offset, min_offset),
-		glm::vec3 (min_offset, max_offset, max_offset),
-		glm::vec3 (max_offset, max_offset, min_offset),
-		glm::vec3 (max_offset, max_offset, max_offset)
-	};*/
-	const glm::vec3 base_point = glm::vec3 (min_corner);
 	QefSolver4D &solver = args.solver;
 	const ScalarField &field = args.field;
 	const MaterialSelector &material = args.material;
+
+	const glm::vec3 base_point { min_corner };
 	solver.reset ();
-	glm::dvec3 avg_normal (0);
-	// Sample some points in a cell
-	int points_cnt = int (10.0 * glm::sqrt (size));
-	for (int i = 0; i < points_cnt; i++) {
-		float ox = std::generate_canonical<float, 24> (args.rng);
-		float oy = std::generate_canonical<float, 24> (args.rng);
-		float oz = std::generate_canonical<float, 24> (args.rng);
-		glm::vec3 offset (ox, oy, oz);
-		glm::vec3 point_local = base_point + float (size) * offset; // + sample_offset_table[i];
-		glm::dvec3 point_global = localToGlobal (point_local);
-		double value_global = field (point_global);
-		float value_local = float (value_global / m_globalScale);
-		glm::dvec3 grad = field.grad (point_global);
-		glm::vec4 point_4d (point_local, value_local);
-		glm::vec4 normal_4d (glm::vec4 (glm::normalize (glm::dvec4 (grad, -1.0))));
-		solver.addPlane (point_4d, normal_4d);
-		avg_normal += grad;
+	glm::dvec3 avg_normal { 0 };
+
+	if (args.use_random_sampling) {
+		const int points_cnt = int (6.0 * glm::sqrt (size));
+		std::uniform_real_distribution<float> odist (0, size);
+		for (int i = 0; i < points_cnt; i++) {
+			glm::vec3 offset (odist (args.rng), odist (args.rng), odist (args.rng));
+			glm::vec3 point_local = base_point + offset;
+			glm::dvec3 point_global = localToGlobal (point_local);
+			double value_global = field (point_global);
+			float value_local = float (value_global / m_globalScale);
+			glm::dvec3 grad = field.grad (point_global);
+			glm::vec4 point_4d { point_local, value_local };
+			glm::vec4 normal_4d { grad, -1.0f };
+			solver.addPlane (point_4d, normal_4d);
+			avg_normal += grad;
+		}
 	}
+	else {
+		const float min_offset = 0.25f * float (size);
+		const float max_offset = float (size) - min_offset;
+		const glm::vec3 sample_offset_table[8] = {
+			glm::vec3 (min_offset, min_offset, min_offset),
+			glm::vec3 (min_offset, min_offset, max_offset),
+			glm::vec3 (max_offset, min_offset, min_offset),
+			glm::vec3 (max_offset, min_offset, max_offset),
+			glm::vec3 (min_offset, max_offset, min_offset),
+			glm::vec3 (min_offset, max_offset, max_offset),
+			glm::vec3 (max_offset, max_offset, min_offset),
+			glm::vec3 (max_offset, max_offset, max_offset)
+		};
+		const int points_cnt = int (sizeof (sample_offset_table) / sizeof (sample_offset_table[0]));
+		for (int i = 0; i < points_cnt; i++) {
+			glm::vec3 point_local = base_point + sample_offset_table[i];
+			glm::dvec3 point_global = localToGlobal (point_local);
+			double value_global = field (point_global);
+			float value_local = float (value_global / m_globalScale);
+			glm::dvec3 grad = field.grad (point_global);
+			glm::vec4 point_4d { point_local, value_local };
+			glm::vec4 normal_4d { grad, -1.0f };
+			solver.addPlane (point_4d, normal_4d);
+			avg_normal += grad;
+		}
+	}
+
 	node->normal = glm::vec3 (glm::normalize (avg_normal));
-	// Solve constrained QEF first (for sliver elimination)
 	glm::vec4 lower_bound (min_corner, 0);
 	glm::vec4 upper_bound (min_corner + size, 0);
-	node->dualVertex = solver.solve (lower_bound, upper_bound);
-	float error = solver.eval (node->dualVertex);
+	glm::vec4 vertex = solver.solve (lower_bound, upper_bound);
+	float error = solver.eval (vertex);
 	if (error > args.epsilon) {
-		// Constrained QEF failed, solve unconstrained one
 		lower_bound.w = std::numeric_limits<float>::lowest ();
 		upper_bound.w = std::numeric_limits<float>::max ();
-		node->dualVertex = solver.solve (lower_bound, upper_bound);
-		error = solver.eval (node->dualVertex);
+		vertex = solver.solve (lower_bound, upper_bound);
+		error = solver.eval (vertex);
 	}
-	double estimated_value_global = node->dualVertex.w * m_globalScale;
-	if (estimated_value_global <= 0) {
-		glm::dvec3 dual_vertex_global = localToGlobal (node->dualVertex);
-		node->material = material.select (dual_vertex_global, estimated_value_global);
+	node->dualVertex = vertex;
+	glm::dvec3 vertex_global = localToGlobal (vertex);
+	//node->normal = glm::vec3 (glm::normalize (field.grad (vertex_global)));
+	if (vertex.w <= 0) {
+		double value_global = double (vertex.w) * m_globalScale;
+		node->material = material.select (vertex_global, value_global);
 	}
 	return error <= args.epsilon;
+}
+
+bool DMC_Octree::shouldSplit (glm::ivec3 min_corner, int32_t size, BuildArgs &args) {
+	const ScalarField &field = args.field;
+	const double epsilon = args.epsilon;
+
+	glm::dvec3 corner[8];
+	corner[0] = localToGlobal (min_corner);
+	double side = size * m_globalScale;
+	for (int i = 1; i < 8; i++)
+		corner[i] = corner[0] + glm::dvec3 (DMC_OctreeNode::kCornerOffset[i]) * side;
+
+	double values[8];
+	for (int i = 0; i < 8; i++)
+		values[i] = field (corner[i]);
+
+	double error = 0;
+	double halfside = side * 0.5;
+	// Edge midpoints
+	const int dim1_corners[3][4] = {
+		{ 0, 1, 4, 5 }, // X
+		{ 0, 1, 2, 3 }, // Y
+		{ 0, 2, 4, 6 }  // Z
+	};
+	const int dim1_id_offsets[3] = { 2, 4, 1 };
+	const glm::dvec3 dim1_offsets[3] = {
+		glm::dvec3 (halfside, 0, 0),
+		glm::dvec3 (0, halfside, 0),
+		glm::dvec3 (0, 0, halfside)
+	};
+	for (int dim = 0; dim <= 2; dim++) {
+		for (int i = 0; i < 4; i++) {
+			int id1 = dim1_corners[dim][i];
+			int id2 = id1 + dim1_id_offsets[dim];
+			glm::dvec3 p = corner[id1] + dim1_offsets[dim];
+			double predict = (values[id1] + values[id2]) * 0.5;
+			double actual = field (p);
+			double k = glm::max (1.0, glm::length (field.grad (p)));
+			error += glm::abs (predict - actual) / k;
+			if (error > epsilon)
+				return true;
+		}
+	}
+	// Face midpoints
+	const int dim2_corners[3][2] = {
+		{ 0, 1 }, // XY
+		{ 0, 4 }, // XZ
+		{ 0, 2 }  // YZ
+	};
+	const int dim2_id_offsets[3][3] = {
+		{ 2, 4, 6 }, // XY
+		{ 1, 2, 3 }, // XZ
+		{ 1, 4, 5 }  // YZ
+	};
+	const glm::dvec3 dim2_offsets[3] = {
+		glm::dvec3 (halfside, halfside, 0),
+		glm::dvec3 (halfside, 0, halfside),
+		glm::dvec3 (0, halfside, halfside)
+	};
+	for (int dim = 0; dim <= 2; dim++) {
+		for (int i = 0; i < 2; i++) {
+			int id1 = dim2_corners[dim][i];
+			int id2 = id1 + dim2_id_offsets[dim][0];
+			int id3 = id1 + dim2_id_offsets[dim][1];
+			int id4 = id1 + dim2_id_offsets[dim][2];
+			glm::dvec3 p = corner[id1] + dim2_offsets[dim];
+			double predict = (values[id1] + values[id2] + values[id3] + values[id4]) * 0.25;
+			double actual = field (p);
+			double k = glm::max (1.0, glm::length (field.grad (p)));
+			error += glm::abs (predict - actual) / k;
+			if (error > epsilon)
+				return true;
+		}
+	}
+	// Cell midpoint
+	{
+		glm::dvec3 p = corner[0] + halfside;
+		double predict = 0;
+		for (int i = 0; i < 8; i++)
+			predict += values[i];
+		predict *= 0.125;
+		double actual = field (p);
+		double k = glm::max (1.0, glm::length (field.grad (p)));
+		error += glm::abs (predict - actual) / k;
+		if (error > epsilon)
+			return true;
+	}
+	return false;
+}
+
+bool DMC_Octree::shouldStopSplitting (glm::ivec3 min_corner, int32_t size, BuildArgs &args) {
+	const ScalarField &field = args.field;
+	const double epsilon = args.epsilon;
+
+	const glm::dvec3 base_point = localToGlobal (min_corner);
+	const double side = size * m_globalScale;
+	const double diag = side * glm::root_three<double> ();
+
+	for (int i = 0; i < 8; i++) {
+		glm::dvec3 point = base_point + side * glm::dvec3 (DMC_OctreeNode::kCornerOffset[i]);
+		double value = field (point);
+		if (glm::abs (value) <= diag)
+			return false;
+	}
+	return true;
 }
 
 }

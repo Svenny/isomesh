@@ -1,6 +1,5 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
-
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 #include <isomesh/qef/qef_solver_4d.hpp>
 
 #include <stdexcept>
@@ -27,7 +26,7 @@ float BaseQefSolver4D::eval (glm::vec4 point) const {
 }
 
 void BaseQefSolver4D::reset () {
-	m_massPoint = glm::vec4 (0);
+	m_massPoint = glm::vec4 { 0 };
 	m_numPlanes = 0;
 }
 

@@ -44,7 +44,7 @@ void isomesh::PlyMesh::calculateNormals()
 		glm::vec3 p2 = m_data.vertex(indexs.y);
 		glm::vec3 p3 = m_data.vertex(indexs.z);
 
-		glm::vec3 normal = glm::normalize(glm::cross(p1 - p2, p1 - p3));
+		glm::vec3 normal = glm::cross(p1 - p2, p1 - p3);
 		m_normals[indexs.x] += normal;
 		m_normals[indexs.y] += normal;
 		m_normals[indexs.z] += normal;

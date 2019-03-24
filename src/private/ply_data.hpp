@@ -3,7 +3,7 @@
 #pragma once
 
 #include <glm/vec3.hpp>
-#include <tinyply.h>
+#include "../3dparty/tinyply.h"
 
 class PlyData {
 public:

@@ -11,7 +11,6 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_STANDARD 17)
 
 find_package (glm CONFIG REQUIRED)
-find_package (tinyply CONFIG REQUIRED)
 
 set (ISOMESH_HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/isomesh)
 set (ISOMESH_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -38,6 +37,7 @@ set (ISOMESH_HEADERS
 source_group (TREE ${ISOMESH_HEADER_DIR} PREFIX Headers FILES ${ISOMESH_HEADERS})
 
 set (ISOMESH_SOURCES
+	src/3dparty/tinyply_impl.cpp
 	src/algo/marching_cubes.cpp
 	src/algo/marching_cubes_tables.h
 	src/algo/uniform_dual_contouring.cpp
@@ -62,7 +62,7 @@ set (ISOMESH_SOURCES
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})
 
 add_library (isomesh STATIC ${ISOMESH_HEADERS} ${ISOMESH_SOURCES})
-target_link_libraries (isomesh PUBLIC glm tinyply)
+target_link_libraries (isomesh PUBLIC glm)
 target_link_libraries (isomesh PRIVATE $<$<CXX_COMPILER_ID:GNU>:stdc++fs>)
 target_include_directories (isomesh PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 

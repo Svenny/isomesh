@@ -51,7 +51,7 @@ protected:
 	glm::vec4 m_normals[kMaxPlanes];
 	float m_coefs[kMaxPlanes];
 	/// Sum of added points
-	glm::vec4 m_massPoint = glm::vec4 (0);
+	glm::vec4 m_massPoint = glm::vec4 { 0 };
 	int m_numPlanes = 0;
 };
 
@@ -64,7 +64,7 @@ public:
 
 protected:
 	int m_stepCount = 20;
-	float m_gradStep = 0.25f;
+	float m_gradStep = 0.05f;
 };
 
 class QrQefSolver4D : public BaseQefSolver4D {

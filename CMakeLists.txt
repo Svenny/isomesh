@@ -26,6 +26,7 @@ set (ISOMESH_HEADERS
 	include/isomesh/data/octree.hpp
 	include/isomesh/data/octree_node.hpp
 	include/isomesh/field/heightmap.hpp
+	include/isomesh/field/mesh_field.hpp
 	include/isomesh/field/scalar_field.hpp
 	include/isomesh/qef/qef_solver_3d.hpp
 	include/isomesh/qef/qef_solver_4d.hpp
@@ -47,6 +48,7 @@ set (ISOMESH_SOURCES
 	src/data/octree.cpp
 	src/data/octree_node.cpp
 	src/field/heightmap.cpp
+	src/field/mesh_field.cpp
 	src/qef/gradient_descent_qef_solver_3d.cpp
 	src/qef/gradient_descent_qef_solver_4d.cpp
 	src/qef/qef_solver_3d.cpp

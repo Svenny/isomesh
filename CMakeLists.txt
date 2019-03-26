@@ -34,6 +34,7 @@ set (ISOMESH_HEADERS
 	include/isomesh/util/material_selector.hpp
 	include/isomesh/util/zero_finder.hpp
 	include/isomesh/util/ply_mesh.hpp
+	include/isomesh/export/mesh2ply.hpp
 )
 source_group (TREE ${ISOMESH_HEADER_DIR} PREFIX Headers FILES ${ISOMESH_HEADERS})
 
@@ -60,6 +61,7 @@ set (ISOMESH_SOURCES
 	src/util/ply_mesh.cpp
 	src/private/stbi_data.cpp
 	src/private/ply_data.cpp
+	src/export/mesh2ply.cpp
 )
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})
 

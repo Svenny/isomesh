@@ -20,6 +20,7 @@
 
 #include "data/grid.hpp"
 #include "data/mesh.hpp"
+#include "data/dc_octree.hpp"
 #include "data/dmc_octree.hpp"
 
 #include "field/heightmap.hpp"

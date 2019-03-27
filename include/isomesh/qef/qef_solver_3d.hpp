@@ -1,5 +1,5 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 #pragma once
 
 #include "../common.hpp"
@@ -65,6 +65,47 @@ public:
 protected:
 	int m_stepCount = 10;
 	float m_gradStep = 0.75f;
+};
+
+class QrQefSolver3D : public QefSolver3D {
+public:
+	struct QefData {
+		// QEF decomposed matrix, only nonzero elements
+		float a_11, a_12, a_13, b_1;
+		float       a_22, a_23, b_2;
+		float             a_33, b_3;
+		float                    r2;
+		// Sum of added points
+		float mpx, mpy, mpz;
+		// Added points count and feature dimension
+		int16_t mp_cnt, dim;
+	};
+
+	QrQefSolver3D () noexcept;
+	QrQefSolver3D (const QefData &data) noexcept;
+
+	virtual void addPlane (glm::vec3 point, glm::vec3 normal) override;
+	virtual glm::vec3 solve (glm::vec3 min_bound, glm::vec3 max_bound) override;
+	virtual float eval (glm::vec3 point) const override;
+	virtual void reset () override;
+
+	void setTolerance (float value) { m_tolerance = value; }
+
+	void merge (const QefData &data) noexcept;
+	
+	QefData data () noexcept;
+	
+protected:
+	constexpr static int kRows = 8;
+	// Column-major
+	float A[4][kRows];
+	glm::vec3 m_pointsSum;
+	int m_addedPoints;
+	int m_usedRows;
+	int m_featureDim;
+	float m_tolerance = 0.01f;
+
+	void compressMatrix ();
 };
 
 }

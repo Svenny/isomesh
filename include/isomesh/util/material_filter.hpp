@@ -1,11 +1,13 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 /** \file
 	\brief Defines material choosing functions
 */
 #pragma once
 
 #include "../data/grid.hpp"
+
+#include <array>
 
 namespace isomesh
 {
@@ -29,6 +31,7 @@ namespace isomesh
 */
 class MaterialFilter {
 public:
+	virtual Material select (const std::array<Material, 8> &corners, uint8_t mask) const = 0;
 	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const = 0;
 };
 
@@ -36,6 +39,7 @@ public:
 // only in case there are no non-Empty materials (which means invalid input)
 class AnyNonemptyMaterialFilter : public MaterialFilter {
 public:
+	virtual Material select (const std::array<Material, 8> &corners, uint8_t mask) const override;
 	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const override;
 };
 
@@ -43,6 +47,7 @@ public:
 // only in case there are no non-Empty materials (which means invalid input)
 class HistogramMaterialFilter : public MaterialFilter {
 public:
+	virtual Material select (const std::array<Material, 8> &corners, uint8_t mask) const override;
 	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const override;
 };
 

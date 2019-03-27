@@ -183,7 +183,7 @@ void edgeProcY (std::array<const DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map,
 
 void edgeProcZ (std::array<const DMC_OctreeNode *, 4> nodes, VertexMap &vtx_map, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
-		 { 0, 6 }, { 0, 7 }, { 1, 4 }, { 1, 5 },
+		{ 0, 6 }, { 0, 7 }, { 1, 4 }, { 1, 5 },
 		{ 3, 2 }, { 3, 3 }, { 2, 0 }, { 2, 1 }
 	};
 	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3]);

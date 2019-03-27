@@ -25,6 +25,9 @@ uint32_t Mesh::addVertex (const glm::vec3 &pos, const glm::vec3 &normal, Materia
 
 void Mesh::addTriangle (uint32_t i1, uint32_t i2, uint32_t i3) {
 	assert (i1 < m_vertices.size () && i2 < m_vertices.size () && i3 < m_vertices.size ());
+	// Skip degenerate triangles (instead of checking it in each algorithm)
+	if (i1 == i2 || i2 == i3 || i1 == i3)
+		return;
 	m_indices.emplace_back (i1);
 	m_indices.emplace_back (i2);
 	m_indices.emplace_back (i3);

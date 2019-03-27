@@ -20,6 +20,8 @@ set (ISOMESH_HEADERS
 	include/isomesh/isomesh.hpp
 	include/isomesh/algo/marching_cubes.hpp
 	include/isomesh/algo/uniform_dual_contouring.hpp
+	include/isomesh/data/dc_octree.hpp
+	include/isomesh/data/dc_octree_node.hpp
 	include/isomesh/data/grid.hpp
 	include/isomesh/data/grid_edge_storage.hpp
 	include/isomesh/data/mesh.hpp
@@ -43,6 +45,8 @@ set (ISOMESH_SOURCES
 	src/algo/marching_cubes.cpp
 	src/algo/marching_cubes_tables.h
 	src/algo/uniform_dual_contouring.cpp
+	src/data/dc_octree.cpp
+	src/data/dc_octree_node.cpp
 	src/data/grid.cpp
 	src/data/grid_edge_storage.cpp
 	src/data/mesh.cpp
@@ -54,6 +58,7 @@ set (ISOMESH_SOURCES
 	src/qef/gradient_descent_qef_solver_4d.cpp
 	src/qef/qef_solver_3d.cpp
 	src/qef/qef_solver_4d.cpp
+	src/qef/qr_qef_solver_3d.cpp
 	src/qef/qr_qef_solver_4d.cpp
 	src/util/bisection_zero_finder.cpp
 	src/util/material_filter.cpp

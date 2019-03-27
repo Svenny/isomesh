@@ -23,8 +23,8 @@ set (ISOMESH_HEADERS
 	include/isomesh/data/grid.hpp
 	include/isomesh/data/grid_edge_storage.hpp
 	include/isomesh/data/mesh.hpp
-	include/isomesh/data/octree.hpp
-	include/isomesh/data/octree_node.hpp
+	include/isomesh/data/dmc_octree.hpp
+	include/isomesh/data/dmc_octree_node.hpp
 	include/isomesh/field/heightmap.hpp
 	include/isomesh/field/mesh_field.hpp
 	include/isomesh/field/scalar_field.hpp
@@ -46,8 +46,8 @@ set (ISOMESH_SOURCES
 	src/data/grid.cpp
 	src/data/grid_edge_storage.cpp
 	src/data/mesh.cpp
-	src/data/octree.cpp
-	src/data/octree_node.cpp
+	src/data/dmc_octree.cpp
+	src/data/dmc_octree_node.cpp
 	src/field/heightmap.cpp
 	src/field/mesh_field.cpp
 	src/qef/gradient_descent_qef_solver_3d.cpp

@@ -10,7 +10,7 @@
 #include "../field/scalar_field.hpp"
 #include "../qef/qef_solver_4d.hpp"
 #include "../util/material_selector.hpp"
-#include "octree_node.hpp"
+#include "dmc_octree_node.hpp"
 
 #include <random>
 

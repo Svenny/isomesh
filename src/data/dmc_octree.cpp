@@ -1,6 +1,6 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
-#include <isomesh/data/octree.hpp>
+#include <isomesh/data/dmc_octree.hpp>
 
 #include <cassert>
 #include <limits>

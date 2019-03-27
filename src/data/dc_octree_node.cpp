@@ -45,7 +45,7 @@ bool DC_OctreeNode::isHomogenous () const noexcept {
 	bool all_air = true;
 	bool all_solid = true;
 	for (int i = 0; i < 8; i++) {
-		if (corners[i] == Material::Empty)
+		if (leaf_data.corners[i] == Material::Empty)
 			all_solid = false;
 		else all_air = false;
 	}

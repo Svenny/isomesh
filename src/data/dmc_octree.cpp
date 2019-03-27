@@ -421,7 +421,7 @@ bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner
 
 	if (args.use_random_sampling) {
 		const int points_cnt = int (6.0 * glm::sqrt (size));
-		std::uniform_real_distribution<float> odist (0, size);
+		std::uniform_real_distribution<float> odist (0, float (size));
 		for (int i = 0; i < points_cnt; i++) {
 			glm::vec3 offset (odist (args.rng), odist (args.rng), odist (args.rng));
 			glm::vec3 point_local = base_point + offset;

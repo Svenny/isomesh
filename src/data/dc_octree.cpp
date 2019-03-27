@@ -28,224 +28,105 @@ void DC_Octree::build (const UniformGrid &grid, QrQefSolver3D &solver, float eps
 		scaled_epsilon,
 		use_octree_simplification
 	};
-	//try {
+	try {
 		if (m_root.isSubdivided ())
 			m_root.collapse ();
 		glm::ivec3 min_corner (-m_rootSize / 2);
 		buildNode (&m_root, min_corner, m_rootSize, args);
-	/*}
+	}
 	catch (...) {
 		auto e = std::current_exception ();
 		m_root.collapse ();
 		std::rethrow_exception (e);
-	}*/
+	}
 }
 
 namespace dc_detail
 {
 
-constexpr int edgeTableX[2][4] = { { 0, 4, 5, 1 }, { 2, 6, 7, 3 } };
-constexpr int edgeTableY[2][4] = { { 0, 1, 3, 2 }, { 4, 5, 7, 6 } };
-constexpr int edgeTableZ[2][4] = { { 0, 2, 6, 4 }, { 1, 3, 7, 5 } };
+/* Quadruples of node children sharing an edge along some axis. First dimension - axis,
+ second dimension - quadruple, third dimension - children. */
+constexpr int edgeTable[3][2][4] = {
+	{ { 0, 4, 5, 1 }, { 2, 6, 7, 3 } }, // X
+	{ { 0, 1, 3, 2 }, { 4, 5, 7, 6 } }, // Y
+	{ { 0, 2, 6, 4 }, { 1, 3, 7, 5 } }  // Z
+};
 
-void edgeProcX (std::array<const DC_OctreeNode *, 4> nodes, Mesh &mesh) {
-	constexpr int subTable[8][2] = {
-		{ 0, 5 }, { 3, 4 }, { 0, 7 }, { 3, 6 },
-		{ 1, 1 }, { 2, 0 }, { 1, 3 }, { 2, 2 }
+template<int D>
+void edgeProc (std::array<const DC_OctreeNode *, 4> nodes, Mesh &mesh) {
+	/* For a quadruple of nodes sharing an edge along some axis there are two quadruples
+	 of their children nodes sharing the same edge. This table maps node to its child. First
+	 dimension - axis, second dimension - position of child. Two values - parent number (in
+	 edgeProc's numbering) and its child number (in octree numbering). Is it better understandable
+	 by looking at the code? */
+	constexpr int subTable[3][8][2] = {
+		{ { 0, 5 }, { 3, 4 }, { 0, 7 }, { 3, 6 },
+			{ 1, 1 }, { 2, 0 }, { 1, 3 }, { 2, 2 } }, // X
+		{ { 0, 3 }, { 1, 2 }, { 3, 1 }, { 2, 0 },
+			{ 0, 7 }, { 1, 6 }, { 3, 5 }, { 2, 4 } }, // Y
+		{ { 0, 6 }, { 0, 7 }, { 1, 4 }, { 1, 5 },
+			{ 3, 2 }, { 3, 3 }, { 2, 0 }, { 2, 1 } }  // Z
 	};
-	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3]);
+	// Almost the same as above
+	constexpr int cornersTable[3][4][2] = {
+		{ { 5, 7 }, { 1, 3 }, { 0, 2 }, { 4, 6 } }, // X
+		{ { 3, 7 }, { 2, 6 }, { 0, 4 }, { 1, 5 } }, // Y
+		{ { 6, 7 }, { 4, 5 }, { 0, 1 }, { 2, 3 } }  // Z
+	};
+	/* If at least one node is not present then (by topological safety test guarantee) this edge
+	 is not surface-crossing (otherwise there was an unsafe node collapse). */
+	if (!nodes[0] || !nodes[1] || !nodes[2] || !nodes[3])
+		return;
 	const DC_OctreeNode *sub[8];
-	bool has_lesser = false;
+	bool all_leaves = true;
 	for (int i = 0; i < 8; i++) {
-		const DC_OctreeNode *n = nodes[subTable[i][0]];
+		const DC_OctreeNode *n = nodes[subTable[D][i][0]];
 		if (n->isSubdivided ()) {
-			sub[i] = (*n)[subTable[i][1]];
-			has_lesser = true;
+			sub[i] = n->children[subTable[D][i][1]];
+			all_leaves = false;
 		}
 		else sub[i] = n;
 	}
-	if (!has_lesser) {
-		Material mat1, mat2;
-		{
-			int16_t max_depth = -1;
-			int max_idx = -1;
-			for (int i = 0; i < 4; i++) {
-				if (nodes[i]->depth () > max_depth) {
-					max_depth = nodes[i]->depth ();
-					max_idx = i;
-				}
-			}
-			bool mat1_found = false;
-			for (int i = 0; i < 8; i++) {
-				if (subTable[i][0] == max_idx) {
-					if (mat1_found)
-						mat2 = nodes[max_idx]->corners[subTable[i][1]];
-					else {
-						mat1 = nodes[max_idx]->corners[subTable[i][1]];
-						mat1_found = true;
-					}
-				}
-			}
-		}
-		if (mat1 == mat2)
-			return;
-		if (mat1 != Material::Empty && mat2 != Material::Empty)
-			return;
-		bool flip = (mat1 == Material::Empty);
-		uint32_t id0 = nodes[0]->vertex_id;
-		uint32_t id1 = nodes[1]->vertex_id;
-		uint32_t id2 = nodes[2]->vertex_id;
-		uint32_t id3 = nodes[3]->vertex_id;
-		if (!flip) {
-			mesh.addTriangle (id0, id1, id2);
-			mesh.addTriangle (id0, id2, id3);
-		}
-		else {
-			mesh.addTriangle (id0, id2, id1);
-			mesh.addTriangle (id0, id3, id2);
+	if (!all_leaves) {
+		for (int i = 0; i < 2; i++) {
+			int i1 = edgeTable[D][i][0];
+			int i2 = edgeTable[D][i][1];
+			int i3 = edgeTable[D][i][2];
+			int i4 = edgeTable[D][i][3];
+			edgeProc<D> ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
 		}
 		return;
 	}
-	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableX[i][0];
-		int i2 = edgeTableX[i][1];
-		int i3 = edgeTableX[i][2];
-		int i4 = edgeTableX[i][3];
-		edgeProcX ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+	Material mat1 = Material::Empty, mat2 = Material::Empty;
+	/* Find the minimal node, i.e. the node with the maximal depth. By looking at its
+	 materials on endpoints of this edge we may know whether the edge is surface-crossing
+	 and if we need to flip the triangles winding order. */
+	int16_t max_depth = -1;
+	for (int i = 0; i < 4; i++) {
+		if (nodes[i]->depth () > max_depth) {
+			max_depth = nodes[i]->depth ();
+			mat1 = nodes[i]->leaf_data.corners[cornersTable[D][i][0]];
+			mat2 = nodes[i]->leaf_data.corners[cornersTable[D][i][1]];
+		}
 	}
-}
-
-void edgeProcY (std::array<const DC_OctreeNode *, 4> nodes, Mesh &mesh) {
-	constexpr int subTable[8][2] = {
-		{ 0, 3 }, { 1, 2 }, { 3, 1 }, { 2, 0 },
-		{ 0, 7 }, { 1, 6 }, { 3, 5 }, { 2, 4 }
-	};
-	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3]);
-	const DC_OctreeNode *sub[8];
-	bool has_lesser = false;
-	for (int i = 0; i < 8; i++) {
-		const DC_OctreeNode *n = nodes[subTable[i][0]];
-		if (n->isSubdivided ()) {
-			sub[i] = (*n)[subTable[i][1]];
-			has_lesser = true;
-		}
-		else sub[i] = n;
+	if (mat1 == mat2)
+		return; // Not a surface-crossing edge
+	if (mat1 != Material::Empty && mat2 != Material::Empty)
+		return; // Ditto
+	/* We assume that lower endpoint is solid. If this is not the case, the triangles'
+	 winding order should be flipped to remain facing outside of the surface. */
+	bool flip = (mat1 == Material::Empty);
+	uint32_t id0 = nodes[0]->leaf_data.vertex_id;
+	uint32_t id1 = nodes[1]->leaf_data.vertex_id;
+	uint32_t id2 = nodes[2]->leaf_data.vertex_id;
+	uint32_t id3 = nodes[3]->leaf_data.vertex_id;
+	if (!flip) {
+		mesh.addTriangle (id0, id1, id2);
+		mesh.addTriangle (id0, id2, id3);
 	}
-	if (!has_lesser) {
-		Material mat1, mat2;
-		{
-			int16_t max_depth = -1;
-			int max_idx = -1;
-			for (int i = 0; i < 4; i++) {
-				if (nodes[i]->depth () > max_depth) {
-					max_depth = nodes[i]->depth ();
-					max_idx = i;
-				}
-			}
-			bool mat1_found = false;
-			for (int i = 0; i < 8; i++) {
-				if (subTable[i][0] == max_idx) {
-					if (mat1_found)
-						mat2 = nodes[max_idx]->corners[subTable[i][1]];
-					else {
-						mat1 = nodes[max_idx]->corners[subTable[i][1]];
-						mat1_found = true;
-					}
-				}
-			}
-		}
-		if (mat1 == mat2)
-			return;
-		if (mat1 != Material::Empty && mat2 != Material::Empty)
-			return;
-		bool flip = (mat1 == Material::Empty);
-		uint32_t id0 = nodes[0]->vertex_id;
-		uint32_t id1 = nodes[1]->vertex_id;
-		uint32_t id2 = nodes[2]->vertex_id;
-		uint32_t id3 = nodes[3]->vertex_id;
-		if (!flip) {
-			mesh.addTriangle (id0, id1, id2);
-			mesh.addTriangle (id0, id2, id3);
-		}
-		else {
-			mesh.addTriangle (id0, id2, id1);
-			mesh.addTriangle (id0, id3, id2);
-		}
-		return;
-	}
-	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableY[i][0];
-		int i2 = edgeTableY[i][1];
-		int i3 = edgeTableY[i][2];
-		int i4 = edgeTableY[i][3];
-		edgeProcY ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
-	}
-}
-
-void edgeProcZ (std::array<const DC_OctreeNode *, 4> nodes, Mesh &mesh) {
-	constexpr int subTable[8][2] = {
-		{ 0, 6 }, { 0, 7 }, { 1, 4 }, { 1, 5 },
-		{ 3, 2 }, { 3, 3 }, { 2, 0 }, { 2, 1 }
-	};
-	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3]);
-	const DC_OctreeNode *sub[8];
-	bool has_lesser = false;
-	for (int i = 0; i < 8; i++) {
-		const DC_OctreeNode *n = nodes[subTable[i][0]];
-		if (n->isSubdivided ()) {
-			sub[i] = (*n)[subTable[i][1]];
-			has_lesser = true;
-		}
-		else sub[i] = n;
-	}
-	if (!has_lesser) {
-		Material mat1, mat2;
-		{
-			int16_t max_depth = -1;
-			int max_idx = -1;
-			for (int i = 0; i < 4; i++) {
-				if (nodes[i]->depth () > max_depth) {
-					max_depth = nodes[i]->depth ();
-					max_idx = i;
-				}
-			}
-			bool mat1_found = false;
-			for (int i = 0; i < 8; i++) {
-				if (subTable[i][0] == max_idx) {
-					if (mat1_found)
-						mat2 = nodes[max_idx]->corners[subTable[i][1]];
-					else {
-						mat1 = nodes[max_idx]->corners[subTable[i][1]];
-						mat1_found = true;
-					}
-				}
-			}
-		}
-		if (mat1 == mat2)
-			return;
-		if (mat1 != Material::Empty && mat2 != Material::Empty)
-			return;
-		bool flip = (mat1 == Material::Empty);
-		uint32_t id0 = nodes[0]->vertex_id;
-		uint32_t id1 = nodes[1]->vertex_id;
-		uint32_t id2 = nodes[2]->vertex_id;
-		uint32_t id3 = nodes[3]->vertex_id;
-		if (!flip) {
-			mesh.addTriangle (id0, id1, id2);
-			mesh.addTriangle (id0, id2, id3);
-		}
-		else {
-			mesh.addTriangle (id0, id2, id1);
-			mesh.addTriangle (id0, id3, id2);
-		}
-		return;
-	}
-	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableZ[i][0];
-		int i2 = edgeTableZ[i][1];
-		int i3 = edgeTableZ[i][2];
-		int i4 = edgeTableZ[i][3];
-		edgeProcZ ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+	else {
+		mesh.addTriangle (id0, id2, id1);
+		mesh.addTriangle (id0, id3, id2);
 	}
 }
 
@@ -277,18 +158,18 @@ void faceProcX (std::array<const DC_OctreeNode *, 2> nodes, Mesh &mesh) {
 		faceProcX ({ sub[i1], sub[i2] }, mesh);
 	}
 	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableY[i][0];
-		int i2 = edgeTableY[i][1];
-		int i3 = edgeTableY[i][2];
-		int i4 = edgeTableY[i][3];
-		edgeProcY ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+		int i1 = edgeTable[1][i][0];
+		int i2 = edgeTable[1][i][1];
+		int i3 = edgeTable[1][i][2];
+		int i4 = edgeTable[1][i][3];
+		edgeProc<1> ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
 	}
 	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableZ[i][0];
-		int i2 = edgeTableZ[i][1];
-		int i3 = edgeTableZ[i][2];
-		int i4 = edgeTableZ[i][3];
-		edgeProcZ ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+		int i1 = edgeTable[2][i][0];
+		int i2 = edgeTable[2][i][1];
+		int i3 = edgeTable[2][i][2];
+		int i4 = edgeTable[2][i][3];
+		edgeProc<2> ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
 	}
 }
 
@@ -317,18 +198,18 @@ void faceProcY (std::array<const DC_OctreeNode *, 2> nodes, Mesh &mesh) {
 		faceProcY ({ sub[i1], sub[i2] }, mesh);
 	}
 	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableX[i][0];
-		int i2 = edgeTableX[i][1];
-		int i3 = edgeTableX[i][2];
-		int i4 = edgeTableX[i][3];
-		edgeProcX ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+		int i1 = edgeTable[0][i][0];
+		int i2 = edgeTable[0][i][1];
+		int i3 = edgeTable[0][i][2];
+		int i4 = edgeTable[0][i][3];
+		edgeProc<0> ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
 	}
 	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableZ[i][0];
-		int i2 = edgeTableZ[i][1];
-		int i3 = edgeTableZ[i][2];
-		int i4 = edgeTableZ[i][3];
-		edgeProcZ ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+		int i1 = edgeTable[2][i][0];
+		int i2 = edgeTable[2][i][1];
+		int i3 = edgeTable[2][i][2];
+		int i4 = edgeTable[2][i][3];
+		edgeProc<2> ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
 	}
 }
 
@@ -356,18 +237,18 @@ void faceProcZ (std::array<const DC_OctreeNode *, 2> nodes, Mesh &mesh) {
 		faceProcZ ({ sub[i1], sub[i2] }, mesh);
 	}
 	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableX[i][0];
-		int i2 = edgeTableX[i][1];
-		int i3 = edgeTableX[i][2];
-		int i4 = edgeTableX[i][3];
-		edgeProcX ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+		int i1 = edgeTable[0][i][0];
+		int i2 = edgeTable[0][i][1];
+		int i3 = edgeTable[0][i][2];
+		int i4 = edgeTable[0][i][3];
+		edgeProc<0> ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
 	}
 	for (int i = 0; i < 2; i++) {
-		int i1 = edgeTableY[i][0];
-		int i2 = edgeTableY[i][1];
-		int i3 = edgeTableY[i][2];
-		int i4 = edgeTableY[i][3];
-		edgeProcY ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
+		int i1 = edgeTable[1][i][0];
+		int i2 = edgeTable[1][i][1];
+		int i3 = edgeTable[1][i][2];
+		int i4 = edgeTable[1][i][3];
+		edgeProc<1> ({ sub[i1], sub[i2], sub[i3], sub[i4] }, mesh);
 	}
 }
 
@@ -386,24 +267,24 @@ void cellProc (const DC_OctreeNode *node, Mesh &mesh) {
 		faceProcZ ({ sub[faceTableZ[i][0]], sub[faceTableZ[i][1]] }, mesh);
 	}
 	for (int i = 0; i < 2; i++) {
-		edgeProcX ({ sub[edgeTableX[i][0]], sub[edgeTableX[i][1]],
-						 sub[edgeTableX[i][2]], sub[edgeTableX[i][3]] }, mesh);
-		edgeProcY ({ sub[edgeTableY[i][0]], sub[edgeTableY[i][1]],
-						 sub[edgeTableY[i][2]], sub[edgeTableY[i][3]] }, mesh);
-		edgeProcZ ({ sub[edgeTableZ[i][0]], sub[edgeTableZ[i][1]],
-						 sub[edgeTableZ[i][2]], sub[edgeTableZ[i][3]] }, mesh);
+		edgeProc<0> ({ sub[edgeTable[0][i][0]], sub[edgeTable[0][i][1]],
+		               sub[edgeTable[0][i][2]], sub[edgeTable[0][i][3]] }, mesh);
+		edgeProc<1> ({ sub[edgeTable[1][i][0]], sub[edgeTable[1][i][1]],
+		               sub[edgeTable[1][i][2]], sub[edgeTable[1][i][3]] }, mesh);
+		edgeProc<2> ({ sub[edgeTable[2][i][0]], sub[edgeTable[2][i][1]],
+		               sub[edgeTable[2][i][2]], sub[edgeTable[2][i][3]] }, mesh);
 	}
 }
 
 void makeVertices (DC_OctreeNode *node, const MaterialFilter &filter, Mesh &mesh) {
 	if (!node->isSubdivided ()) {
 		if (!node->isHomogenous ()) {
-			glm::vec3 vertex = node->dualVertex;
-			glm::vec3 normal = node->normal;
-			Material mat = filter.select (node->corners, 0xFF);
-			node->vertex_id = mesh.addVertex (vertex, normal, mat);
+			glm::vec3 vertex = node->leaf_data.dual_vertex;
+			glm::vec3 normal = node->leaf_data.normal;
+			Material mat = filter.select (node->leaf_data.corners, 0xFF);
+			node->leaf_data.vertex_id = mesh.addVertex (vertex, normal, mat);
 		}
-		else node->vertex_id = std::numeric_limits<uint32_t>::max ();
+		else node->leaf_data.vertex_id = std::numeric_limits<uint32_t>::max ();
 		return;
 	}
 	for (int i = 0; i < 8; i++)
@@ -434,48 +315,40 @@ void DC_Octree::buildNode (DC_OctreeNode *node, glm::ivec3 min_corner,
 		glm::ivec3 child_min_corner = min_corner + child_size * DC_OctreeNode::kCornerOffset[i];
 		buildNode ((*node)[i], child_min_corner, child_size, args);
 	}
-	// Homogenous collapse
-	{
-		bool all_homo = true;
-		std::array<Material, 8> corners;
-		for (int i = 0; i < 8; i++) {
-			if (!node->children[i]->isHomogenous ()) {
-				all_homo = false;
-				break;
-			}
-			corners[i] = node->children[i]->corners[i];
-		}
-		if (all_homo) {
-			node->collapse ();
-			node->corners = corners;
+	// All children are build and possibly simplified, try to do simplification of this node
+	std::array<Material, 8> corners;
+	corners.fill (Material::Empty);
+	bool all_children_homogenous = true;
+	for (int i = 0; i < 8; i++) {
+		// We can't do any simplification if there is a least one non-leaf child
+		if (node->children[i]->isSubdivided ())
 			return;
-		}
+		if (!node->children[i]->isHomogenous ())
+			all_children_homogenous = false;
+		corners[i] = node->children[i]->leaf_data.corners[i];
+	}
+	// If all children are homogenous, simply drop them (this octree is not to be used as a storage)
+	if (all_children_homogenous) {
+		node->collapse ();
+		node->leaf_data.corners = corners;
+		return;
 	}
 	if (args.use_octree_simplification) {
-		bool all_leaves = true;
 		CubeMaterials mats;
-		std::array<Material, 8> corners;
 		for (int i = 0; i < 8; i++) {
-			if (node->children[i]->isSubdivided ()) {
-				all_leaves = false;
-				break;
-			}
-			corners[i] = node->children[i]->corners[i];
 			for (int j = 0; j < 8; j++) {
 				auto offset = DC_OctreeNode::kCornerOffset[i] + DC_OctreeNode::kCornerOffset[j];
-				mats[offset.y][offset.x][offset.z] = node->children[i]->corners[j];
+				mats[offset.y][offset.x][offset.z] = node->children[i]->leaf_data.corners[j];
 			}
 		}
-		if (!all_leaves)
-			return;
 		if (!checkTopoSafety (mats))
 			return;
 		args.solver.reset ();
 		glm::vec3 avg_normal { 0 };
 		for (int i = 0; i < 8; i++) {
 			if (!node->children[i]->isHomogenous ()) {
-				avg_normal += node->children[i]->normal;
-				args.solver.merge (node->children[i]->qef);
+				avg_normal += node->children[i]->leaf_data.normal;
+				args.solver.merge (node->children[i]->leaf_data.qef);
 			}
 		}
 		glm::vec3 lower_bound (min_corner);
@@ -485,10 +358,10 @@ void DC_Octree::buildNode (DC_OctreeNode *node, glm::ivec3 min_corner,
 		if (error > args.epsilon)
 			return;
 		node->collapse ();
-		node->dualVertex = vertex;
-		node->normal = glm::normalize (avg_normal);
-		node->corners = corners;
-		node->qef = args.solver.data ();
+		node->leaf_data.dual_vertex = vertex;
+		node->leaf_data.normal = glm::normalize (avg_normal);
+		node->leaf_data.corners = corners;
+		node->leaf_data.qef = args.solver.data ();
 	}
 }
 
@@ -501,7 +374,7 @@ void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
 	glm::vec3 avg_normal { 0 };
 
 	for (int i = 0; i < 8; i++)
-		node->corners[i] = G[min_corner + DC_OctreeNode::kCornerOffset[i]];
+		node->leaf_data.corners[i] = G[min_corner + DC_OctreeNode::kCornerOffset[i]];
 	
 	bool has_edges = false;
 
@@ -512,8 +385,8 @@ void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
 	};
 	for (int dim = 0; dim <= 2; dim++) {
 		for (int i = 0; i < 4; i++) {
-			Material mat1 = node->corners[edge_table[dim][i][0]];
-			Material mat2 = node->corners[edge_table[dim][i][1]];
+			Material mat1 = node->leaf_data.corners[edge_table[dim][i][0]];
+			Material mat2 = node->leaf_data.corners[edge_table[dim][i][1]];
 			if (mat1 == mat2)
 				continue;
 			if (mat1 != Material::Empty && mat2 != Material::Empty)
@@ -532,11 +405,11 @@ void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
 	}
 
 	if (has_edges) {
-		node->normal = glm::normalize (avg_normal);
+		node->leaf_data.normal = glm::normalize (avg_normal);
 		glm::vec3 lower_bound (min_corner);
 		glm::vec3 upper_bound (min_corner + size);
-		node->dualVertex = solver.solve (lower_bound, upper_bound);
-		node->qef = solver.data ();
+		node->leaf_data.dual_vertex = solver.solve (lower_bound, upper_bound);
+		node->leaf_data.qef = solver.data ();
 	}
 }
 

@@ -24,14 +24,14 @@ struct DC_OctreeNode {
 
 	union {
 		struct {
-			glm::vec3 dualVertex;
+			glm::vec3 dual_vertex;
 			glm::vec3 normal;
 			std::array<Material, 8> corners;
 			QrQefSolver3D::QefData qef;
-		};
+			uint32_t vertex_id;
+		} leaf_data;
 		DC_OctreeNode *children[8];
 	};
-	uint32_t vertex_id;
 
 	inline const static glm::ivec3 kCornerOffset[8] = {
 		glm::ivec3 (0, 0, 0),

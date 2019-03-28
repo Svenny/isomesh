@@ -46,19 +46,32 @@ glm::vec3 QrQefSolver3D::solve (glm::vec3 min_bound, glm::vec3 max_bound) {
 	if (m_addedPoints == 0)
 		throw std::runtime_error ("Solver has no input");
 	compressMatrix ();
+	m_featureDim = 3;
+	if (glm::abs (A[0][0]) < m_tolerance)
+		m_featureDim--;
+	if (glm::abs (A[1][1]) < m_tolerance)
+		m_featureDim--;
+	if (glm::abs (A[2][2]) < m_tolerance)
+		m_featureDim--;
 	// I know I am doing it wrong :P
 	// TODO: Replace with linear algebra solver
 	glm::vec3 P = m_pointsSum / float (m_addedPoints);
-	for (int i = 0; i < 55; i++) {
+	float step = 0.2f;
+	float last_error = std::numeric_limits<float>::max ();
+	for (int i = 0; i < 45; i++) {
 		glm::vec3 grad (0);
+		float error = 0;
 		for (int j = 0; j < m_usedRows; j++) {
 			glm::vec3 normal (A[0][j], A[1][j], A[2][j]);
-			float coef = 2.0f * (glm::dot (normal, P) - A[3][j]);
-			grad += coef * normal;
+			float diff = (glm::dot (normal, P) - A[3][j]);
+			error += diff * diff;
+			grad += 2.0f * diff * normal;
 		}
-		float buben = 1.0f + 0.1f * float (i);
-		P -= (m_tolerance / buben) * grad;
+		if (error > last_error)
+			step *= 0.5f;
+		P -= step * grad;
 		P = glm::clamp (P, min_bound, max_bound);
+		last_error = error;
 	}
 	return P;
 }
@@ -84,6 +97,10 @@ void QrQefSolver3D::reset () {
 void QrQefSolver3D::merge (const QefData &data) noexcept {
 	if (m_usedRows > kRows - 4)
 		compressMatrix ();
+	if (data.dim < m_featureDim)
+		return;
+	if (data.dim > m_featureDim)
+		m_usedRows = 0;
 	int id = m_usedRows;
 	A[0][id] = data.a_11;
 	A[1][id] = data.a_12;
@@ -98,6 +115,7 @@ void QrQefSolver3D::merge (const QefData &data) noexcept {
 	m_usedRows += 4;
 	m_pointsSum += glm::vec3 (data.mpx, data.mpy, data.mpz);
 	m_addedPoints += data.mp_cnt;
+	m_featureDim = data.dim;
 }
 
 QrQefSolver3D::QefData QrQefSolver3D::data () noexcept {

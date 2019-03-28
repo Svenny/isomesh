@@ -103,7 +103,7 @@ protected:
 	int m_addedPoints;
 	int m_usedRows;
 	int m_featureDim;
-	float m_tolerance = 0.01f;
+	float m_tolerance = 0.1f;
 
 	void compressMatrix ();
 };

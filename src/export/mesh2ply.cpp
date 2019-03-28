@@ -19,7 +19,9 @@ namespace isomesh {
 		tinyply::PlyFile file;
 
 		size_t vcount = mesh->vertexCount();
-		float fdata[vcount*3];
+		std::vector<float> fdata_container (vcount * 3);
+		float *fdata = fdata_container.data ();
+		//float fdata[vcount*3]; // Because MSVC is shit that can't do VLA
 		const Mesh::Vertex* vertexptr = reinterpret_cast<const Mesh::Vertex*>(mesh->vertexData());
 		for (size_t i = 0; i < vcount; i++) {
 			fdata[3*i] = vertexptr->position.x;

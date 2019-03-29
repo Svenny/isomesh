@@ -67,6 +67,7 @@ set (ISOMESH_SOURCES
 	src/private/stbi_data.cpp
 	src/private/ply_data.cpp
 	src/export/mesh2ply.cpp
+	src/private/octree.cpp
 )
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})
 

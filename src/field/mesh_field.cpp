@@ -6,58 +6,37 @@
 #include <limits>
 #include <iostream>
 #include <cmath>
+#include <limits>
+
+#include "../private/octree.hpp"
 
 using namespace std;
+
+isomesh::MeshField::MeshField():
+	m_root(nullptr)
+{
+}
 
 void isomesh::MeshField::load(std::string filename)
 {
 	m_data.load(filename);
 	calculateNormalsAndCenters();
+	fillOctree();
 }
 
 double isomesh::MeshField::value (double x, double y, double z) const noexcept
 {
 	glm::vec3 p(x, y, z);
-
-	size_t idx = nearTriangle(p);
-
-	glm::ivec3 indexs = m_data.triangleIndexs(idx);
-	glm::vec3 p1 = m_data.vertex(indexs.x);
-	glm::vec3 p2 = m_data.vertex(indexs.y);
-	glm::vec3 p3 = m_data.vertex(indexs.z);
-
-	glm::vec3 center = m_centers[idx];
-	glm::vec3 normal = m_normals[idx];
-
-	float h = glm::dot(normal, p - center);
-	glm::vec3 projP = p - normal*h;
-
-	float d1 = glm::distance(projP, p1);
-	float d2 = glm::distance(projP, p2);
-	float d3 = glm::distance(projP, p3);
-	float dmax = max(d1, max(d2, d3));
-
-	glm::vec3 edgeP;
-	if (dmax == d1) {
-		edgeP = glm::dot(p, p2 - p3) / glm::dot(p2 - p3, p2 - p3) * (p2-p3);
-	} else if (dmax == d2) {
-		edgeP = glm::dot(p, p1 - p3) / glm::dot(p1 - p3, p1 - p3) * (p1-p3);
-	} else {
-		edgeP = glm::dot(p, p2 - p1) / glm::dot(p2 - p1, p2 - p1) * (p2-p1);
-	}
-
-	float dproj = glm::distance(edgeP, center);
-	if (glm::distance(center, projP) > dproj)
-		return glm::sign(h) * glm::distance(edgeP, p);
-	else
-		return h;
+	std::tuple<Triangle, float, int> ans = m_root->nearTriangle(p);
+	return get<1>(ans) - 0.02f;
 }
 
 glm::dvec3 isomesh::MeshField::grad (double x, double y, double z) const noexcept
 {
 	glm::vec3 p(x, y, z);
-	size_t idx = nearTriangle(p);
-	return m_normals[idx];
+	std::tuple<Triangle, float, int> ans = m_root->nearTriangle(p);
+	Triangle tri = get<0>(ans);
+	return glm::normalize(glm::cross(tri.a - tri.b, tri.a - tri.c));
 }
 
 void isomesh::MeshField::calculateNormalsAndCenters()
@@ -94,6 +73,48 @@ size_t isomesh::MeshField::nearTriangle(glm::dvec3 p) const noexcept
 	}
 
 	return idx;
+}
 
+void isomesh::MeshField::fillOctree() {
+	const size_t vcount = m_data.verticesCount();
 
+	float minX = std::numeric_limits<float>::max();
+	float maxX = std::numeric_limits<float>::min();
+	float minY = std::numeric_limits<float>::max();
+	float maxY = std::numeric_limits<float>::min();
+	float minZ = std::numeric_limits<float>::max();
+	float maxZ = std::numeric_limits<float>::min();
+	for (size_t i = 0; i < vcount; i++) {
+		glm::vec3 p = m_data.vertex(i);
+		//std::cout << "v: " << p.x << " " << p.y << " " << p.z << std::endl;
+		if (p.x < minX)
+			minX = p.x;
+		if (p.x > maxX)
+			maxX = p.x;
+
+		if (p.y < minY)
+			minY = p.y;
+		if (p.y > maxY)
+			maxY = p.y;
+
+		if (p.z < minZ)
+			minZ = p.z;
+		if (p.z > maxZ)
+			maxZ = p.z;
+	}
+
+	//std::cout << "mins: " << minX << " " << minY << " " << minZ << std::endl;
+	//std::cout << "maxs: " << maxX << " " << maxY << " " << maxZ << std::endl;
+	float treeSize = max(maxX - minX, max(maxY - minY, maxZ - minZ));
+	//std::cout << "treeSize: " << treeSize << std::endl;
+	//std::cout << "minpos: " << minX << " " << minY << " " << minZ << std::endl;
+	if (m_root)
+		delete m_root;
+	m_root = new TriangleOctree(treeSize/2, 0, glm::vec3(minX, minY, minZ));
+
+	const size_t fcount = m_data.trianglesCount();
+	std::cout << "load model with " << fcount << " triangles" << std::endl;
+	for (size_t i = 0; i < fcount; i++) {
+		m_root->insert(m_data.triangle(i));
+	}
 }

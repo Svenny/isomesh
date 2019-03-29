@@ -4,6 +4,7 @@
 
 #include <glm/vec3.hpp>
 #include "../3dparty/tinyply.h"
+#include "triangle.hpp"
 
 class PlyData {
 public:
@@ -14,16 +15,17 @@ public:
 	glm::vec3 vertex(const size_t idx) const;
 	size_t verticesCount() const noexcept;
 
-	std::array<glm::vec3, 3> triangle(const size_t idx) const;
+	Triangle triangle(const size_t idx) const;
 	glm::ivec3 triangleIndexs(const size_t idx) const;
 	size_t trianglesCount() const noexcept;
 
 	bool loaded() const noexcept;
 private:
-	void calcCenter() noexcept;
+	void normalization() noexcept;
 
 private:
 	bool m_loaded;
 	std::shared_ptr<tinyply::PlyData> m_vertices, m_faces;
 	glm::vec3 m_center;
+	float m_multiplier;
 };

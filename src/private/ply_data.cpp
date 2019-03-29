@@ -7,6 +7,7 @@
 #include <array>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 PlyData::PlyData():
 	m_loaded(false),
@@ -32,13 +33,13 @@ void PlyData::load(std::string filename)
 
 	file.read(fin);
 	m_loaded = true;
-	calcCenter();
+	normalization();
 }
 
 glm::vec3 PlyData::vertex(const size_t idx) const
 {
 	float* vdata = reinterpret_cast<float*>(m_vertices->buffer.get());
-	return glm::vec3(vdata[3*idx], vdata[3*idx+1], vdata[3*idx+2]) - m_center;
+	return (glm::vec3(vdata[3*idx], vdata[3*idx+1], vdata[3*idx+2]) - m_center) / m_multiplier;
 }
 size_t PlyData::verticesCount() const noexcept
 {
@@ -48,11 +49,11 @@ size_t PlyData::verticesCount() const noexcept
 		return 0;
 }
 
-std::array<glm::vec3, 3> PlyData::triangle(const size_t idx) const
+Triangle PlyData::triangle(const size_t idx) const
 {
 	const glm::ivec3& indexs = triangleIndexs(idx);
 
-	return {vertex(indexs.x), vertex(indexs.y), vertex(indexs.z)};
+	return Triangle(vertex(indexs.x), vertex(indexs.y), vertex(indexs.z));
 }
 
 glm::ivec3 PlyData::triangleIndexs(const size_t idx) const
@@ -78,14 +79,40 @@ bool PlyData::loaded() const noexcept
 	return m_loaded;
 }
 
-void PlyData::calcCenter() noexcept
+void PlyData::normalization() noexcept
 {
+	float minX = std::numeric_limits<float>::max();
+	float maxX = std::numeric_limits<float>::min();
+	float minY = std::numeric_limits<float>::max();
+	float maxY = std::numeric_limits<float>::min();
+	float minZ = std::numeric_limits<float>::max();
+	float maxZ = std::numeric_limits<float>::min();
+
 	float* vdata = reinterpret_cast<float*>(m_vertices->buffer.get());
 	size_t vcount = m_vertices->count;
-	m_center = glm::vec3(0, 0, 0);
 
-	for (size_t i = 0; i < vcount; i++)
-		m_center += glm::vec3(vdata[3*i], vdata[3*i+1], vdata[3*i+2]);
+	for (size_t i = 0; i < vcount; i++) {
+		float x = vdata[3*i];
+		float y = vdata[3*i+1];
+		float z = vdata[3*i+2];
 
-	m_center /= (float)(vcount);
+		if (x < minX)
+			minX = x;
+		if (x > maxX)
+			maxX = x;
+
+		if (y < minY)
+			minY = y;
+		if (y > maxY)
+			maxY = y;
+
+		if (z < minZ)
+			minZ = z;
+		if (z > maxZ)
+			maxZ = z;
+	}
+
+	m_multiplier = std::max(maxX - minX, std::max(maxY - minY, maxZ - minZ));
+	m_multiplier /= 2;
+	m_center = glm::vec3((maxX + minX)/2, (maxY + minY)/2, (maxZ + minZ)/2);
 }

@@ -6,10 +6,12 @@
 #include "../../../src/private/ply_data.hpp"
 #include <isomesh/field/scalar_field.hpp>
 
+class TriangleOctree;
+
 namespace isomesh {
 	class MeshField : public ScalarField {
 	public:
-		MeshField() = default;
+		MeshField();
 
 		void load(std::string filename);
 
@@ -20,9 +22,12 @@ namespace isomesh {
 		// returns index of this triangle and distance from p to it
 		size_t nearTriangle(glm::dvec3 p) const noexcept;
 
+		void fillOctree();
+
 	private:
 		PlyData m_data;
 		std::vector<glm::vec3> m_normals;
 		std::vector<glm::vec3> m_centers;
+		TriangleOctree* m_root;
 	};
 }

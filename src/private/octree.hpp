@@ -17,6 +17,8 @@ public:
 	std::tuple<Triangle, float, int> nearTriangle(glm::vec3 p) const;
 
 	size_t printInfoRecursify(int indent = 0, int level = 1);
+
+	float halfSize() const noexcept {return m_halfSize;}
 private:
 	int index(glm::vec3 point) const;
 	void insertByIndex(int idx, Triangle triangle);

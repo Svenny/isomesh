@@ -28,7 +28,7 @@ double isomesh::MeshField::value (double x, double y, double z) const noexcept
 {
 	glm::vec3 p(x, y, z);
 	std::tuple<Triangle, float, int> ans = m_root->nearTriangle(p);
-	return get<1>(ans) - 0.02f;
+	return get<1>(ans) - 0.03f;
 }
 
 glm::dvec3 isomesh::MeshField::grad (double x, double y, double z) const noexcept

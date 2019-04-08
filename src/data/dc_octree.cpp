@@ -299,6 +299,8 @@ Mesh DC_Octree::contour (const MaterialFilter &filter) {
 	Mesh mesh;
 	makeVertices (&m_root, filter, mesh);
 	cellProc (&m_root, mesh);
+	mesh.setGlobalPos (m_globalPos);
+	mesh.setGlobalScale (m_globalScale);
 	return mesh;
 }
 

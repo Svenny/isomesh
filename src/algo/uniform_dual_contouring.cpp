@@ -112,6 +112,8 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	generateQuads<0> (dual_vertex_ids, mesh, G); // X
 	generateQuads<1> (dual_vertex_ids, mesh, G); // Y
 	generateQuads<2> (dual_vertex_ids, mesh, G); // Z
+	mesh.setGlobalPos (G.globalPosition ());
+	mesh.setGlobalScale (G.gridStep ());
 	return mesh;
 }
 

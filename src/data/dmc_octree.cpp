@@ -367,6 +367,8 @@ Mesh DMC_Octree::contour () const {
 	Mesh mesh;
 	VertexMap vertex_map;
 	cellProc (&m_root, vertex_map, mesh);
+	mesh.setGlobalPos (m_globalPos);
+	mesh.setGlobalScale (m_globalScale);
 	return mesh;
 }
 

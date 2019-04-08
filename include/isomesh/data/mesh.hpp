@@ -78,9 +78,16 @@ public:
 	size_t indexCount () const noexcept { return m_indices.size (); }
 	/// Size of index data in bytes
 	size_t indexBytes () const noexcept { return m_indices.size () * sizeof (uint32_t); }
+	
+	glm::dvec3 globalPos () const noexcept { return m_globalPos; }
+	void setGlobalPos (const glm::dvec3 &value) noexcept { m_globalPos = value; }
+	double globalScale () const noexcept { return m_globalScale; }
+	void setGlobalScale (double value) noexcept { m_globalScale = value; }
 private:
 	std::vector<Vertex> m_vertices; ///< Vertices array
 	std::vector<uint32_t> m_indices; ///< Indices array
+	glm::dvec3 m_globalPos { 0 }; ///< Position of local space origin in global space
+	double m_globalScale = 1; ///< Scaling needed to transform mesh to global space
 };
 
 }

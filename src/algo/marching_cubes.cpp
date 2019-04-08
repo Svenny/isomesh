@@ -117,6 +117,8 @@ Mesh marchingCubes (const UniformGrid &G) {
 			mesh.addTriangle (vertex_idx[i1], vertex_idx[i2], vertex_idx[i3]);
 		}
 	}
+	mesh.setGlobalPos (G.globalPosition ());
+	mesh.setGlobalScale (G.gridStep ());
 	return mesh;
 }
 

@@ -124,21 +124,14 @@ void TriangleOctree::insertByIndex(int idx, Triangle triangle) {
 	m_children[idx]->insert(triangle);
 }
 
-size_t TriangleOctree::printInfoRecursify(int indent, int level) {
-	size_t sum = 0;
-
-	if (m_isLeaf)
-		sum = m_triangles.size();
-	else {
+void TriangleOctree::printInfoRecursify(int indent) const {
+	if (m_isLeaf) {
+		cout << string(indent, '-') << (int)m_level << endl;
+	} else {
 		for (int i = 0; i < 8; i++)
 			if (m_children[i])
-				sum += m_children[i]->printInfoRecursify(indent+2, level - 1);
+				m_children[i]->printInfoRecursify(indent+2);
 	}
-
-	if (level > 1)
-		cout << string(indent, '-') << sum << endl;
-
-	return sum;
 }
 
 pair<float, int> TriangleOctree::distance (glm::vec3 P, Triangle tri) {

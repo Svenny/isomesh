@@ -16,7 +16,7 @@ public:
 
 	std::tuple<Triangle, float, int> nearTriangle(glm::vec3 p) const;
 
-	size_t printInfoRecursify(int indent = 0, int level = 1);
+	void printInfoRecursify(int indent = 0) const;
 
 	float halfSize() const noexcept {return m_halfSize;}
 private:
@@ -33,8 +33,8 @@ private:
 	const static int X_SIGN_MASK = 1;
 	const static int Y_SIGN_MASK = 2;
 	const static int Z_SIGN_MASK = 4;
-	const static int SPLIT_TRIANGLES_LIMIT = 20;
-	const static int MAX_DEPTH = 14;
+	const static int SPLIT_TRIANGLES_LIMIT = 60;
+	const static int MAX_DEPTH = 15;
 private:
 	glm::vec3 m_pos;
 	float m_halfSize;

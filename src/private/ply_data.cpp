@@ -23,7 +23,7 @@ void PlyData::load(std::string filename)
 	tinyply::PlyFile file;
 	std::ifstream fin(filename, std::ios::binary);
 	if (!fin.is_open())
-		throw std::runtime_error("file" + filename + "not found");
+		throw std::runtime_error("file " + filename + " not found");
 	file.parse_header(fin);
 
 	m_vertices = file.request_properties_from_element("vertex", { "x", "y", "z"}, 3);

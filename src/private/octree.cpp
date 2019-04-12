@@ -8,6 +8,10 @@
 
 using namespace std;
 
+float sign(float x) {
+	return x > 0 ? 1 : -1;
+}
+
 float distance2(glm::vec3 a, glm::vec3 b) {
 	return (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y) + (a.z - b.z)*(a.z - b.z);
 }
@@ -47,6 +51,19 @@ std::tuple<Triangle, float, int> TriangleOctree::nearTriangle(glm::vec3 point) c
 	shared_ptr<Triangle> ans(new Triangle());
 	shared_ptr<int> ansi(new int(0));
 	nearTriangleImpl(point, bound, ans, ansi);
+
+
+	/*
+	cerr << "point: " << point.x << " " << point.y << " " << point.z << endl;
+	cerr << "tri:" << endl;
+	cerr << "   a: " << ans->a.x << " " << ans->a.y << " " << ans->a.z << endl;
+	cerr << "   b: " << ans->b.x << " " << ans->b.y << " " << ans->b.z << endl;
+	cerr << "   c: " << ans->c.x << " " << ans->c.y << " " << ans->c.z << endl;
+	cerr << "dist: " << sqrt(*bound) << endl;
+	cerr << "sign: " << *ansi << endl;
+	*/
+
+
 	return { *ans, sqrt(*bound), *ansi };
 }
 
@@ -58,7 +75,10 @@ void TriangleOctree::nearTriangleImpl(glm::vec3 p, std::shared_ptr<float> bound,
 		std::pair<float, int> calc;
 		for (size_t i = 0; i < m_triangles.size(); i++) {
 			calc = TriangleOctree::distance(p, m_triangles[i]);
-			if (calc.first < *bound) {
+			//cerr << i << " " << calc.first << " " << calc.second << endl;
+			//
+			if (calc.first < *bound || (calc.first == *bound && calc.second < 0)) {
+				//cerr << "better!" << endl;
 				*ans = m_triangles[i];
 				*bound = calc.first;
 				*ansi = calc.second;
@@ -126,7 +146,7 @@ void TriangleOctree::insertByIndex(int idx, Triangle triangle) {
 
 void TriangleOctree::printInfoRecursify(int indent) const {
 	if (m_isLeaf) {
-		cout << string(indent, '-') << (int)m_level << endl;
+		cout << string(indent, '-') << (int)m_triangles.size() << endl;
 	} else {
 		for (int i = 0; i < 8; i++)
 			if (m_children[i])
@@ -141,38 +161,38 @@ pair<float, int> TriangleOctree::distance (glm::vec3 P, Triangle tri) {
 	float d_ca = glm::dot (CA, P - tri.c) / glm::dot (CA, CA);
 	// Check vertices
 	if (d_ca >= 1 && d_ab <= 0)
-		return { distance2 (tri.a, P), glm::sign(glm::dot(tri.a-P, tri.normal)) };
+		return { distance2 (tri.a, P), sign(glm::dot(tri.a-P, tri.normal)) };
 	glm::vec3 BC = tri.c - tri.b;
 	float d_bc = glm::dot (BC, P - tri.b) / glm::dot (BC, BC);
 	if (d_ab >= 1 && d_bc <= 0)
-		return { distance2 (tri.b, P), glm::sign(glm::dot(tri.b-P, tri.normal)) };
+		return { distance2 (tri.b, P), sign(glm::dot(tri.b-P, tri.normal)) };
 	if (d_bc >= 1 && d_ca <= 0)
-		return { distance2 (tri.c, P), glm::sign(glm::dot(tri.c-P, tri.normal)) };
+		return { distance2 (tri.c, P), sign(glm::dot(tri.c-P, tri.normal)) };
 	// Check edges
 	if (d_ab >= 0 && d_ab <= 1) {
 		glm::vec3 normalAB = glm::cross (AB, tri.normal);
 		if (glm::dot (normalAB, P - tri.a) >= 0) {
 			glm::vec3 K = tri.a + d_ab * AB;
-			return { distance2 (K, P), glm::sign(glm::dot(K-P, tri.normal)) };
+			return { distance2 (K, P), sign(glm::dot(K-P, tri.normal)) };
 		}
 	}
 	if (d_bc >= 0 && d_bc <= 1) {
 		glm::vec3 normalBC = glm::cross (BC, tri.normal);
 		if (glm::dot (normalBC, P - tri.b) >= 0) {
 			glm::vec3 K = tri.b + d_bc * BC;
-			return { distance2 (K, P), glm::sign(glm::dot(K-P, tri.normal)) };
+			return { distance2 (K, P), sign(glm::dot(K-P, tri.normal)) };
 		}
 	}
 	if (d_ca >= 0 && d_ca <= 1) {
 		glm::vec3 normalCA = glm::cross (CA, tri.normal);
 		if (glm::dot (normalCA, P - tri.c) >= 0) {
 			glm::vec3 K = tri.c + d_ca * CA;
-			return { distance2(K, P), glm::sign(glm::dot(K-P, tri.normal)) };
+			return { distance2(K, P), sign(glm::dot(K-P, tri.normal)) };
 		}
 	}
 	// Point is inside triangle, direct answer
 	glm::vec3 K = P - glm::dot (P - tri.a, tri.normal) * tri.normal;
-	return { distance2 (K, P), glm::sign(glm::dot (K - P, tri.normal)) };
+	return { distance2 (K, P), sign(glm::dot (K - P, tri.normal)) };
 }
 
 float TriangleOctree::distanceToNode(glm::vec3 p) const noexcept {

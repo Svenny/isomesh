@@ -28,12 +28,12 @@ double isomesh::MeshField::value (double x, double y, double z) const noexcept
 {
 	glm::vec3 p(x, y, z);
 	std::tuple<Triangle, float, int> ans = m_root->nearTriangle(p);
-	return get<1>(ans) - 0.03f;
+	return get<1>(ans) * get<2>(ans);
 }
 
 glm::dvec3 isomesh::MeshField::grad (double x, double y, double z) const noexcept
 {
-	const double h = m_root->halfSize() / 100;
+	const double h = m_root->halfSize() / 500;
 
 	const double x1 = value(x - h, y, z);
 	const double x2 = value(x + h, y, z);
@@ -42,12 +42,11 @@ glm::dvec3 isomesh::MeshField::grad (double x, double y, double z) const noexcep
 	const double z1 = value(x, y, z - h);
 	const double z2 = value(x, y, z + h);
 
-	return {(x2 - x1)/2/h, (y2 - y1)/2/h, (z2 - z1)/2/h};
+	return {-(x2 - x1)/2/h, -(y2 - y1)/2/h, -(z2 - z1)/2/h};
 	/*
 	glm::vec3 p(x, y, z);
 	std::tuple<Triangle, float, int> ans = m_root->nearTriangle(p);
-	Triangle tri = get<0>(ans);
-	return glm::normalize(glm::cross(tri.a - tri.b, tri.a - tri.c));
+	return get<0>(ans).normal;
 	*/
 }
 
@@ -129,4 +128,6 @@ void isomesh::MeshField::fillOctree() {
 	for (size_t i = 0; i < fcount; i++) {
 		m_root->insert(m_data.triangle(i));
 	}
+
+	//m_root->printInfoRecursify();
 }

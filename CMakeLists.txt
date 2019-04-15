@@ -1,6 +1,11 @@
 cmake_minimum_required (VERSION 3.10 FATAL_ERROR)
 
-project (isomesh VERSION 0.1.0 LANGUAGES CXX)
+project (
+	isomesh
+	VERSION 0.1.0
+	DESCRIPTION "Library of isosurface extraction algorithms"
+	LANGUAGES CXX
+)
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include (CMakePackageConfigHelpers)
@@ -84,6 +89,32 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   target_compile_options(isomesh PRIVATE "/W4")
 endif()
+
+option(BUILD_DOC "Build developer documentation" ON)
+if (BUILD_DOC)
+	find_package(Doxygen)
+	if (DOXYGEN_FOUND)
+		include(configureDoxygenFile)
+
+		set(DOXY_INPUT ${ISOMESH_HEADER_DIR})
+		configure_doxygen_file(Doxyfile)
+
+		add_custom_command(
+			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
+			DEPENDS ${ISOMESH_HEADERS}
+			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+			COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+			COMMAND cmake -E touch ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
+			COMMENT "Generating API documentation with Doxygen"
+			VERBATIM
+		)
+		add_custom_target(docs ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp)
+
+		install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION ${CMAKE_INSTALL_DOCDIR})
+	else (DOXYGEN_FOUND)
+		message("Doxygen need to be installed to generate the doxygen documentation")
+	endif (DOXYGEN_FOUND)
+endif(BUILD_DOC)
 
 set_target_properties (isomesh PROPERTIES
 	DEBUG_POSTFIX _d

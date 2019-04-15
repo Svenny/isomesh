@@ -1,0 +1,26 @@
+# Code from here https://habr.com/ru/post/133512/, with minor changes
+# Thanks qivb18 for this code
+
+function(configure_doxygen_file DOXYGEN_CONFIG_FILE)
+    IF(EXISTS ${PROJECT_SOURCE_DIR}/${DOXYGEN_CONFIG_FILE})
+       FILE(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${DOXYGEN_CONFIG_FILE})
+       FILE(READ ${PROJECT_SOURCE_DIR}/${DOXYGEN_CONFIG_FILE} DOXYFILE_CONTENTS)
+        STRING(REGEX REPLACE ";" "\\\\;" DOXYFILE_CONTENTS "${DOXYFILE_CONTENTS}")
+        STRING(REGEX REPLACE "\n" ";" DOXYFILE_LINES "${DOXYFILE_CONTENTS}")
+        LIST(LENGTH DOXYFILE_LINES ROW)
+        MATH(EXPR ROW "${ROW} - 1")
+        FOREACH(I RANGE ${ROW})
+           LIST(GET DOXYFILE_LINES ${I} LINE)
+           IF(LINE STRGREATER "")
+            STRING(REGEX MATCH "^[a-zA-Z]([^ ])+" DOXY_PARAM ${LINE})
+            IF(DEFINED DOXY_${DOXY_PARAM})
+               STRING(REGEX REPLACE "=([^\n])+" "= ${DOXY_${DOXY_PARAM}}" LINE ${LINE})
+            ENDIF(DEFINED DOXY_${DOXY_PARAM})
+           ENDIF()
+           FILE(APPEND ${CMAKE_CURRENT_BINARY_DIR}/${DOXYGEN_CONFIG_FILE} "${LINE}\n")
+        ENDFOREACH()
+    ELSE()
+       MESSAGE(SEND_ERROR "Doxygen configuration file '${DOXYGEN_CONFIG_FILE}' not found. Documentation will not be generated")
+    ENDIF()
+endfunction(configure_doxygen_file)
+

@@ -20,7 +20,6 @@ isomesh::MeshField::MeshField():
 void isomesh::MeshField::load(std::string filename)
 {
 	m_data.load(filename);
-	calculateNormalsAndCenters();
 	fillOctree();
 }
 
@@ -48,42 +47,6 @@ glm::dvec3 isomesh::MeshField::grad (double x, double y, double z) const noexcep
 	std::tuple<Triangle, float, int> ans = m_root->nearTriangle(p);
 	return get<0>(ans).normal;
 	*/
-}
-
-void isomesh::MeshField::calculateNormalsAndCenters()
-{
-	const size_t fcount = m_data.trianglesCount();
-
-	m_normals.resize(fcount);
-	m_centers.resize(fcount);
-
-	for (size_t i = 0; i < fcount; i++) {
-		glm::ivec3 indexs = m_data.triangleIndexs(i);
-		glm::vec3 p1 = m_data.vertex(indexs.x);
-		glm::vec3 p2 = m_data.vertex(indexs.y);
-		glm::vec3 p3 = m_data.vertex(indexs.z);
-
-		m_normals[i] = glm::normalize(glm::cross(p1 - p2, p1 - p3));
-		m_centers[i] = (p1 + p2 + p3) / 3.0f;
-	}
-}
-
-size_t isomesh::MeshField::nearTriangle(glm::dvec3 p) const noexcept
-{
-	glm::vec3 s = p;
-	const size_t fcount = m_data.trianglesCount();
-
-	float dist = std::numeric_limits<float>::max();
-	size_t idx = 0;
-	for (size_t i = 0; i < fcount; i++) {
-		float l = glm::distance(s, m_centers[i]);
-		if (l < dist) {
-			dist = l;
-			idx = i;
-		}
-	}
-
-	return idx;
 }
 
 void isomesh::MeshField::fillOctree() {

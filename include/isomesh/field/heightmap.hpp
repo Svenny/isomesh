@@ -19,11 +19,11 @@ namespace isomesh {
 		);
 		~Heightmap();
 
-		/// ScalarField overridings
+		// ScalarField overridings
 		double value(double x, double y, double z) const noexcept override;
 		glm::dvec3 grad(double x, double y, double z) const noexcept override;
 
-		/// Getters, setters for parameters
+		// getters, setters
 		void setHeightRange(std::pair<double, double> range) noexcept;
 		std::pair<double, double> heightRange()  const noexcept;
 		void setPixelSize(double pixelSize) noexcept;
@@ -31,11 +31,13 @@ namespace isomesh {
 		void setCenter(glm::dvec3 center) noexcept;
 		glm::dvec3 center() const noexcept;
 
-		// Members for data manipulation
-		/// Load grayscale heightmap with 8-bit or 16-bit on color channel
+		/**
+		@brief Load grayscale heightmap with 8-bit or 16-bit on color channel
+		@param filename path to image file
+		*/
 		void loadGrayscaleMap(std::string filename);
 
-		/// If data not loaded, Heightmap::value throw the logic_exception
+		/// Checks, if heightmap data loaded
 		bool isDataLoaded() const noexcept;
 
 	private:

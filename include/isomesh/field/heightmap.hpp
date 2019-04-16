@@ -10,6 +10,16 @@
 class STBImageData;
 
 namespace isomesh {
+	/**
+	 * @brief Scalar field from heightmap image file
+	 *
+	 * Logic of creating field over heightmap very simple - we map pixel 2D space to XZ Plane of 3D space,
+	 * using @p pixelSize as distance between neighboring pixels and @p center as global position of central pixel.
+	 * Then, using @p heightRange, we map pixel colour data to height. For position, which not a pixel point,
+	 * we using bilinear interpolation to calculate height value.
+	 *
+	 * Heightmap::value in our case is Y coord minus height of heightmap in this point on XY plane.
+	 */
 	class Heightmap: public ScalarField {
 	public:
 		Heightmap(

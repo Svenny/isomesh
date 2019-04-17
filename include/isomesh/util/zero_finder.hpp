@@ -1,5 +1,8 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+/** @file
+ * @brief Interfase of zero finder and some realization of it
+ */
 #pragma once
 
 #include "../common.hpp"
@@ -7,12 +10,14 @@
 
 namespace isomesh
 {
-
+/**
+ * @brief Interface of class for finding zero along axis
+ *
+ * Preconditions: f0 * f1 <= 0 and |f0| + |f1| > 0.
+ * These are assumed to be satisfied when findAlong* is called
+ */
 class ZeroFinder {
 public:
-	// Preconditions: f0 * f1 <= 0 and |f0| + |f1| > 0
-	// These are assumed to be satisfied when findAlong* is called
-
 	// f0 = f (x0, y0, z0)
 	// f1 = f (x1, y0, z0)
 	virtual double findAlongX (double x0, double y0, double z0,
@@ -30,6 +35,9 @@ public:
 	                           const ScalarField &f) const = 0;
 };
 
+/**
+ * @brief Specification of zero finder interface with step founding
+ */
 class StepCountedZeroFinder : public ZeroFinder {
 public:
 	StepCountedZeroFinder () noexcept = default;
@@ -41,6 +49,9 @@ protected:
 	int m_stepCount = 8;
 };
 
+/**
+ * @brief Realization of zero finder interface working by bisection
+ */
 class BisectionZeroFinder : public StepCountedZeroFinder {
 public:
 	BisectionZeroFinder () noexcept = default;

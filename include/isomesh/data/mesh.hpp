@@ -20,6 +20,7 @@ namespace isomesh
 */
 class Mesh {
 public:
+	/// @c vertex data structure, used in Mesh storage
 	struct alignas (4) Vertex {
 		Vertex (const glm::vec3 &p, const glm::vec3 &n, Material m) noexcept :
 			position (p), normal (n), material (float (m)) {}

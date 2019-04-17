@@ -1,5 +1,8 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
+/** @file
+ * @brief Interface for 3D QEF minimizer
+ */
 #pragma once
 
 #include "../common.hpp"
@@ -40,6 +43,9 @@ public:
 	virtual void reset () = 0;
 };
 
+/**
+ * @brief Base realization of QEF 3D interfase
+ */
 class BaseQefSolver3D : public QefSolver3D {
 public:
 	virtual void addPlane (glm::vec3 point, glm::vec3 normal) override;
@@ -55,6 +61,9 @@ protected:
 	int m_numPlanes = 0;
 };
 
+/**
+ * @brief Realization of QEF 3D interfase via gradient descent
+ */
 class GradientDescentQefSolver3D : public BaseQefSolver3D {
 public:
 	virtual glm::vec3 solve (glm::vec3 minPoint, glm::vec3 maxPoint) override;

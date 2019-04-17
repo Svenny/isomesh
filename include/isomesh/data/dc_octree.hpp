@@ -1,5 +1,8 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
+/** @file
+ * @brief Octree data storage for DC algorithm
+ */
 #pragma once
 
 #include "../common.hpp"

@@ -1,7 +1,7 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 /** \file
-	\brief Octree node
+	\brief Node of DMC Octree
 */
 #pragma once
 

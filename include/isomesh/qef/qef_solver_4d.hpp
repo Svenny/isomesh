@@ -1,5 +1,8 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
+/** @file
+ * @brief Interface for 4D QEF minimizer
+ */
 #pragma once
 
 #include "../common.hpp"
@@ -40,6 +43,9 @@ public:
 	virtual void reset () = 0;
 };
 
+/**
+ * @brief Base realization of QEF 4D interfase
+ */
 class BaseQefSolver4D : public QefSolver4D {
 public:
 	virtual void addPlane (glm::vec4 point, glm::vec4 normal) override;
@@ -55,6 +61,9 @@ protected:
 	int m_numPlanes = 0;
 };
 
+/**
+ * @brief Realization of QEF 4D interfase via gradient descent
+ */
 class GradientDescentQefSolver4D : public BaseQefSolver4D {
 public:
 	virtual glm::vec4 solve (glm::vec4 minPoint, glm::vec4 maxPoint) override;

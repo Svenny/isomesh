@@ -113,6 +113,6 @@ void PlyData::normalization() noexcept
 	}
 
 	m_multiplier = std::max(maxX - minX, std::max(maxY - minY, maxZ - minZ));
-	m_multiplier /= 2;
+	m_multiplier /= 32;
 	m_center = glm::vec3((maxX + minX)/2, (maxY + minY)/2, (maxZ + minZ)/2);
 }

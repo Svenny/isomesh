@@ -41,7 +41,7 @@ glm::dvec3 isomesh::MeshField::grad (double x, double y, double z) const noexcep
 	const double z1 = value(x, y, z - h);
 	const double z2 = value(x, y, z + h);
 
-	return {-(x2 - x1)/2/h, -(y2 - y1)/2/h, -(z2 - z1)/2/h};
+	return {(x1 - x2)/2/h, (y1 - y2)/2/h, (z1 - z2)/2/h};
 	/*
 	glm::vec3 p(x, y, z);
 	std::tuple<Triangle, float, int> ans = m_root->nearTriangle(p);

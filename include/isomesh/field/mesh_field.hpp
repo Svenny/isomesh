@@ -6,7 +6,6 @@
 #pragma once
 
 #include <glm/common.hpp>
-#include "../../../src/private/ply_data.hpp"
 #include <isomesh/field/scalar_field.hpp>
 
 class TriangleOctree;
@@ -22,17 +21,15 @@ namespace isomesh {
 		MeshField();
 
 		/**
-		@brief Load 3d model
-		@param filename path to .ply file with 3d model
+		* @brief Load 3d model
+		* @param filename path to .ply file with 3d model
+		* @param reverseLoadedOrder change winding order when load model, default to false
 		*/
-		void load(std::string filename);
+		void load(std::string filename, bool reverseLoadedOrder = false);
 
 		double value (double x, double y, double z) const noexcept override;
 		glm::dvec3 grad (double x, double y, double z) const noexcept override;
 	private:
-		void fillOctree();
-	private:
-		PlyData m_data;
 		TriangleOctree* m_root;
 	};
 }

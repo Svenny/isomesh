@@ -8,10 +8,12 @@
 
 using namespace std;
 
-isomesh::Mesh* isomesh::ply2mesh(const std::string filename)
+isomesh::Mesh* isomesh::ply2mesh(const std::string filename, bool reverseLoadedOrder)
 {
 	PlyData data;
 	data.load(filename);
+	if (reverseLoadedOrder)
+		data.setWindingOrder(WindingOrder::Inverted);
 
 	const size_t vcount = data.verticesCount();
 	const size_t fcount = data.trianglesCount();

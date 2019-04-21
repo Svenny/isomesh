@@ -6,6 +6,12 @@
 #include "../3dparty/tinyply.h"
 #include "triangle.hpp"
 
+enum class WindingOrder: uint8_t {
+	Direct,
+	Inverted
+};
+
+
 class PlyData {
 public:
 	PlyData();
@@ -20,11 +26,15 @@ public:
 	size_t trianglesCount() const noexcept;
 
 	bool loaded() const noexcept;
+
+	void setWindingOrder(WindingOrder order) noexcept;
+	WindingOrder windingOrder() const noexcept;
 private:
 	void normalization() noexcept;
 
 private:
 	bool m_loaded;
+	bool m_directWindingOrder;
 	std::shared_ptr<tinyply::PlyData> m_vertices, m_faces;
 	glm::vec3 m_center;
 	float m_multiplier;

@@ -12,6 +12,7 @@ namespace isomesh {
 	/**
 	 * @brief Function for convert 3d model from .ply file to Mesh
 	 * @param filename path to .ply file with 3d model
+	 * @param reverseLoadedOrder change winding order when load model, default to false
 	 */
-	Mesh* ply2mesh(std::string filename);
+	Mesh* ply2mesh(std::string filename, bool reverseLoadedOrder = false);
 }

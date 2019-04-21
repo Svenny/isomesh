@@ -11,6 +11,7 @@
 
 PlyData::PlyData():
 	m_loaded(false),
+	m_directWindingOrder(true),
 	m_vertices(nullptr),
 	m_faces(nullptr)
 {
@@ -32,8 +33,8 @@ void PlyData::load(std::string filename)
 	//std::cerr << "faces: " << tinyply::PropertyTable[m_faces->t].str << std::endl;
 
 	file.read(fin);
-	m_loaded = true;
 	normalization();
+	m_loaded = true;
 }
 
 glm::vec3 PlyData::vertex(const size_t idx) const
@@ -41,6 +42,7 @@ glm::vec3 PlyData::vertex(const size_t idx) const
 	float* vdata = reinterpret_cast<float*>(m_vertices->buffer.get());
 	return (glm::vec3(vdata[3*idx], vdata[3*idx+1], vdata[3*idx+2]) - m_center) / m_multiplier;
 }
+
 size_t PlyData::verticesCount() const noexcept
 {
 	if (m_vertices)
@@ -60,8 +62,14 @@ glm::ivec3 PlyData::triangleIndexs(const size_t idx) const
 {
 	int* fdata = reinterpret_cast<int*>(m_faces->buffer.get());
 	int i1 = fdata[3*idx];
-	int i2 = fdata[3*idx+1];
-	int i3 = fdata[3*idx+2];
+	int i2, i3;
+	if (m_directWindingOrder) {
+		i2 = fdata[3*idx+1];
+		i3 = fdata[3*idx+2];
+	} else {
+		i2 = fdata[3*idx+2];
+		i3 = fdata[3*idx+1];
+	}
 
 	return {i1, i2, i3};
 }
@@ -115,4 +123,20 @@ void PlyData::normalization() noexcept
 	m_multiplier = std::max(maxX - minX, std::max(maxY - minY, maxZ - minZ));
 	m_multiplier /= 32;
 	m_center = glm::vec3((maxX + minX)/2, (maxY + minY)/2, (maxZ + minZ)/2);
+}
+
+void PlyData::setWindingOrder(WindingOrder order) noexcept {
+	switch (order) {
+		case WindingOrder::Direct:
+			m_directWindingOrder = true;
+			break;
+
+		case WindingOrder::Inverted:
+			m_directWindingOrder = false;
+			break;
+	}
+}
+
+WindingOrder PlyData::windingOrder() const noexcept {
+	return m_directWindingOrder ? WindingOrder::Direct : WindingOrder::Inverted;
 }

@@ -18,7 +18,7 @@ DC_Octree::DC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_sc
 		throw std::invalid_argument ("Octree size is not a power of two");
 }
 
-void DC_Octree::build (const UniformGrid &grid, QrQefSolver3D &solver, float epsilon,
+void DC_Octree::build (const UniformGrid &grid, QefSolver3D &solver, float epsilon,
                        bool use_octree_simplification) {
 	// Scale epsilon according to QEF scale (when translating from global coordinates to
 	// local QEF value is scaled by 1/(scale^2))
@@ -363,13 +363,13 @@ void DC_Octree::buildNode (DC_OctreeNode *node, glm::ivec3 min_corner,
 		node->leaf_data.dual_vertex = vertex;
 		node->leaf_data.normal = glm::normalize (avg_normal);
 		node->leaf_data.corners = corners;
-		node->leaf_data.qef = args.solver.data ();
+		node->leaf_data.qef = args.solver.state ();
 	}
 }
 
 void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
                            int32_t size, BuildArgs &args) {
-	QrQefSolver3D &solver = args.solver;
+	QefSolver3D &solver = args.solver;
 	const UniformGrid &G = args.grid;
 
 	solver.reset ();
@@ -411,7 +411,7 @@ void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
 		glm::vec3 lower_bound (min_corner);
 		glm::vec3 upper_bound (min_corner + size);
 		node->leaf_data.dual_vertex = solver.solve (lower_bound, upper_bound);
-		node->leaf_data.qef = solver.data ();
+		node->leaf_data.qef = solver.state ();
 	}
 }
 

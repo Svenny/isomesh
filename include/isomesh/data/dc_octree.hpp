@@ -21,7 +21,7 @@ class DC_Octree {
 public:
 	explicit DC_Octree (int32_t root_size, glm::dvec3 global_pos = glm::dvec3 (0), double global_scale = 1);
 
-	void build (const UniformGrid &G, QrQefSolver3D &solver, float epsilon,
+	void build (const UniformGrid &G, QefSolver3D &solver, float epsilon,
 	            bool use_octree_simplification = true);
 	Mesh contour (const MaterialFilter &filter);
 
@@ -37,7 +37,7 @@ private:
 
 	struct BuildArgs {
 		const UniformGrid &grid;
-		QrQefSolver3D &solver;
+		QefSolver3D &solver;
 		float epsilon;
 		bool use_octree_simplification;
 	};

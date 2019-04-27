@@ -26,32 +26,26 @@ std::pair<T, T> calcSinCos (T buben) {
 
 template<typename T>
 void rotate (glm::mat<3, 3, T> &A, glm::mat<3, 3, T> &H, T c, T s, int i, int j) {
-	int caseid = i * 2 + j - 1;
-	switch (caseid) {
-	case 0: {
+	if (i == 0 && j == 1) {
 		int k = 2;
 		float aik = A[i][k];
 		float ajk = A[j][k];
 		A[i][k] = c * aik + s * ajk;
 		A[j][k] = -s * aik + c * ajk;
-		break;
 	}
-	case 1: {
+	else if (i == 0 && j == 2) {
 		int k = 1;
 		float aik = A[i][k];
 		float akj = A[k][j];
 		A[i][k] = c * aik + s * akj;
 		A[k][j] = -s * aik + c * akj;
-		break;
 	}
-	case 2: {
+	else { // (i == 1 && j == 2), other cases are impossible
 		int k = 0;
 		float aki = A[k][i];
 		float akj = A[k][j];
 		A[k][i] = c * aki + s * akj;
 		A[k][j] = -s * aki + c * akj;
-		break;
-	}
 	}
 	float aii = A[i][i];
 	float ajj = A[j][j];

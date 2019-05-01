@@ -1,5 +1,5 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 // Lookup tables used by Marching Cubes algorithm
 
 /* Maps vertex sign mask to edge zero-crossing mask. In my

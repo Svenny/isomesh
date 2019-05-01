@@ -173,7 +173,6 @@ void faceProcX (std::array<const DC_OctreeNode *, 2> nodes, Mesh &mesh) {
 	}
 }
 
-
 void faceProcY (std::array<const DC_OctreeNode *, 2> nodes, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		{ 0, 4 }, { 0, 5 }, { 0, 6 }, { 0, 7 },
@@ -285,9 +284,8 @@ void makeVertices (DC_OctreeNode *node, const MaterialFilter &filter, Mesh &mesh
 			node->leaf_data.vertex_id = mesh.addVertex (vertex, normal, mat);
 		}
 		else node->leaf_data.vertex_id = std::numeric_limits<uint32_t>::max ();
-		return;
 	}
-	for (int i = 0; i < 8; i++)
+	else for (int i = 0; i < 8; i++)
 		makeVertices (node->children[i], filter, mesh);
 }
 
@@ -380,7 +378,7 @@ void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
 	
 	bool has_edges = false;
 
-	const int edge_table[3][4][2] = {
+	constexpr int edge_table[3][4][2] = {
 		{ { 0, 2 }, { 1, 3 }, { 4, 6 }, { 5, 7 } }, // X
 		{ { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } }, // Y
 		{ { 0, 1 }, { 2, 3 }, { 4, 5 }, { 6, 7 } }  // Z

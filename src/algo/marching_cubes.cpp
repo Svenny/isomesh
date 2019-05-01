@@ -90,10 +90,9 @@ Mesh marchingCubes (const UniformGrid &G) {
 	}
 	while (true) {
 		uint32_t min_unprocessed_cell = G.kBadIndex;
-		for (int i = 0; i < 12; i++) {
+		for (int i = 0; i < 12; i++)
 			if (cell_edge_iters[i] != cell_edges[i].end ())
 				min_unprocessed_cell = glm::min (min_unprocessed_cell, cell_edge_iters[i]->cellIndex);
-		}
 		// All cells are processed
 		if (min_unprocessed_cell == G.kBadIndex)
 			break;
@@ -123,4 +122,3 @@ Mesh marchingCubes (const UniformGrid &G) {
 }
 
 }
-

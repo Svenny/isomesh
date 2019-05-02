@@ -8,21 +8,21 @@ namespace isomesh
 namespace jacobi_detail
 {
 
+// Faster but less accurate (Jacobi does not fully converge with this)
 template<typename T>
-std::pair<T, T> calcSinCos (T buben) {
+std::pair<T, T> calcSinCosFast (T buben) {
 	T inv = T (0.5) / hypot (T (1), buben);
 	T c = sqrt (T (0.5) + inv);
 	T s = copysign (sqrt (T (0.5) - inv), buben);
 	return { s, c };
 }
 
-/* // More accurate but much slower
+// More accurate but much slower
 template<typename T>
-std::pair<T, T> calcSinCos (T buben) {
+std::pair<T, T> calcSinCosAccurate (T buben) {
 	T phi = T (0.5) * atan (buben);
 	return { sin (phi), cos (phi) };
 }
-*/
 
 template<typename T>
 void rotate (glm::mat<3, 3, T> &A, glm::mat<3, 3, T> &H, T c, T s, int i, int j) {
@@ -73,7 +73,7 @@ void roate (glm::mat<4, 4, T> &A, glm::mat<4, 4, T> &H, T c, T s, int i, int j) 
 	A[i][i] = c * c * aii + s * s * ajj + c * s * (aij + aij);
 	A[j][j] = s * s * aii + c * c * ajj - c * s * (aij + aij);
 	A[i][j] = 0;
-	for (int k = 0; k < D; k++) {
+	for (int k = 0; k < 4; k++) {
 		float hik = H[i][k];
 		float hjk = H[j][k];
 		H[i][k] = c * hik + s * hjk;
@@ -84,10 +84,11 @@ void roate (glm::mat<4, 4, T> &A, glm::mat<4, 4, T> &H, T c, T s, int i, int j) 
 }
 
 template<typename T, int D>
-std::pair<glm::vec<D, T>, glm::mat<D, D, T> > jacobi (glm::mat<D, D, T> A, T tolerance) {
+std::pair<glm::vec<D, T>, glm::mat<D, D, T> > jacobi (glm::mat<D, D, T> A, T tolerance,
+                                                      int max_iters, bool use_fast_sincos) {
 	using namespace jacobi_detail;
 	glm::mat<D, D, T> E { T (1) };
-	for (int k = 0; k < D * 5; k++) {
+	for (int k = 0; k < max_iters; k++) {
 		T max_el = abs (A[0][1]);
 		int max_i = 0;
 		int max_j = 1;
@@ -106,7 +107,11 @@ std::pair<glm::vec<D, T>, glm::mat<D, D, T> > jacobi (glm::mat<D, D, T> A, T tol
 		int i = max_i;
 		int j = max_j;
 		T buben = (A[i][j] + A[i][j]) / (A[i][i] - A[j][j]);
-		auto[s, c] = calcSinCos (buben);
+		T s, c;
+		if (use_fast_sincos)
+			std::tie (s, c) = calcSinCosFast (buben);
+		else
+			std::tie (s, c) = calcSinCosAccurate (buben);
 		rotate<T> (A, E, c, s, i, j);
 	}
 	glm::vec<D, T> e;

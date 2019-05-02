@@ -5,6 +5,8 @@
 #include "householder.hpp"
 #include "jacobi.hpp"
 
+#include <cassert>
+#include <limits>
 #include <stdexcept>
 
 namespace isomesh
@@ -65,6 +67,7 @@ QefSolver3D::QefSolverState QefSolver3D::state () noexcept {
 	data.mpy = m_pointsSum.y;
 	data.mpz = m_pointsSum.z;
 	// Is it really safe to assume nobody will ever add 2^15 points? :P
+	assert (m_pointsCount <= std::numeric_limits<int16_t>::max ());
 	data.mp_cnt = int16_t (m_pointsCount);
 	data.dim = int16_t (m_featureDim);
 	return data;
@@ -104,11 +107,11 @@ glm::vec3 QefSolver3D::solve (glm::vec3 min_point, glm::vec3 max_point) {
 		AT = glm::transpose (M);
 		ATA = AT * M;
 	}
-	auto[e, E] = jacobi (ATA, m_tolerance);
+	auto[e, E] = jacobi (ATA, m_jacobiTolerance, m_maxJacobiIters, m_useFastFormulas);
 	glm::mat3 sigma { 0.0f };
 	m_featureDim = 3;
 	for (int i = 0; i < 3; i++) {
-		if (abs (e[i]) >= 0.01f)
+		if (abs (e[i]) >= m_pinvTolerance)
 			sigma[i][i] = 1.0f / e[i];
 		else m_featureDim--;
 	}
@@ -116,9 +119,7 @@ glm::vec3 QefSolver3D::solve (glm::vec3 min_point, glm::vec3 max_point) {
 	glm::vec3 p = m_pointsSum / float (m_pointsCount);
 	glm::vec3 b (A[3][0], A[3][1], A[3][2]);
 	glm::vec3 c = ATAp * (AT * b - ATA * p);
-	glm::mat3 test = ATAp * ATA;
-	glm::vec3 solution = c + p;
-	return glm::clamp (solution, min_point, max_point);
+	return glm::clamp (c + p, min_point, max_point);
 }
 
 void QefSolver3D::compressMatrix () noexcept {

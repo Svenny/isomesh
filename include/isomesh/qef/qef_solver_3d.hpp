@@ -73,8 +73,15 @@ public:
 	*/
 	glm::vec3 solve (glm::vec3 min_point, glm::vec3 max_point);
 	
-	float tolerance () const noexcept { return m_tolerance; }
-	void setTolerance (float value) noexcept { m_tolerance = glm::max (0.0f, value); }
+	float pinvTolerance () const noexcept { return m_pinvTolerance; }
+	float jacobiTolerance () const noexcept { return m_jacobiTolerance; }
+	int maxJacobiIters () const noexcept { return m_maxJacobiIters; }
+	bool fastFormulasUsed () const noexcept { return m_useFastFormulas; }
+	
+	void setPinvTolerance (float value) noexcept { m_pinvTolerance = glm::max (0.0f, value); }
+	void setJacobiTolerance (float value) noexcept { m_jacobiTolerance = glm::max (0.0f, value); }
+	void setMaxJacobiIters (int value) noexcept { m_maxJacobiIters = glm::max (1, value); }
+	void useFastFormulas (bool value) noexcept { m_useFastFormulas = value; }
 
 protected:
 	/// Maximal number of used rows
@@ -84,9 +91,6 @@ protected:
 	float A[4][kMaxRows];
 	/// Count of matrix rows occupied with useful data
 	int m_usedRows;
-	/// Singular values with absolute value less than tolerance will be zero-truncated
-	/// This tolerance also controls stopping condition in eigenvalue solver
-	float m_tolerance = 0.0025f;
 	/// Algebraic sum of points added to the solver
 	glm::vec3 m_pointsSum;
 	/// Count of points added to the solver
@@ -100,6 +104,14 @@ protected:
 		pseudoinverse matrix).
 	*/
 	int m_featureDim;
+	/// Singular values with absolute value less than tolerance will be truncated to zero
+	float m_pinvTolerance = 0.01f;
+	/// Stopping condition in Jacobi eigenvalue algorithm
+	float m_jacobiTolerance = 0.0025f;
+	/// Maximal number of Jacobi eigenvalue algorithm iterations
+	int m_maxJacobiIters = 15;
+	/// Whether to use more accurate or faster formulae in Jacobi eigenvalue algorithm
+	bool m_useFastFormulas = true;
 
 	void compressMatrix () noexcept;
 };

@@ -16,7 +16,7 @@ QefSolver3D::QefSolver3D () noexcept {
 	reset ();
 }
 
-QefSolver3D::QefSolver3D (const QefSolverState &data) noexcept {
+QefSolver3D::QefSolver3D (const State &data) noexcept {
 	reset ();
 	merge (data);
 }
@@ -26,10 +26,10 @@ void QefSolver3D::reset () noexcept {
 	m_pointsSum = glm::vec3 { 0 };
 	m_pointsCount = 0;
 	m_usedRows = 0;
-	m_featureDim = -1;
+	m_featureDim = 0;
 }
 
-void QefSolver3D::merge (const QefSolverState &data) noexcept {
+void QefSolver3D::merge (const State &data) noexcept {
 	// Mergee is of higher dimension, our mass point may be dismissed
 	if (data.dim > m_featureDim) {
 		m_featureDim = data.dim;
@@ -56,9 +56,9 @@ void QefSolver3D::merge (const QefSolverState &data) noexcept {
 	m_usedRows += 4;
 }
 
-QefSolver3D::QefSolverState QefSolver3D::state () noexcept {
+QefSolver3D::State QefSolver3D::state () noexcept {
 	compressMatrix ();
-	QefSolverState data;
+	State data;
 	data.a_11 = A[0][0]; data.a_12 = A[1][0]; data.a_13 = A[2][0]; data.b_1 = A[3][0];
 	data.a_22 = A[1][1]; data.a_23 = A[2][1]; data.b_2 = A[3][1];
 	data.a_33 = A[2][2]; data.b_3 = A[3][2];
@@ -66,10 +66,10 @@ QefSolver3D::QefSolverState QefSolver3D::state () noexcept {
 	data.mpx = m_pointsSum.x;
 	data.mpy = m_pointsSum.y;
 	data.mpz = m_pointsSum.z;
-	// Is it really safe to assume nobody will ever add 2^15 points? :P
-	assert (m_pointsCount <= std::numeric_limits<int16_t>::max ());
-	data.mp_cnt = int16_t (m_pointsCount);
-	data.dim = int16_t (m_featureDim);
+	// Is it really safe to assume nobody will ever add 2^30 points? :P
+	assert (m_pointsCount < (1 << 30));
+	data.mp_cnt = m_pointsCount;
+	data.dim = m_featureDim;
 	return data;
 }
 

@@ -1,10 +1,10 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+#include <isomesh/algo/uniform_dual_contouring.hpp>
+#include <isomesh/util/material_filter.hpp>
 
 #include <algorithm>
 #include <vector>
-
-#include <isomesh/algo/uniform_dual_contouring.hpp>
 
 namespace isomesh
 {
@@ -26,10 +26,10 @@ struct EdgeEntry {
 	bool operator < (const EdgeEntry &e) const noexcept { return cellIndex < e.cellIndex; }
 };
 
-void generateDualVertices (const UniformGrid &G, const MaterialFilter &filter, QefSolver3D &solver,
-                           const std::vector<EdgeEntry> &cell_edges, std::vector<uint32_t> &dual_vertex_ids,
-                           Mesh &mesh) {
+void generateDualVertices (const UniformGrid &G, QefSolver3D &solver, Mesh &mesh,
+                           const std::vector<EdgeEntry> &cell_edges, std::vector<uint32_t> &dual_vertex_ids) {
 	auto iter = cell_edges.begin ();
+	MaterialFilter filter;
 	while (iter != cell_edges.end ()) {
 		uint32_t cell_idx = iter->cellIndex;
 		solver.reset ();
@@ -45,7 +45,9 @@ void generateDualVertices (const UniformGrid &G, const MaterialFilter &filter, Q
 		glm::vec3 upper_bound = lower_bound + 1.0f;
 		glm::vec3 dual_vertex = solver.solve (lower_bound, upper_bound);
 		avg_normal = glm::normalize (avg_normal);
-		Material mat = filter.select (G, lower_bound, 0xFF);
+		filter.reset ();
+		filter <<= G.materialsOfCell (cell_idx);
+		Material mat = filter.select ();
 		dual_vertex_ids[cell_idx] = mesh.addVertex (dual_vertex, avg_normal, mat);
 	}
 }
@@ -94,7 +96,7 @@ void generateQuads (const std::vector<uint32_t> &dual_vertex_ids, Mesh &mesh, co
 
 using namespace dc_detail;
 
-Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolver3D &solver) {
+Mesh dualContouring (const UniformGrid &G, QefSolver3D &solver) {
 	size_t edges_count = G.edges<0> ().size () + G.edges<1> ().size () + G.edges<2> ().size ();
 	std::vector<EdgeEntry> cell_edges;
 	// Each edge provides up to four entries
@@ -108,7 +110,7 @@ Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolv
 	// Rough estimation that vertices count is equal to edges count
 	// and each vertex is shared by six triangles
 	Mesh mesh (edges_count, 6 * edges_count);
-	generateDualVertices (G, filter, solver, cell_edges, dual_vertex_ids, mesh);
+	generateDualVertices (G, solver, mesh, cell_edges, dual_vertex_ids);
 	generateQuads<0> (dual_vertex_ids, mesh, G); // X
 	generateQuads<1> (dual_vertex_ids, mesh, G); // Y
 	generateQuads<2> (dual_vertex_ids, mesh, G); // Z

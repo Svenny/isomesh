@@ -1,13 +1,12 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 #include <isomesh/data/dc_octree.hpp>
+#include <isomesh/util/material_filter.hpp>
 
 #include <cassert>
 #include <limits>
 #include <stdexcept>
 #include <unordered_map>
-
-#include <glm/gtc/constants.hpp>
 
 namespace isomesh
 {
@@ -275,27 +274,30 @@ void cellProc (const DC_OctreeNode *node, Mesh &mesh) {
 	}
 }
 
-void makeVertices (DC_OctreeNode *node, const MaterialFilter &filter, Mesh &mesh) {
+void makeVertices (DC_OctreeNode *node, Mesh &mesh) {
+	MaterialFilter filter;
 	if (!node->isSubdivided ()) {
 		if (!node->isHomogenous ()) {
 			glm::vec3 vertex = node->leaf_data.dual_vertex;
 			glm::vec3 normal = node->leaf_data.normal;
-			Material mat = filter.select (node->leaf_data.corners, 0xFF);
+			filter.reset ();
+			filter <<= node->leaf_data.corners;
+			Material mat = filter.select ();
 			node->leaf_data.vertex_id = mesh.addVertex (vertex, normal, mat);
 		}
 		else node->leaf_data.vertex_id = std::numeric_limits<uint32_t>::max ();
 	}
 	else for (int i = 0; i < 8; i++)
-		makeVertices (node->children[i], filter, mesh);
+		makeVertices (node->children[i], mesh);
 }
 
 }
 
 using namespace dc_detail;
 
-Mesh DC_Octree::contour (const MaterialFilter &filter) {
+Mesh DC_Octree::contour () {
 	Mesh mesh;
-	makeVertices (&m_root, filter, mesh);
+	makeVertices (&m_root, mesh);
 	cellProc (&m_root, mesh);
 	mesh.setGlobalPos (m_globalPos);
 	mesh.setGlobalScale (m_globalScale);

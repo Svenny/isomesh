@@ -14,10 +14,10 @@ namespace isomesh
 {
 
 struct MDC_Vertex {
-	MDC_Vertex () noexcept : normal (0), parent (nullptr) {}
+	MDC_Vertex () noexcept : normal (0), vertex_id (UINT32_MAX), parent (nullptr) {}
 	glm::vec3 dual_vertex;
 	glm::vec3 normal;
-	QefSolver3D::QefSolverState qef;
+	QefSolver3D::State qef;
 	uint32_t vertex_id;
 	uint16_t edge_mask;
 	bool collapsible;
@@ -30,12 +30,15 @@ struct MDC_OctreeNode {
 	
 	void subdivide ();
 	void collapse () noexcept;
-	bool isSubdivided () const noexcept { return m_children != nullptr; }
-	bool isLeaf () const noexcept { return m_children == nullptr; }
+	bool isSubdivided () const noexcept { return !m_isLeaf; }
+	bool isLeaf () const noexcept { return m_isLeaf; }
 	int16_t depth () const noexcept { return m_depth; }
 	
-	MDC_OctreeNode *child (int num) const noexcept { return m_children + num; }
-	MDC_OctreeNode *operator[] (int num) const noexcept { return m_children + num; }
+	const MDC_OctreeNode *child (int num) const noexcept { return m_children + num; }
+	Material corner (int num) const noexcept { return m_corners[num]; }
+
+	MDC_OctreeNode *child (int num) noexcept { return m_children + num; }
+	Material &corner (int num) noexcept { return m_corners[num]; }
 	
 	std::vector<MDC_Vertex> vertices;
 	
@@ -50,7 +53,12 @@ struct MDC_OctreeNode {
 		glm::ivec3 (1, 1, 1)
 	};
 private:
-	MDC_OctreeNode *m_children;
+	union {
+		MDC_OctreeNode *m_children;
+		Material m_corners[8];
+	};
+	bool m_isLeaf = true;
+	bool m_isCollapsed = false;
 	int16_t m_depth = 0;
 };
 

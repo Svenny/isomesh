@@ -9,6 +9,7 @@
 #include <tuple>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace isomesh
 {

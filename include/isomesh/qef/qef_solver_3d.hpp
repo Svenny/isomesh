@@ -16,10 +16,14 @@ class QefSolver3D {
 public:
 	/** \brief QEF solver state for external storage
 	
-		This struct holds all data necessary to initialize QEF solver in
-		compact form, suitable for storage in octree nodes.
+		This struct holds solver's internal state in compact form, suitable
+		for storage in octree nodes. You may use this struct to merge QEF's
+		together or to initialize another solver.
+		\note Solver's tunable options, such as tolerance or maximal number
+		of iterations, are not preserved. You need to used some other way
+		if you plan to store these options externally.
 	*/
-	struct QefSolverState {
+	struct State {
 		// Compressed matrix, only nonzero elements
 		float a_11, a_12, a_13, b_1;
 		float       a_22, a_23, b_2;
@@ -28,25 +32,26 @@ public:
 		// Sum of added points
 		float mpx, mpy, mpz;
 		// Added points count and feature dimension
-		// Using int16_t to fit them in four bytes (saving other four)
-		int16_t mp_cnt, dim;
+		// Using bit fields to fit them in four bytes, saving other four
+		uint32_t mp_cnt : 30;
+		uint32_t dim : 2;
 	};
 
 	QefSolver3D () noexcept;
-	QefSolver3D (const QefSolverState &data) noexcept;
+	QefSolver3D (const State &data) noexcept;
 	/** \brief Resets solver to its initial state
 	*/
 	void reset () noexcept;
-	/** \brief Add data from external storage to solver state
+	/** \brief Adds data from external storage to solver state
 
 		\param[in] data Data to be added
 	*/
-	void merge (const QefSolverState &data) noexcept;
-	/** \brief Obtain solver state for external storage
+	void merge (const State &data) noexcept;
+	/** \brief Obtains solver state for external storage
 
 		\return Solver state in compact form
 	*/
-	QefSolverState state () noexcept;
+	State state () noexcept;
 	/** \brief Adds a plane to the solver
 
 		\param[in] normal Normal vector of the plane, must have unit length
@@ -83,7 +88,7 @@ public:
 	void setMaxJacobiIters (int value) noexcept { m_maxJacobiIters = glm::max (1, value); }
 	void useFastFormulas (bool value) noexcept { m_useFastFormulas = value; }
 
-protected:
+private:
 	/// Maximal number of used rows
 	constexpr static int kMaxRows = 8;
 	/** \brief Column-major matrix A* = (A b)
@@ -94,7 +99,7 @@ protected:
 	/// Algebraic sum of points added to the solver
 	glm::vec3 m_pointsSum;
 	/// Count of points added to the solver
-	int m_pointsCount;
+	uint32_t m_pointsCount;
 	/** \brief Feature dimension
 	
 		Minimizer space is a set of all points in solution space where the QEF value
@@ -103,7 +108,7 @@ protected:
 		minus the number of singular values truncated to zero during computing the
 		pseudoinverse matrix).
 	*/
-	int m_featureDim;
+	uint32_t m_featureDim;
 	/// Singular values with absolute value less than tolerance will be truncated to zero
 	float m_pinvTolerance = 0.01f;
 	/// Stopping condition in Jacobi eigenvalue algorithm

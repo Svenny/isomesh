@@ -30,7 +30,7 @@ struct DC_OctreeNode {
 			glm::vec3 dual_vertex;
 			glm::vec3 normal;
 			std::array<Material, 8> corners;
-			QefSolver3D::QefSolverState qef;
+			QefSolver3D::State qef;
 			uint32_t vertex_id;
 		} leaf_data;
 		DC_OctreeNode *children[8];

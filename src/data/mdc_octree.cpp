@@ -132,7 +132,7 @@ void faceProcX (std::array<const MDC_OctreeNode *, 2> nodes, Mesh &mesh) {
 	for (int i = 0; i < 8; i++) {
 		const MDC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
-			sub[i] = (*n)[subTable[i][1]];
+			sub[i] = n->child (subTable[i][1]);
 			has_lesser = true;
 		}
 		else sub[i] = n;
@@ -171,7 +171,7 @@ void faceProcY (std::array<const MDC_OctreeNode *, 2> nodes, Mesh &mesh) {
 	for (int i = 0; i < 8; i++) {
 		const MDC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
-			sub[i] = (*n)[subTable[i][1]];
+			sub[i] = n->child (subTable[i][1]);
 			has_lesser = true;
 		}
 		else sub[i] = n;
@@ -210,7 +210,7 @@ void faceProcZ (std::array<const MDC_OctreeNode *, 2> nodes, Mesh &mesh) {
 	for (int i = 0; i < 8; i++) {
 		const MDC_OctreeNode *n = nodes[subTable[i][0]];
 		if (n->isSubdivided ()) {
-			sub[i] = (*n)[subTable[i][1]];
+			sub[i] = n->child (subTable[i][1]);
 			has_lesser = true;
 		}
 		else sub[i] = n;
@@ -333,12 +333,17 @@ void MDC_Octree::buildLeaf (MDC_OctreeNode *node, glm::ivec3 min_corner, int32_t
 		0, 2, 0, 2, 0, 2, 0, 2, 1, 1, 1, 1
 	};
 	// This mask generates up to four surface patches
+	int surface_cnt = 0;
 	for (int i = 0; i < 4; i++) {
-		uint16_t edge_mask = edgeSetsTable[vertex_mask][i];
-		if (edge_mask == 0)
+		if (edgeSetsTable[vertex_mask][i] == 0)
 			break;
+		surface_cnt++;
+	}
+	node->vertices.resize (surface_cnt);
+	for (int i = 0; i < surface_cnt; i++) {
+		uint16_t edge_mask = edgeSetsTable[vertex_mask][i];
 		solver.reset ();
-		MDC_Vertex octree_vertex;
+		MDC_Vertex &octree_vertex = node->vertices[i];
 		octree_vertex.edge_mask = edge_mask;
 		for (int j = 0; j < 12; j++) {
 			if (!(edge_mask & uint16_t (1 << j)))
@@ -347,9 +352,6 @@ void MDC_Octree::buildLeaf (MDC_OctreeNode *node, glm::ivec3 min_corner, int32_t
 			// C++ really needs 'for static' like in D language...
 			const auto &storage = (dim == 0 ? G.edges<0> () : dim == 1 ? G.edges<1> () : G.edges<2> ());
 			auto edge_pos = min_corner + MDC_OctreeNode::kCornerOffset[edge_table[j][0]];
-			auto e2 = min_corner + MDC_OctreeNode::kCornerOffset[edge_table[j][1]];
-			auto m1 = G[edge_pos];
-			auto m2 = G[e2];
 			auto iter = storage.findEdge (edge_pos.x, edge_pos.y, edge_pos.z);
 			assert (iter != storage.end ());
 			glm::vec3 vertex = iter->surfacePoint ();
@@ -363,7 +365,6 @@ void MDC_Octree::buildLeaf (MDC_OctreeNode *node, glm::ivec3 min_corner, int32_t
 		octree_vertex.dual_vertex = solver.solve (lower_bound, upper_bound);
 		octree_vertex.qef = solver.state ();
 		octree_vertex.collapsible = true;
-		node->vertices.emplace_back (octree_vertex);
 	}
 }
 

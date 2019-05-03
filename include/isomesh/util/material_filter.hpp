@@ -5,50 +5,65 @@
 */
 #pragma once
 
-#include "../data/grid.hpp"
+#include "../common.hpp"
 
 #include <array>
+#include <type_traits>
 
 namespace isomesh
 {
 
-/** \brief Selects material for uniform grid cell
+namespace matfilter_detail
+{
 
-	Pos denotes local coordinates of cell vertex closest to the 'lowest'
-	vertex in the grid (-size/2, -size/2, -size/2).
-	Vertex mask defines which cell vertices should be considered
-	in selection. i-th bit denotes i-th vertex in YXZ traversal order.
-	For example, consider cell (0, 0, 0)-(1, 1, 1), then bits will mean:
-	0 - (0, 0, 0)
-	1 - (0, 0, 1)
-	2 - (1, 0, 0)
-	3 - (1, 0, 1)
-	4 - (0, 1, 0)
-	5 - (0, 1, 1)
-	6 - (1, 1, 0)
-	7 - (1, 1, 1)
-	All-zero mask is not valid and should never be passed to this function.
-*/
-class MaterialFilter {
+constexpr bool kUsePreciseFilter = false;
+
+class MaterialFilterPrecise {
 public:
-	virtual Material select (const std::array<Material, 8> &corners, uint8_t mask) const = 0;
-	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const = 0;
+	MaterialFilterPrecise () noexcept { m_counts.fill (0); }
+
+	void operator <<= (Material mat) noexcept { m_counts[size_t (mat)]++; }
+	void operator <<= (const std::array<Material, 8> &mats) noexcept {
+		for (auto mat : mats)
+			m_counts[size_t (mat)]++;
+	}
+	void operator <<= (const MaterialFilterPrecise &flt) noexcept {
+		for (size_t i = 0; i < m_counts.size (); i++)
+			m_counts[i] += flt.m_counts[i];
+	}
+
+	void reset () noexcept { m_counts.fill (0); }
+	Material select () const noexcept;
+
+private:
+	std::array<uint32_t, size_t (Material::Count)> m_counts;
 };
 
-// Selects the first found material not equal to Empty. Selects Empty
-// only in case there are no non-Empty materials (which means invalid input)
-class AnyNonemptyMaterialFilter : public MaterialFilter {
+class MaterialFilterFast {
 public:
-	virtual Material select (const std::array<Material, 8> &corners, uint8_t mask) const override;
-	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const override;
+	MaterialFilterFast () noexcept : m_candidate (Material::Empty), m_count (0) {}
+
+	void operator <<= (Material mat) noexcept;
+	void operator <<= (const std::array<Material, 8> &mats) noexcept {
+		for (auto mat : mats)
+			*this <<= mat;
+	}
+	void operator <<= (const MaterialFilterFast &flt) noexcept;
+
+	void reset () noexcept {
+		m_candidate = Material::Empty;
+		m_count = 0;
+	}
+	Material select () const noexcept { return m_candidate; }
+
+private:
+	Material m_candidate;
+	uint32_t m_count;
 };
 
-// Selects the most frequent material not equal to Empty. Selects Empty
-// only in case there are no non-Empty materials (which means invalid input)
-class HistogramMaterialFilter : public MaterialFilter {
-public:
-	virtual Material select (const std::array<Material, 8> &corners, uint8_t mask) const override;
-	virtual Material select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const override;
-};
+}
+
+using MaterialFilter = std::conditional_t<matfilter_detail::kUsePreciseFilter,
+	matfilter_detail::MaterialFilterPrecise, matfilter_detail::MaterialFilterFast>;
 
 }

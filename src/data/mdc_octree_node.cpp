@@ -9,20 +9,25 @@ MDC_OctreeNode::MDC_OctreeNode () noexcept : m_children (nullptr)
 {}
 
 MDC_OctreeNode::~MDC_OctreeNode () noexcept {
-	delete[] m_children;
+	if (m_isLeaf)
+		delete[] m_children;
 }
 
 void MDC_OctreeNode::subdivide () {
-	if (m_children)
-		throw std::logic_error ("Octree node is already subdivided");
-	m_children = new MDC_OctreeNode[8];
-	for (int i = 0; i < 8; i++)
-		m_children[i].m_depth = m_depth + 1;
+	if (m_isLeaf) {
+		m_children = new MDC_OctreeNode[8];
+		for (int i = 0; i < 8; i++)
+			m_children[i].m_depth = m_depth + 1;
+		m_isLeaf = false;
+	}
 }
 
 void MDC_OctreeNode::collapse () noexcept {
-	delete[] m_children;
-	m_children = nullptr;
+	if (!m_isLeaf) {
+		delete[] m_children;
+		m_children = nullptr;
+		m_isLeaf = true;
+	}
 }
 
 }

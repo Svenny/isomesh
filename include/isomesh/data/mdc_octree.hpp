@@ -19,8 +19,8 @@ class MDC_Octree {
 public:
 	explicit MDC_Octree (int32_t root_size, glm::dvec3 global_pos = glm::dvec3 (0), double global_scale = 1);
 	
-	void build (const UniformGrid &G, QefSolver3D &solver, float epsilon);
-	Mesh contour ();
+	void build (const UniformGrid &G, QefSolver3D &solver);
+	Mesh contour (float epsilon);
 	
 	// Mappings between local and global coordinate spaces
 	glm::dvec3 localToGlobal (const glm::dvec3 &L) const noexcept { return L * m_globalScale + m_globalPos; }
@@ -35,7 +35,6 @@ private:
 	struct BuildArgs {
 		const UniformGrid &grid;
 		QefSolver3D &solver;
-		float epsilon;
 	};
 
 	void buildNode (MDC_OctreeNode *node, glm::ivec3 min_corner, int32_t size, BuildArgs &args);

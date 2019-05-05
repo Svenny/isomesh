@@ -67,7 +67,6 @@ set (ISOMESH_SOURCES
 	src/export/mesh2ply.cpp
 	src/field/heightmap.cpp
 	src/field/mesh_field.cpp
-	src/private/disjoint_set_union.cpp
 	src/private/disjoint_set_union.hpp
 	src/private/octree.cpp
 	src/private/octree.hpp

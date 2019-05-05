@@ -46,7 +46,7 @@ void generateDualVertices (const UniformGrid &G, QefSolver3D &solver, Mesh &mesh
 		glm::vec3 dual_vertex = solver.solve (lower_bound, upper_bound);
 		avg_normal = glm::normalize (avg_normal);
 		filter.reset ();
-		filter <<= G.materialsOfCell (cell_idx);
+		filter.add (G.materialsOfCell (cell_idx));
 		Material mat = filter.select ();
 		dual_vertex_ids[cell_idx] = mesh.addVertex (dual_vertex, avg_normal, mat);
 	}

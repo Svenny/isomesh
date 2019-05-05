@@ -22,12 +22,12 @@ class MaterialFilterPrecise {
 public:
 	MaterialFilterPrecise () noexcept { m_counts.fill (0); }
 
-	void operator <<= (Material mat) noexcept { m_counts[size_t (mat)]++; }
-	void operator <<= (const std::array<Material, 8> &mats) noexcept {
+	void add (Material mat) noexcept { m_counts[size_t (mat)]++; }
+	void add (const std::array<Material, 8> &mats) noexcept {
 		for (auto mat : mats)
 			m_counts[size_t (mat)]++;
 	}
-	void operator <<= (const MaterialFilterPrecise &flt) noexcept {
+	void add (const MaterialFilterPrecise &flt) noexcept {
 		for (size_t i = 0; i < m_counts.size (); i++)
 			m_counts[i] += flt.m_counts[i];
 	}
@@ -43,12 +43,12 @@ class MaterialFilterFast {
 public:
 	MaterialFilterFast () noexcept : m_candidate (Material::Empty), m_count (0) {}
 
-	void operator <<= (Material mat) noexcept;
-	void operator <<= (const std::array<Material, 8> &mats) noexcept {
+	void add (Material mat) noexcept;
+	void add (const std::array<Material, 8> &mats) noexcept {
 		for (auto mat : mats)
-			*this <<= mat;
+			add (mat);
 	}
-	void operator <<= (const MaterialFilterFast &flt) noexcept;
+	void add (const MaterialFilterFast &flt) noexcept;
 
 	void reset () noexcept {
 		m_candidate = Material::Empty;

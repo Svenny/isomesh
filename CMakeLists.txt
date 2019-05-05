@@ -27,13 +27,14 @@ set (ISOMESH_HEADERS
 	include/isomesh/algo/uniform_dual_contouring.hpp
 	include/isomesh/data/dc_octree.hpp
 	include/isomesh/data/dc_octree_node.hpp
+	include/isomesh/data/dmc_octree.hpp
+	include/isomesh/data/dmc_octree_node.hpp
 	include/isomesh/data/grid.hpp
 	include/isomesh/data/grid_edge_storage.hpp
 	include/isomesh/data/mdc_octree.hpp
 	include/isomesh/data/mdc_octree_node.hpp
 	include/isomesh/data/mesh.hpp
-	include/isomesh/data/dmc_octree.hpp
-	include/isomesh/data/dmc_octree_node.hpp
+	include/isomesh/export/mesh2ply.hpp
 	include/isomesh/field/heightmap.hpp
 	include/isomesh/field/mesh_field.hpp
 	include/isomesh/field/scalar_field.hpp
@@ -41,28 +42,41 @@ set (ISOMESH_HEADERS
 	include/isomesh/qef/qef_solver_4d.hpp
 	include/isomesh/util/material_filter.hpp
 	include/isomesh/util/material_selector.hpp
-	include/isomesh/util/zero_finder.hpp
 	include/isomesh/util/ply_mesh.hpp
-	include/isomesh/export/mesh2ply.hpp
+	include/isomesh/util/tables.hpp
+	include/isomesh/util/zero_finder.hpp
 )
 source_group (TREE ${ISOMESH_HEADER_DIR} PREFIX Headers FILES ${ISOMESH_HEADERS})
 
 set (ISOMESH_SOURCES
+	src/3dparty/stb_image.h
+	src/3dparty/tinyply.h
 	src/3dparty/tinyply_impl.cpp
+	src/algo/edge_sets_table.h
 	src/algo/marching_cubes.cpp
 	src/algo/marching_cubes_tables.h
 	src/algo/uniform_dual_contouring.cpp
 	src/data/dc_octree.cpp
 	src/data/dc_octree_node.cpp
+	src/data/dmc_octree.cpp
+	src/data/dmc_octree_node.cpp
 	src/data/grid.cpp
 	src/data/grid_edge_storage.cpp
 	src/data/mdc_octree.cpp
 	src/data/mdc_octree_node.cpp
 	src/data/mesh.cpp
-	src/data/dmc_octree.cpp
-	src/data/dmc_octree_node.cpp
+	src/export/mesh2ply.cpp
 	src/field/heightmap.cpp
 	src/field/mesh_field.cpp
+	src/private/disjoint_set_union.cpp
+	src/private/disjoint_set_union.hpp
+	src/private/octree.cpp
+	src/private/octree.hpp
+	src/private/ply_data.cpp
+	src/private/ply_data.hpp
+	src/private/stbi_data.cpp
+	src/private/stbi_data.hpp
+	src/private/triangle.hpp
 	src/qef/gradient_descent_qef_solver_4d.cpp
 	src/qef/householder.hpp
 	src/qef/jacobi.hpp
@@ -71,12 +85,9 @@ set (ISOMESH_SOURCES
 	src/qef/qr_qef_solver_4d.cpp
 	src/util/bisection_zero_finder.cpp
 	src/util/material_filter.cpp
-	src/util/regula_falsi_zero_finder.cpp
 	src/util/ply_mesh.cpp
-	src/private/stbi_data.cpp
-	src/private/ply_data.cpp
-	src/export/mesh2ply.cpp
-	src/private/octree.cpp
+	src/util/tables.cpp
+	src/util/regula_falsi_zero_finder.cpp
 )
 source_group (TREE ${ISOMESH_SOURCE_DIR} PREFIX Sources FILES ${ISOMESH_SOURCES})
 

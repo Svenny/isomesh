@@ -281,7 +281,7 @@ void makeVertices (DC_OctreeNode *node, Mesh &mesh) {
 			glm::vec3 vertex = node->leaf_data.dual_vertex;
 			glm::vec3 normal = node->leaf_data.normal;
 			filter.reset ();
-			filter <<= node->leaf_data.corners;
+			filter.add (node->leaf_data.corners);
 			Material mat = filter.select ();
 			node->leaf_data.vertex_id = mesh.addVertex (vertex, normal, mat);
 		}

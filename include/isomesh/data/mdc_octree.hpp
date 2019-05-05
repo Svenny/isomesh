@@ -9,7 +9,6 @@
 #include "../data/mesh.hpp"
 #include "../data/grid.hpp"
 #include "../qef/qef_solver_3d.hpp"
-#include "../util/material_filter.hpp"
 #include "../util/material_selector.hpp"
 #include "mdc_octree_node.hpp"
 

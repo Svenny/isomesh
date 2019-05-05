@@ -19,7 +19,7 @@ Material MaterialFilterPrecise::select () const noexcept {
 	return Material (iter - m_counts.begin ());
 }
 
-void MaterialFilterFast::operator <<= (Material mat) noexcept {
+void MaterialFilterFast::add (Material mat) noexcept {
 	if (mat == Material::Empty)
 		return;
 	if (mat == m_candidate)
@@ -32,7 +32,7 @@ void MaterialFilterFast::operator <<= (Material mat) noexcept {
 	}
 }
 
-void MaterialFilterFast::operator <<= (const MaterialFilterFast &flt) noexcept {
+void MaterialFilterFast::add (const MaterialFilterFast &flt) noexcept {
 	if (m_candidate == flt.m_candidate)
 		m_count += flt.m_count;
 	else if (m_count > flt.m_count)

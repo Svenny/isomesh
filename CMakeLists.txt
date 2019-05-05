@@ -41,7 +41,6 @@ set (ISOMESH_HEADERS
 	include/isomesh/qef/qef_solver_3d.hpp
 	include/isomesh/qef/qef_solver_4d.hpp
 	include/isomesh/util/material_filter.hpp
-	include/isomesh/util/material_selector.hpp
 	include/isomesh/util/ply_mesh.hpp
 	include/isomesh/util/tables.hpp
 	include/isomesh/util/zero_finder.hpp

@@ -31,7 +31,6 @@
 #include "qef/qef_solver_4d.hpp"
 
 #include "util/material_filter.hpp"
-#include "util/material_selector.hpp"
 #include "util/zero_finder.hpp"
 
 #include "algo/marching_cubes.hpp"

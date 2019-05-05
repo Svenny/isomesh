@@ -1,12 +1,10 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
+#include <isomesh/data/grid.hpp>
 
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
-
-#include <isomesh/util/material_selector.hpp>
-#include <isomesh/data/grid.hpp>
 
 namespace isomesh
 {
@@ -23,9 +21,7 @@ UniformGrid::UniformGrid (uint32_t size, const glm::dvec3 &globalPos, double gri
 	m_mat.reset (new Material[(size + 1) * (size + 1) * (size + 1)]);
 }
 
-void UniformGrid::fill (const ScalarField &f,
-                        const ZeroFinder &solver,
-                        const MaterialSelector &material) {
+void UniformGrid::fill (const ScalarField &f, const ZeroFinder &solver) {
 	std::vector<double> values (dataSize ());
 	// Compute function values over the whole grid
 	uint32_t idx = 0;
@@ -40,7 +36,7 @@ void UniformGrid::fill (const ScalarField &f,
 				if (values[idx] > 0)
 					m_mat[idx] = Material::Empty;
 				else
-					m_mat[idx] = material.select (call_pos, values[idx]);
+					m_mat[idx] = f.material (call_pos, values[idx]);
 				idx++;
 				call_pos.z += m_gridStep;
 			}

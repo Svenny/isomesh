@@ -20,13 +20,13 @@ DMC_Octree::DMC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_
 		throw std::invalid_argument ("Octree size is not a power of two");
 }
 
-void DMC_Octree::build (const ScalarField &field, const MaterialSelector &material,
-                        QefSolver4D &solver, float epsilon, bool use_simple_split_policy,
-                        bool use_random_sampling, bool use_early_split_stop, uint32_t seed) {
+void DMC_Octree::build (const ScalarField &field, QefSolver4D &solver, float epsilon,
+                        bool use_simple_split_policy, bool use_random_sampling,
+                        bool use_early_split_stop, uint32_t seed) {
 	// Scale epsilon according to QEF scale (when translating from global coordinates to
 	// local QEF value is scaled by 1/(scale^2))
 	float scaled_epsilon = epsilon / float (m_globalScale * m_globalScale);
-	BuildArgs args { field, material, solver, scaled_epsilon, use_simple_split_policy,
+	BuildArgs args { field, solver, scaled_epsilon, use_simple_split_policy,
 	                 use_random_sampling, use_early_split_stop, std::mt19937 (seed) };
 	try {
 		m_root.collapse ();
@@ -415,7 +415,6 @@ bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner
                                      int32_t size, BuildArgs &args) {
 	QefSolver4D &solver = args.solver;
 	const ScalarField &field = args.field;
-	const MaterialSelector &material = args.material;
 
 	const glm::vec3 base_point { min_corner };
 	solver.reset ();
@@ -480,7 +479,7 @@ bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner
 	//node->normal = glm::vec3 (glm::normalize (field.grad (vertex_global)));
 	if (vertex.w <= 0) {
 		double value_global = double (vertex.w) * m_globalScale;
-		node->material = material.select (vertex_global, value_global);
+		node->material = field.material (vertex_global, value_global);
 	}
 	return error <= args.epsilon;
 }

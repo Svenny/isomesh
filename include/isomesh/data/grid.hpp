@@ -102,8 +102,6 @@ public:
 	// Edge storages access
 	template<int D> const UniformGridEdgeStorage &edges () const noexcept;
 
-	/// This index marks a vertex/edge/cell that does not exist
-	constexpr static uint32_t kBadIndex = ~uint32_t (0);
 private:
 	const uint32_t m_size;
 	const int32_t m_halfSize;

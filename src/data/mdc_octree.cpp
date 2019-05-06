@@ -141,7 +141,10 @@ void cellProc (const MDC_OctreeNode *node, Mesh &mesh) {
 
 void addVerticesToMesh (MDC_OctreeNode *node, Mesh &mesh, float epsilon) {
 	for (auto &v : node->m_vertices) {
-		v.m_collapsible = v.m_error <= epsilon;
+		if (node->isLeaf ())
+			v.m_collapsible = true;
+		else
+			v.m_collapsible = v.m_error <= epsilon;
 		if (v.m_collapsible && !v.hasCollapsibleAncestor ()) {
 			glm::vec3 vertex = v.m_position;
 			glm::vec3 normal = v.m_normal;

@@ -60,7 +60,7 @@ void collectCellEdges (std::vector<EdgeEntry> &cell_edges, const UniformGrid &G)
 		glm::ivec3 edge_pos = iter->lesserEndpoint ();
 		auto cells = G.adjacentCellsForEdge<D> (edge_pos);
 		for (uint32_t cell_idx : cells)
-			if (cell_idx != G.kBadIndex)
+			if (cell_idx != kBadIndex)
 				cell_edges.emplace_back (cell_idx, iter);
 	}
 }
@@ -71,15 +71,15 @@ void generateQuads (const std::vector<uint32_t> &dual_vertex_ids, Mesh &mesh, co
 		glm::ivec3 edge_pos = edge.lesserEndpoint ();
 		auto cells = G.adjacentCellsForEdge<D> (edge_pos);
 		// Border edges lack some adjacent cells, skip them
-		if (cells[0] == G.kBadIndex || cells[1] == G.kBadIndex ||
-			 cells[2] == G.kBadIndex || cells[3] == G.kBadIndex)
+		if (cells[0] == kBadIndex || cells[1] == kBadIndex ||
+			 cells[2] == kBadIndex || cells[3] == kBadIndex)
 			continue;
 		uint32_t vtx0 = dual_vertex_ids[cells[0]];
 		uint32_t vtx1 = dual_vertex_ids[cells[1]];
 		uint32_t vtx2 = dual_vertex_ids[cells[2]];
 		uint32_t vtx3 = dual_vertex_ids[cells[3]];
-		assert (vtx0 != G.kBadIndex && vtx1 != G.kBadIndex &&
-		        vtx2 != G.kBadIndex && vtx3 != G.kBadIndex);
+		assert (vtx0 != kBadIndex && vtx1 != kBadIndex &&
+		        vtx2 != kBadIndex && vtx3 != kBadIndex);
 		bool flip = !edge.isLesserEndpointSolid ();
 		if (!flip) {
 			mesh.addTriangle (vtx0, vtx1, vtx3);
@@ -106,7 +106,7 @@ Mesh dualContouring (const UniformGrid &G, QefSolver3D &solver) {
 	collectCellEdges<2> (cell_edges, G); // Z
 	// Group edges by cell ids
 	std::sort (cell_edges.begin (), cell_edges.end ());
-	std::vector<uint32_t> dual_vertex_ids (G.dataSize (), G.kBadIndex);
+	std::vector<uint32_t> dual_vertex_ids (G.dataSize (), kBadIndex);
 	// Rough estimation that vertices count is equal to edges count
 	// and each vertex is shared by six triangles
 	Mesh mesh (edges_count, 6 * edges_count);

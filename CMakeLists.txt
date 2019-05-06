@@ -51,7 +51,6 @@ set (ISOMESH_SOURCES
 	src/3dparty/stb_image.h
 	src/3dparty/tinyply.h
 	src/3dparty/tinyply_impl.cpp
-	src/algo/edge_sets_table.h
 	src/algo/marching_cubes.cpp
 	src/algo/marching_cubes_tables.h
 	src/algo/uniform_dual_contouring.cpp

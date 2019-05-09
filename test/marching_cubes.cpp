@@ -1,10 +1,10 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 // Tests for marching cubes algorithm
+#include <isomesh/isomesh.hpp>
+
 #include <iostream>
 #include <fstream>
-
-#include <isomesh/isomesh.hpp>
 
 using std::cerr;
 using std::clog;
@@ -36,7 +36,7 @@ int main () {
 	// then check it against a manually validated result
 	const int sz = 16;
 	isomesh::UniformGrid G (sz);
-	G.fill (F, solver, isomesh::TrivialMaterialSelector ());
+	G.fill (F, solver);
 	// Separate grid-related bugs from algorithm-related
 	auto edge_count = G.edges<0> ().size ();
 	if (edge_count != 39) {

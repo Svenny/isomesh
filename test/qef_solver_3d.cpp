@@ -1,9 +1,9 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 // Tests for QEF solver interface and its example implementation
-#include <iostream>
-
 #include <isomesh/qef/qef_solver_3d.hpp>
+
+#include <iostream>
 
 using std::cerr;
 using std::clog;

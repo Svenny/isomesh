@@ -1,11 +1,10 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 // Tests for uniform grid
-#include <iostream>
-
-#include <isomesh/util/material_selector.hpp>
 #include <isomesh/util/zero_finder.hpp>
 #include <isomesh/data/grid.hpp>
+
+#include <iostream>
 
 using std::cerr;
 using std::clog;
@@ -107,7 +106,7 @@ int main () {
 	// Create and fill uniform grid
 	const int sz = 4;
 	UniformGrid G (sz);
-	G.fill (F, solver, isomesh::TrivialMaterialSelector ());
+	G.fill (F, solver);
 
 	clog << "Grid layout map:" << endl;
 	printGridLayout (G);

@@ -10,43 +10,38 @@ namespace jacobi_detail
 
 // Faster but less accurate (Jacobi does not fully converge with this)
 template<typename T>
-std::pair<T, T> calcSinCosFast (T buben) {
-	T inv = T (0.5) / hypot (T (1), buben);
+std::pair<T, T> calcSinCosFast (T tan_twophi) {
+	T inv = T (0.5) / hypot (T (1), tan_twophi);
 	T c = sqrt (T (0.5) + inv);
-	T s = copysign (sqrt (T (0.5) - inv), buben);
+	T s = copysign (sqrt (T (0.5) - inv), tan_twophi);
 	return { s, c };
 }
 
 // More accurate but much slower
 template<typename T>
-std::pair<T, T> calcSinCosAccurate (T buben) {
-	T phi = T (0.5) * atan (buben);
+std::pair<T, T> calcSinCosAccurate (T tan_twophi) {
+	T phi = T (0.5) * atan (tan_twophi);
 	return { sin (phi), cos (phi) };
 }
 
 template<typename T>
 void rotate (glm::mat<3, 3, T> &A, glm::mat<3, 3, T> &H, T c, T s, int i, int j) {
+#define jacobiRotate(i, j, k) { \
+	float aik = A[glm::min (i, k)][glm::max (i, k)]; \
+	float ajk = A[glm::min (j, k)][glm::max (j, k)]; \
+	A[glm::min (i, k)][glm::max (i, k)] = c * aik + s * ajk; \
+	A[glm::min (j, k)][glm::max (j, k)] = -s * aik + c * ajk; \
+}
 	if (i == 0 && j == 1) {
-		int k = 2;
-		float aik = A[i][k];
-		float ajk = A[j][k];
-		A[i][k] = c * aik + s * ajk;
-		A[j][k] = -s * aik + c * ajk;
+		jacobiRotate (0, 1, 2);
 	}
 	else if (i == 0 && j == 2) {
-		int k = 1;
-		float aik = A[i][k];
-		float akj = A[k][j];
-		A[i][k] = c * aik + s * akj;
-		A[k][j] = -s * aik + c * akj;
+		jacobiRotate (0, 2, 1);
 	}
 	else { // (i == 1 && j == 2), other cases are impossible
-		int k = 0;
-		float aki = A[k][i];
-		float akj = A[k][j];
-		A[k][i] = c * aki + s * akj;
-		A[k][j] = -s * aki + c * akj;
+		jacobiRotate (1, 2, 0);
 	}
+#undef jacobiRotate
 	float aii = A[i][i];
 	float ajj = A[j][j];
 	float aij = A[i][j];
@@ -62,11 +57,38 @@ void rotate (glm::mat<3, 3, T> &A, glm::mat<3, 3, T> &H, T c, T s, int i, int j)
 }
 
 template<typename T>
-void roate (glm::mat<4, 4, T> &A, glm::mat<4, 4, T> &H, T c, T s, int i, int j) {
-	int caseid = 0;
-	switch (caseid) {
-		// TODO
+void rotate (glm::mat<4, 4, T> &A, glm::mat<4, 4, T> &H, T c, T s, int i, int j) {
+#define jacobiRotate(i, j, k) { \
+	float aik = A[glm::min (i, k)][glm::max (i, k)]; \
+	float ajk = A[glm::min (j, k)][glm::max (j, k)]; \
+	A[glm::min (i, k)][glm::max (i, k)] = c * aik + s * ajk; \
+	A[glm::min (j, k)][glm::max (j, k)] = -s * aik + c * ajk; \
+}
+	if (i == 0 && j == 1) {
+		jacobiRotate (0, 1, 2);
+		jacobiRotate (0, 1, 3);
 	}
+	else if (i == 0 && j == 2) {
+		jacobiRotate (0, 2, 1);
+		jacobiRotate (0, 2, 3);
+	}
+	else if (i == 0 && j == 3) {
+		jacobiRotate (0, 3, 1);
+		jacobiRotate (0, 3, 2);
+	}
+	else if (i == 1 && j == 2) {
+		jacobiRotate (1, 2, 0);
+		jacobiRotate (1, 2, 3);
+	}
+	else if (i == 1 && j == 3) {
+		jacobiRotate (1, 3, 0);
+		jacobiRotate (1, 3, 2);
+	}
+	else { // (i == 2 && j == 3), other cases are impossible
+		jacobiRotate (2, 3, 0);
+		jacobiRotate (2, 3, 1);
+	}
+#undef jacobiRotate
 	float aii = A[i][i];
 	float ajj = A[j][j];
 	float aij = A[i][j];
@@ -106,12 +128,12 @@ std::pair<glm::vec<D, T>, glm::mat<D, D, T> > jacobi (glm::mat<D, D, T> A, T tol
 			break;
 		int i = max_i;
 		int j = max_j;
-		T buben = (A[i][j] + A[i][j]) / (A[i][i] - A[j][j]);
+		T tan_twophi = (A[i][j] + A[i][j]) / (A[i][i] - A[j][j]);
 		T s, c;
 		if (use_fast_sincos)
-			std::tie (s, c) = calcSinCosFast (buben);
+			std::tie (s, c) = calcSinCosFast (tan_twophi);
 		else
-			std::tie (s, c) = calcSinCosAccurate (buben);
+			std::tie (s, c) = calcSinCosAccurate (tan_twophi);
 		rotate<T> (A, E, c, s, i, j);
 	}
 	glm::vec<D, T> e;

@@ -74,12 +74,10 @@ set (ISOMESH_SOURCES
 	src/private/stbi_data.cpp
 	src/private/stbi_data.hpp
 	src/private/triangle.hpp
-	src/qef/gradient_descent_qef_solver_4d.cpp
 	src/qef/householder.hpp
 	src/qef/jacobi.hpp
 	src/qef/qef_solver_3d.cpp
 	src/qef/qef_solver_4d.cpp
-	src/qef/qr_qef_solver_4d.cpp
 	src/util/bisection_zero_finder.cpp
 	src/util/material_filter.cpp
 	src/util/ply_mesh.cpp

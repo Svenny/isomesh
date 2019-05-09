@@ -119,6 +119,7 @@ glm::vec3 QefSolver3D::solve (glm::vec3 min_point, glm::vec3 max_point) {
 	glm::vec3 p = m_pointsSum / float (m_pointsCount);
 	glm::vec3 b (A[3][0], A[3][1], A[3][2]);
 	glm::vec3 c = ATAp * (AT * b - ATA * p);
+	// TODO: replace this hack with proper bounded solver
 	return glm::clamp (c + p, min_point, max_point);
 }
 

@@ -42,7 +42,7 @@ public:
 	/** \brief Resets solver to its initial state
 	*/
 	void reset () noexcept;
-	/** \brief Adds data from external storage to solver state
+	/** \brief Adds data from external storage to the solver state
 
 		\param[in] data Data to be added
 	*/

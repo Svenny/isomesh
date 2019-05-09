@@ -37,7 +37,7 @@ void householder (T A[N][M], int used_rows) {
 			invgamma = T (1) / glm::abs (v[i]);
 		}
 		// For each column do A[j] -= v * dot (A[j], v) / gamma
-		for (int j = i; j < 4; j++) {
+		for (int j = i; j < N; j++) {
 			T mult { 0 };
 			for (int k = i; k < used_rows; k++)
 				mult += A[j][k] * v[k];
@@ -47,40 +47,5 @@ void householder (T A[N][M], int used_rows) {
 		}
 	}
 }
-
-// Original code - remove when code above is properly tested
-/*void QrQefSolver3D::compressMatrix () {
-	float v[kRows];
-	for (int i = 0; i < 4; i++) {
-		// norm of i-th subcolumn
-		float norm = 0;
-		for (int j = i; j < kRows; j++)
-			norm += A[i][j] * A[i][j];
-		memset (v, 0, sizeof (v));
-		float invgamma = 0;
-		if (norm < std::numeric_limits<float>::min ()) {
-			v[i] = 1.0f;
-			invgamma = 2.0f;
-		}
-		else {
-			float mult = 1.0f / glm::sqrt (norm);
-			for (int j = i; j < kRows; j++)
-				v[j] = A[i][j] * mult;
-			if (v[i] >= 0)
-				v[i] += 1.0f;
-			else
-				v[i] -= 1.0f;
-			invgamma = 1.0f / glm::abs (v[i]);
-		}
-		for (int j = i; j < 4; j++) {
-			float dot = 0;
-			for (int k = i; k < kRows; k++)
-				dot += A[j][k] * v[k];
-			for (int k = 0; k < kRows; k++)
-				A[j][k] -= dot * invgamma * v[k];
-		}
-	}
-	m_usedRows = 4;
-}*/
 
 }

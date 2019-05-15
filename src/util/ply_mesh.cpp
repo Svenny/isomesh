@@ -39,8 +39,7 @@ isomesh::Mesh* isomesh::ply2mesh(const std::string filename, bool reverseLoadedO
 	isomesh::Mesh* ptr = new isomesh::Mesh(vcount, fcount);
 
 	for (size_t i = 0; i < vcount; i++) {
-		// TODO: Stone? Is it normal usage of material argument?
-		ptr->addVertex(data.vertex(i), normals[i], isomesh::Material::Stone);
+		ptr->addVertex(data.vertex(i), normals[i], isomesh::Material::Solid);
 	}
 
 	for (size_t i = 0; i < fcount; i++) {

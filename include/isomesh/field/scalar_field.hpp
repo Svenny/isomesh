@@ -47,7 +47,7 @@ public:
 	*/
 	virtual Material material (double x, double y, double z, double value) const noexcept {
 		(void) x; (void) y; (void) z; (void) value; // Unused parameters
-		return Material::Stone;
+		return Material::Solid;
 	}
 	/// Shorthand for \ref value
 	double operator () (double x, double y, double z) const noexcept { return value (x, y, z); }

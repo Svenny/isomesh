@@ -17,8 +17,9 @@ namespace isomesh
 /// Voxel materials enumeration
 enum class Material : uint8_t {
 	Empty = 0,  ///< No voxel (i.e. air)
-	Stone, ///<
-	Soil, ///<
+	Solid, ///< Default nonempty material
+	Stone,
+	Soil,
 
 	Count ///< Not a material
 };

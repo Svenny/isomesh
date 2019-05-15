@@ -1,5 +1,5 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 /** \file
 	\brief Master header file for Isomesh library
 */
@@ -11,7 +11,7 @@
   results of these algorithms on different inputs.
   \author Pavel Asyutchenko
   \version 0.1
-  \date 2018
+  \date 2018-2019
   \copyright MIT License
 */
 #pragma once
@@ -19,6 +19,7 @@
 #include "common.hpp"
 
 #include "data/grid.hpp"
+#include "data/mdc_octree.hpp"
 #include "data/mesh.hpp"
 #include "data/dc_octree.hpp"
 #include "data/dmc_octree.hpp"
@@ -30,7 +31,6 @@
 #include "qef/qef_solver_4d.hpp"
 
 #include "util/material_filter.hpp"
-#include "util/material_selector.hpp"
 #include "util/zero_finder.hpp"
 
 #include "algo/marching_cubes.hpp"

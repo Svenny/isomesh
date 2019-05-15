@@ -1,9 +1,8 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
+#include <isomesh/util/zero_finder.hpp>
 
 #include <algorithm>
-
-#include <isomesh/util/zero_finder.hpp>
 
 namespace isomesh
 {
@@ -16,7 +15,7 @@ double RegulaFalsiZeroFinder::findAlongC (double x0, double y0, double z0,
 	glm::dvec3 p (x0, y0, z0);
 	double c0 = std::get<C> (p);
 	int side = 0;
-	double mid;
+	double mid = c0;
 	for (int i = 0; i < m_stepCount; i++) {
 		mid = (c0 * f1 - c1 * f0) / (f1 - f0);
 		std::get<C> (p) = mid;

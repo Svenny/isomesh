@@ -50,7 +50,7 @@ protected:
 };
 
 /**
- * @brief Realization of zero finder interface working by bisection
+ * @brief Implementation of zero finder interface working by bisection
  */
 class BisectionZeroFinder : public StepCountedZeroFinder {
 public:

@@ -9,6 +9,7 @@
 #include <tuple>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace isomesh
 {
@@ -21,6 +22,9 @@ enum class Material : uint8_t {
 
 	Count ///< Not a material
 };
+
+/// This value indicates non-existent element
+constexpr uint32_t kBadIndex = UINT32_MAX;
 
 }
 

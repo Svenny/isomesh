@@ -1,9 +1,9 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 // Tests for QEF solver interface and its example implementation
-#include <iostream>
-
 #include <isomesh/qef/qef_solver_3d.hpp>
+
+#include <iostream>
 
 using std::cerr;
 using std::clog;
@@ -23,7 +23,7 @@ bool validate (isomesh::QefSolver3D &solver, glm::vec3 trueSolution) {
 		cerr << "Solver has breached constraints!" << endl;
 		return false;
 	}
-	if (glm::distance (solution, trueSolution) > 0.05f) {
+	if (glm::distance (solution, trueSolution) > 0.001f) {
 		cerr << "Solver is too far from true solution!" << endl;
 		return false;
 	}
@@ -70,8 +70,7 @@ bool test3 (isomesh::QefSolver3D &solver) {
 }
 
 int main () {
-	isomesh::GradientDescentQefSolver3D solver;
-	solver.setStepCount (25);
+	isomesh::QefSolver3D solver;
 	if (!test1 (solver))
 		return 1;
 	// Broken reset will probably make second test fail

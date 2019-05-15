@@ -16,8 +16,6 @@
 namespace isomesh
 {
 
-class MaterialSelector;
-
 // YXZ traversal order (to match Voxen's layout)
 // Local coordinates are [-size/2; size/2]
 // Global coordinates define point position in the world
@@ -37,7 +35,7 @@ public:
 		\param[in] solver Solver to find zeros along grid edges
 		\param[in] material Material selector
 	*/
-	void fill (const ScalarField &field, const ZeroFinder &solver, const MaterialSelector &material);
+	void fill (const ScalarField &field, const ZeroFinder &solver);
 	// Local-coordinates indexing
 	Material at (int32_t x, int32_t y, int32_t z) const;
 	Material operator [] (const glm::ivec3 &v) const;
@@ -104,8 +102,6 @@ public:
 	// Edge storages access
 	template<int D> const UniformGridEdgeStorage &edges () const noexcept;
 
-	/// This index marks a vertex/edge/cell that does not exist
-	constexpr static uint32_t kBadIndex = ~uint32_t (0);
 private:
 	const uint32_t m_size;
 	const int32_t m_halfSize;

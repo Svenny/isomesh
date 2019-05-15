@@ -9,8 +9,6 @@
 #include "../data/mesh.hpp"
 #include "../data/grid.hpp"
 #include "../qef/qef_solver_3d.hpp"
-#include "../util/material_filter.hpp"
-#include "../util/material_selector.hpp"
 #include "dc_octree_node.hpp"
 
 namespace isomesh 
@@ -21,9 +19,9 @@ class DC_Octree {
 public:
 	explicit DC_Octree (int32_t root_size, glm::dvec3 global_pos = glm::dvec3 (0), double global_scale = 1);
 
-	void build (const UniformGrid &G, QrQefSolver3D &solver, float epsilon,
+	void build (const UniformGrid &G, QefSolver3D &solver, float epsilon,
 	            bool use_octree_simplification = true);
-	Mesh contour (const MaterialFilter &filter);
+	Mesh contour ();
 
 	// Mappings between local and global coordinate spaces
 	glm::dvec3 localToGlobal (const glm::dvec3 &L) const noexcept { return L * m_globalScale + m_globalPos; }
@@ -37,7 +35,7 @@ private:
 
 	struct BuildArgs {
 		const UniformGrid &grid;
-		QrQefSolver3D &solver;
+		QefSolver3D &solver;
 		float epsilon;
 		bool use_octree_simplification;
 	};

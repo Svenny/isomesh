@@ -1,15 +1,12 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 #include <isomesh/data/dmc_octree.hpp>
+#include <isomesh/util/tables.hpp>
 
 #include <cassert>
 #include <limits>
 #include <stdexcept>
 #include <unordered_map>
-
-#include <glm/gtc/constants.hpp>
-
-#include "../algo/marching_cubes_tables.h"
 
 namespace isomesh
 {
@@ -20,13 +17,13 @@ DMC_Octree::DMC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_
 		throw std::invalid_argument ("Octree size is not a power of two");
 }
 
-void DMC_Octree::build (const ScalarField &field, const MaterialSelector &material,
-                        QefSolver4D &solver, float epsilon, bool use_simple_split_policy,
-                        bool use_random_sampling, bool use_early_split_stop, uint32_t seed) {
+void DMC_Octree::build (const ScalarField &field, QefSolver4D &solver, float epsilon,
+                        bool use_simple_split_policy, bool use_random_sampling,
+                        bool use_early_split_stop, uint32_t seed) {
 	// Scale epsilon according to QEF scale (when translating from global coordinates to
 	// local QEF value is scaled by 1/(scale^2))
 	float scaled_epsilon = epsilon / float (m_globalScale * m_globalScale);
-	BuildArgs args { field, material, solver, scaled_epsilon, use_simple_split_policy,
+	BuildArgs args { field, solver, scaled_epsilon, use_simple_split_policy,
 	                 use_random_sampling, use_early_split_stop, std::mt19937 (seed) };
 	try {
 		m_root.collapse ();
@@ -59,11 +56,6 @@ glm::vec3 lerp (const glm::vec3 &a, float w_a, const glm::vec3 &b, float w_b) {
 }
 
 void vertProc (std::array<const DMC_OctreeNode *, 8> nodes, VertexMap &vtx_map, Mesh &mesh) {
-	constexpr int octreeToMcOrder[8] = { 0, 3, 1, 2, 4, 7, 5, 6 };
-	constexpr int mcOrderEdges[12][2] = {
-		{ 0, 2 }, { 2, 3 }, { 1, 3 }, { 0, 1 }, { 4, 6 }, { 6, 7 },
-		{ 5, 7 }, { 4, 5 }, { 0, 4 }, { 2, 6 }, { 3, 7 }, { 1, 5 }
-	};
 	assert (nodes[0] && nodes[1] && nodes[2] && nodes[3] &&
 	        nodes[4] && nodes[5] && nodes[6] && nodes[7]);
 	const DMC_OctreeNode *sub[8];
@@ -80,21 +72,20 @@ void vertProc (std::array<const DMC_OctreeNode *, 8> nodes, VertexMap &vtx_map, 
 		vertProc ({ sub[0], sub[1], sub[2], sub[3], sub[4], sub[5], sub[6], sub[7] }, vtx_map, mesh);
 		return;
 	}
-	// Apply MC to this dual cell
+	// Apply Marching Cubes to this dual cell
 	uint32_t vertex_mask = 0;
 	for (int i = 0; i < 8; i++) {
 		float value = sub[i]->dualVertex.w;
 		if (value <= 0.0f)
-			vertex_mask |= uint32_t (1 << octreeToMcOrder[i]);
+			vertex_mask |= uint32_t (1 << i);
 	}
-	uint32_t edge_mask = edgeTable[vertex_mask];
+	uint32_t edge_mask = kMcVertexMaskToEdgeMask[vertex_mask];
 	uint32_t edge_vertex[12];
-	constexpr uint32_t bad_index = ~uint32_t (0);
 	for (int i = 0; i < 12; i++) {
-		edge_vertex[i] = bad_index;
+		edge_vertex[i] = kBadIndex;
 		if (edge_mask & uint32_t (1 << i)) {
-			int i1 = mcOrderEdges[i][0];
-			int i2 = mcOrderEdges[i][1];
+			int i1 = kCellEdgeEndpoint[i][0];
+			int i2 = kCellEdgeEndpoint[i][1];
 			auto subs = std::minmax (sub[i1], sub[i2]);
 			std::pair<const DMC_OctreeNode *, const DMC_OctreeNode *> edge (subs.first, subs.second);
 			auto iter = vtx_map.find (edge);
@@ -110,13 +101,10 @@ void vertProc (std::array<const DMC_OctreeNode *, 8> nodes, VertexMap &vtx_map, 
 			edge_vertex[i] = iter->second;
 		}
 	}
-	for (int i = 0; triTable[vertex_mask][i] != -1; i += 3) {
-		int i1 = triTable[vertex_mask][i];
-		int i2 = triTable[vertex_mask][i + 1];
-		int i3 = triTable[vertex_mask][i + 2];
-		assert (edge_vertex[i1] != bad_index &&
-		        edge_vertex[i2] != bad_index &&
-		        edge_vertex[i3] != bad_index);
+	for (int i = 0; kMcTriangleTable[vertex_mask][i] != -1; i += 3) {
+		int i1 = kMcTriangleTable[vertex_mask][i];
+		int i2 = kMcTriangleTable[vertex_mask][i + 1];
+		int i3 = kMcTriangleTable[vertex_mask][i + 2];
 		mesh.addTriangle (edge_vertex[i1], edge_vertex[i2], edge_vertex[i3]);
 	}
 }
@@ -390,7 +378,7 @@ void DMC_Octree::buildNode (DMC_OctreeNode *node, glm::ivec3 min_corner,
 			node->subdivide ();
 			int32_t child_size = size / 2;
 			for (int i = 0; i < 8; i++) {
-				glm::ivec3 child_min_corner = min_corner + child_size * DMC_OctreeNode::kCornerOffset[i];
+				glm::ivec3 child_min_corner = min_corner + child_size * kCellCornerOffset[i];
 				buildNode ((*node)[i], child_min_corner, child_size, args);
 			}
 			return;
@@ -405,7 +393,7 @@ void DMC_Octree::buildNode (DMC_OctreeNode *node, glm::ivec3 min_corner,
 		node->subdivide ();
 		int32_t child_size = size / 2;
 		for (int i = 0; i < 8; i++) {
-			glm::ivec3 child_min_corner = min_corner + child_size * DMC_OctreeNode::kCornerOffset[i];
+			glm::ivec3 child_min_corner = min_corner + child_size * kCellCornerOffset[i];
 			buildNode ((*node)[i], child_min_corner, child_size, args);
 		}
 	}
@@ -415,7 +403,6 @@ bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner
                                      int32_t size, BuildArgs &args) {
 	QefSolver4D &solver = args.solver;
 	const ScalarField &field = args.field;
-	const MaterialSelector &material = args.material;
 
 	const glm::vec3 base_point { min_corner };
 	solver.reset ();
@@ -480,7 +467,7 @@ bool DMC_Octree::generateDualVertex (DMC_OctreeNode *node, glm::ivec3 min_corner
 	//node->normal = glm::vec3 (glm::normalize (field.grad (vertex_global)));
 	if (vertex.w <= 0) {
 		double value_global = double (vertex.w) * m_globalScale;
-		node->material = material.select (vertex_global, value_global);
+		node->material = field.material (vertex_global, value_global);
 	}
 	return error <= args.epsilon;
 }
@@ -493,7 +480,7 @@ bool DMC_Octree::shouldSplit (glm::ivec3 min_corner, int32_t size, BuildArgs &ar
 	corner[0] = localToGlobal (min_corner);
 	double side = size * m_globalScale;
 	for (int i = 1; i < 8; i++)
-		corner[i] = corner[0] + glm::dvec3 (DMC_OctreeNode::kCornerOffset[i]) * side;
+		corner[i] = corner[0] + glm::dvec3 (kCellCornerOffset[i]) * side;
 
 	double values[8];
 	for (int i = 0; i < 8; i++)
@@ -582,7 +569,7 @@ bool DMC_Octree::shouldStopSplitting (glm::ivec3 min_corner, int32_t size, Build
 	const double diag = side * glm::root_three<double> ();
 
 	for (int i = 0; i < 8; i++) {
-		glm::dvec3 point = base_point + side * glm::dvec3 (DMC_OctreeNode::kCornerOffset[i]);
+		glm::dvec3 point = base_point + side * glm::dvec3 (kCellCornerOffset[i]);
 		double value = field (point);
 		if (glm::abs (value) <= diag)
 			return false;

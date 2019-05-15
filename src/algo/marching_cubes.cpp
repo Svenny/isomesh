@@ -1,11 +1,10 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
+#include <isomesh/algo/marching_cubes.hpp>
+#include <isomesh/util/tables.hpp>
 
 #include <algorithm>
 #include <vector>
-
-#include <isomesh/algo/marching_cubes.hpp>
-#include "marching_cubes_tables.h"
 
 namespace isomesh
 {
@@ -30,14 +29,9 @@ struct EdgeEntry {
 uint32_t getVertexMask (const UniformGrid &G, uint32_t cell_idx) {
 	auto materials = G.materialsOfCell (cell_idx);
 	uint32_t mask = 0;
-	if (materials[0] != Material::Empty) mask |= uint32_t (1 << 0);
-	if (materials[1] != Material::Empty) mask |= uint32_t (1 << 3);
-	if (materials[2] != Material::Empty) mask |= uint32_t (1 << 1);
-	if (materials[3] != Material::Empty) mask |= uint32_t (1 << 2);
-	if (materials[4] != Material::Empty) mask |= uint32_t (1 << 4);
-	if (materials[5] != Material::Empty) mask |= uint32_t (1 << 7);
-	if (materials[6] != Material::Empty) mask |= uint32_t (1 << 5);
-	if (materials[7] != Material::Empty) mask |= uint32_t (1 << 6);
+	for (uint32_t i = 0; i < 8; i++)
+		if (materials[i] != Material::Empty)
+			mask |= uint32_t (1 << i);
 	return mask;
 }
 
@@ -59,13 +53,13 @@ void collectCellEdges (std::vector<EdgeEntry> &cell_edges_0, std::vector<EdgeEnt
 		// Add this edge to adjacent cells
 		glm::ivec3 edge_pos = edge.lesserEndpoint ();
 		auto cells = G.adjacentCellsForEdge<D> (edge_pos);
-		if (cells[0] != G.kBadIndex)
+		if (cells[0] != kBadIndex)
 			cell_edges_0.emplace_back (cells[0], vertex_idx);
-		if (cells[1] != G.kBadIndex)
+		if (cells[1] != kBadIndex)
 			cell_edges_1.emplace_back (cells[1], vertex_idx);
-		if (cells[2] != G.kBadIndex)
+		if (cells[2] != kBadIndex)
 			cell_edges_2.emplace_back (cells[2], vertex_idx);
-		if (cells[3] != G.kBadIndex)
+		if (cells[3] != kBadIndex)
 			cell_edges_3.emplace_back (cells[3], vertex_idx);
 	}
 }
@@ -79,9 +73,9 @@ Mesh marchingCubes (const UniformGrid &G) {
 	// Each edge generates one vertex, and we assume that each vertex is shared by six triangles
 	Mesh mesh (edges_count, 6 * edges_count);
 	std::vector<EdgeEntry> cell_edges[12];
-	collectCellEdges<0> (cell_edges[6], cell_edges[2], cell_edges[0], cell_edges[4], mesh, G); // X
-	collectCellEdges<1> (cell_edges[10], cell_edges[9], cell_edges[8], cell_edges[11], mesh, G); // Y
-	collectCellEdges<2> (cell_edges[5], cell_edges[7], cell_edges[3], cell_edges[1], mesh, G); // Z
+	collectCellEdges<0> (cell_edges[3], cell_edges[1], cell_edges[0], cell_edges[2], mesh, G); // X
+	collectCellEdges<1> (cell_edges[7], cell_edges[6], cell_edges[4], cell_edges[5], mesh, G); // Y
+	collectCellEdges<2> (cell_edges[11], cell_edges[10], cell_edges[8], cell_edges[9], mesh, G); // Z
 	std::vector<EdgeEntry>::const_iterator cell_edge_iters[12];
 	// Group edges by cell ids
 	for (int i = 0; i < 12; i++) {
@@ -89,13 +83,12 @@ Mesh marchingCubes (const UniformGrid &G) {
 		cell_edge_iters[i] = cell_edges[i].begin ();
 	}
 	while (true) {
-		uint32_t min_unprocessed_cell = G.kBadIndex;
-		for (int i = 0; i < 12; i++) {
+		uint32_t min_unprocessed_cell = kBadIndex;
+		for (int i = 0; i < 12; i++)
 			if (cell_edge_iters[i] != cell_edges[i].end ())
 				min_unprocessed_cell = glm::min (min_unprocessed_cell, cell_edge_iters[i]->cellIndex);
-		}
 		// All cells are processed
-		if (min_unprocessed_cell == G.kBadIndex)
+		if (min_unprocessed_cell == kBadIndex)
 			break;
 		uint32_t cell_idx = min_unprocessed_cell;
 		uint32_t vertex_idx[12];
@@ -109,11 +102,11 @@ Mesh marchingCubes (const UniformGrid &G) {
 			}
 		}
 		uint32_t vertex_mask = getVertexMask (G, cell_idx);
-		assert (edge_mask == edgeTable[vertex_mask]);
-		for (int i = 0; triTable[vertex_mask][i] != -1; i += 3) {
-			int i1 = triTable[vertex_mask][i];
-			int i2 = triTable[vertex_mask][i + 1];
-			int i3 = triTable[vertex_mask][i + 2];
+		assert (edge_mask == kMcVertexMaskToEdgeMask[vertex_mask]);
+		for (int i = 0; kMcTriangleTable[vertex_mask][i] != -1; i += 3) {
+			int i1 = kMcTriangleTable[vertex_mask][i];
+			int i2 = kMcTriangleTable[vertex_mask][i + 1];
+			int i3 = kMcTriangleTable[vertex_mask][i + 2];
 			mesh.addTriangle (vertex_idx[i1], vertex_idx[i2], vertex_idx[i3]);
 		}
 	}
@@ -123,4 +116,3 @@ Mesh marchingCubes (const UniformGrid &G) {
 }
 
 }
-

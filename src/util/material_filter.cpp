@@ -7,68 +7,42 @@
 namespace isomesh
 {
 
-Material AnyNonemptyMaterialFilter::select (const std::array<Material, 8> &corners, uint8_t mask) const {
-	for (uint32_t i = 0; i < 8; i++)
-		if ((mask & (1 << i)) && corners[i] != Material::Empty)
-			return corners[i];
-	return Material::Empty;
+namespace matfilter_detail
+{
+
+Material MaterialFilterPrecise::select () const noexcept {
+	// Add 1 to begin () to exclude empty material which should
+	// never be returned when there is at least one nonempty material
+	auto iter = std::max_element (m_counts.begin () + 1, m_counts.end ());
+	if (*iter == 0)
+		return Material::Empty;
+	return Material (iter - m_counts.begin ());
 }
 
-Material AnyNonemptyMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const {
-	uint32_t idx = 0;
-	for (int32_t y = 0; y <= 1; y++) {
-		for (int32_t x = 0; x <= 1; x++) {
-			for (int32_t z = 0; z <= 1; z++) {
-				if (mask & (1 << idx)) {
-					auto mat = G.at (pos.x + x, pos.y + y, pos.z + z);
-					if (mat != Material::Empty)
-						return mat;
-				}
-				idx++;
-			}
-		}
+void MaterialFilterFast::add (Material mat) noexcept {
+	if (mat == Material::Empty)
+		return;
+	if (mat == m_candidate)
+		m_count++;
+	else if (m_count > 1)
+		m_count--;
+	else {
+		m_candidate = mat;
+		m_count = 1;
 	}
-	return Material::Empty;
 }
 
-Material HistogramMaterialFilter::select (const std::array<Material, 8> &corners, uint8_t mask) const {
-	constexpr size_t n = size_t (Material::Count);
-	uint32_t cnt[n];
-	std::fill (cnt, cnt + n, 0);
-
-	for (uint32_t i = 0; i < 8; i++) {
-		if (mask & (1 << i)) {
-			auto mat = corners[i];
-			if (mat != Material::Empty)
-				cnt[size_t (mat)]++;
-		}
+void MaterialFilterFast::add (const MaterialFilterFast &flt) noexcept {
+	if (m_candidate == flt.m_candidate)
+		m_count += flt.m_count;
+	else if (m_count > flt.m_count)
+		m_count -= flt.m_count;
+	else {
+		m_candidate = flt.m_candidate;
+		m_count = std::max (uint32_t (1), flt.m_count - m_count);
 	}
-
-	Material mat = Material (std::max_element (cnt, cnt + n) - cnt);
-	return mat;
 }
 
-Material HistogramMaterialFilter::select (const UniformGrid &G, glm::ivec3 pos, uint8_t mask) const {
-	constexpr size_t n = size_t (Material::Count);
-	uint32_t cnt[n];
-	std::fill (cnt, cnt + n, 0);
-
-	uint32_t idx = 0;
-	for (int32_t y = 0; y <= 1; y++) {
-		for (int32_t x = 0; x <= 1; x++) {
-			for (int32_t z = 0; z <= 1; z++) {
-				if (mask & (1 << idx)) {
-					auto mat = G.at (pos.x + x, pos.y + y, pos.z + z);
-					if (mat != Material::Empty)
-						cnt[size_t (mat)]++;
-				}
-				idx++;
-			}
-		}
-	}
-
-	Material mat = Material (std::max_element (cnt, cnt + n) - cnt);
-	return mat;
 }
 
 }

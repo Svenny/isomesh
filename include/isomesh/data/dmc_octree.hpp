@@ -9,7 +9,6 @@
 #include "../data/mesh.hpp"
 #include "../field/scalar_field.hpp"
 #include "../qef/qef_solver_4d.hpp"
-#include "../util/material_selector.hpp"
 #include "dmc_octree_node.hpp"
 
 #include <random>
@@ -22,10 +21,9 @@ class DMC_Octree {
 public:
 	explicit DMC_Octree (int32_t root_size, glm::dvec3 global_pos = glm::dvec3 (0), double global_scale = 1);
 	
-	void build (const ScalarField &field, const MaterialSelector &material,
-	            QefSolver4D &solver, float epsilon, bool use_simple_split_policy = false,
-	            bool use_random_sampling = true, bool use_early_split_stop = false,
-	            uint32_t seed = 0xDEADBEEF);
+	void build (const ScalarField &field, QefSolver4D &solver, float epsilon,
+	            bool use_simple_split_policy = false, bool use_random_sampling = true,
+	            bool use_early_split_stop = false, uint32_t seed = 0xDEADBEEF);
 	Mesh contour () const;
 
 	// Mappings between local and global coordinate spaces
@@ -40,7 +38,6 @@ private:
 
 	struct BuildArgs {
 		const ScalarField &field;
-		const MaterialSelector &material;
 		QefSolver4D &solver;
 		float epsilon;
 		bool use_simple_split_policy;

@@ -1,7 +1,6 @@
 /* This file is part of Isomesh library, released under MIT license.
-  Copyright (c) 2018 Pavel Asyutchenko (sventeam@yandex.ru) */
-// Simple test to check GLM installation correctness
-#include <glm/glm.hpp>
+  Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
+// Simple test to check GLM installation and Isomesh-GLM interop
 #include <isomesh/common.hpp>
 
 int main () {

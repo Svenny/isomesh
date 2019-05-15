@@ -8,7 +8,6 @@
 #include "../data/grid.hpp"
 #include "../data/mesh.hpp"
 #include "../qef/qef_solver_3d.hpp"
-#include "../util/material_filter.hpp"
 
 namespace isomesh
 {
@@ -17,6 +16,6 @@ namespace isomesh
 
 	TBD
 */
-Mesh dualContouring (const UniformGrid &G, const MaterialFilter &filter, QefSolver3D &solver);
+Mesh dualContouring (const UniformGrid &G, QefSolver3D &solver);
 
 }

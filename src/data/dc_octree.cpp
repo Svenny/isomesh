@@ -1,13 +1,13 @@
 /* This file is part of Isomesh library, released under MIT license.
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 #include <isomesh/data/dc_octree.hpp>
+#include <isomesh/util/material_filter.hpp>
+#include <isomesh/util/tables.hpp>
 
 #include <cassert>
 #include <limits>
 #include <stdexcept>
 #include <unordered_map>
-
-#include <glm/gtc/constants.hpp>
 
 namespace isomesh
 {
@@ -18,7 +18,7 @@ DC_Octree::DC_Octree (int32_t root_size, glm::dvec3 global_pos, double global_sc
 		throw std::invalid_argument ("Octree size is not a power of two");
 }
 
-void DC_Octree::build (const UniformGrid &grid, QrQefSolver3D &solver, float epsilon,
+void DC_Octree::build (const UniformGrid &grid, QefSolver3D &solver, float epsilon,
                        bool use_octree_simplification) {
 	// Scale epsilon according to QEF scale (when translating from global coordinates to
 	// local QEF value is scaled by 1/(scale^2))
@@ -173,7 +173,6 @@ void faceProcX (std::array<const DC_OctreeNode *, 2> nodes, Mesh &mesh) {
 	}
 }
 
-
 void faceProcY (std::array<const DC_OctreeNode *, 2> nodes, Mesh &mesh) {
 	constexpr int subTable[8][2] = {
 		{ 0, 4 }, { 0, 5 }, { 0, 6 }, { 0, 7 },
@@ -276,28 +275,30 @@ void cellProc (const DC_OctreeNode *node, Mesh &mesh) {
 	}
 }
 
-void makeVertices (DC_OctreeNode *node, const MaterialFilter &filter, Mesh &mesh) {
+void makeVertices (DC_OctreeNode *node, Mesh &mesh) {
+	MaterialFilter filter;
 	if (!node->isSubdivided ()) {
 		if (!node->isHomogenous ()) {
 			glm::vec3 vertex = node->leaf_data.dual_vertex;
 			glm::vec3 normal = node->leaf_data.normal;
-			Material mat = filter.select (node->leaf_data.corners, 0xFF);
+			filter.reset ();
+			filter.add (node->leaf_data.corners);
+			Material mat = filter.select ();
 			node->leaf_data.vertex_id = mesh.addVertex (vertex, normal, mat);
 		}
 		else node->leaf_data.vertex_id = std::numeric_limits<uint32_t>::max ();
-		return;
 	}
-	for (int i = 0; i < 8; i++)
-		makeVertices (node->children[i], filter, mesh);
+	else for (int i = 0; i < 8; i++)
+		makeVertices (node->children[i], mesh);
 }
 
 }
 
 using namespace dc_detail;
 
-Mesh DC_Octree::contour (const MaterialFilter &filter) {
+Mesh DC_Octree::contour () {
 	Mesh mesh;
-	makeVertices (&m_root, filter, mesh);
+	makeVertices (&m_root, mesh);
 	cellProc (&m_root, mesh);
 	mesh.setGlobalPos (m_globalPos);
 	mesh.setGlobalScale (m_globalScale);
@@ -314,7 +315,7 @@ void DC_Octree::buildNode (DC_OctreeNode *node, glm::ivec3 min_corner,
 	node->subdivide ();
 	int32_t child_size = size / 2;
 	for (int i = 0; i < 8; i++) {
-		glm::ivec3 child_min_corner = min_corner + child_size * DC_OctreeNode::kCornerOffset[i];
+		glm::ivec3 child_min_corner = min_corner + child_size * kCellCornerOffset[i];
 		buildNode ((*node)[i], child_min_corner, child_size, args);
 	}
 	// All children are build and possibly simplified, try to do simplification of this node
@@ -339,7 +340,7 @@ void DC_Octree::buildNode (DC_OctreeNode *node, glm::ivec3 min_corner,
 		CubeMaterials mats;
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
-				auto offset = DC_OctreeNode::kCornerOffset[i] + DC_OctreeNode::kCornerOffset[j];
+				auto offset = kCellCornerOffset[i] + kCellCornerOffset[j];
 				mats[offset.y][offset.x][offset.z] = node->children[i]->leaf_data.corners[j];
 			}
 		}
@@ -363,24 +364,23 @@ void DC_Octree::buildNode (DC_OctreeNode *node, glm::ivec3 min_corner,
 		node->leaf_data.dual_vertex = vertex;
 		node->leaf_data.normal = glm::normalize (avg_normal);
 		node->leaf_data.corners = corners;
-		node->leaf_data.qef = args.solver.data ();
+		node->leaf_data.qef = args.solver.state ();
 	}
 }
 
 void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
                            int32_t size, BuildArgs &args) {
-	QrQefSolver3D &solver = args.solver;
+	QefSolver3D &solver = args.solver;
 	const UniformGrid &G = args.grid;
 
 	solver.reset ();
 	glm::vec3 avg_normal { 0 };
 
-	for (int i = 0; i < 8; i++)
-		node->leaf_data.corners[i] = G[min_corner + DC_OctreeNode::kCornerOffset[i]];
+	node->leaf_data.corners = G.materialsOfCell (G.pointToIndex (min_corner));
 	
 	bool has_edges = false;
 
-	const int edge_table[3][4][2] = {
+	constexpr int edge_table[3][4][2] = {
 		{ { 0, 2 }, { 1, 3 }, { 4, 6 }, { 5, 7 } }, // X
 		{ { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } }, // Y
 		{ { 0, 1 }, { 2, 3 }, { 4, 5 }, { 6, 7 } }  // Z
@@ -396,7 +396,7 @@ void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
 			has_edges = true;
 			// C++ really needs 'for static' like in D language...
 			const auto &storage = (dim == 0 ? G.edges<0> () : dim == 1 ? G.edges<1> () : G.edges<2> ());
-			auto edge_pos = min_corner + DC_OctreeNode::kCornerOffset[edge_table[dim][i][0]];
+			auto edge_pos = min_corner + kCellCornerOffset[edge_table[dim][i][0]];
 			auto iter = storage.findEdge (edge_pos.x, edge_pos.y, edge_pos.z);
 			assert (iter != storage.end ());
 			glm::vec3 vertex = iter->surfacePoint ();
@@ -411,7 +411,7 @@ void DC_Octree::buildLeaf (DC_OctreeNode *node, glm::ivec3 min_corner,
 		glm::vec3 lower_bound (min_corner);
 		glm::vec3 upper_bound (min_corner + size);
 		node->leaf_data.dual_vertex = solver.solve (lower_bound, upper_bound);
-		node->leaf_data.qef = solver.data ();
+		node->leaf_data.qef = solver.state ();
 	}
 }
 
@@ -437,7 +437,7 @@ bool DC_Octree::checkTopoSafety (const CubeMaterials &mats) noexcept {
 	};
 	uint32_t mask = 0;
 	for (int i = 0; i < 8; i++) {
-		auto pos = 2 * DC_OctreeNode::kCornerOffset[i];
+		auto pos = 2 * kCellCornerOffset[i];
 		auto mat = mats[pos.y][pos.x][pos.z];
 		if (mat != Material::Empty)
 			mask |= uint32_t (1 << dcToMc[i]);
@@ -447,7 +447,7 @@ bool DC_Octree::checkTopoSafety (const CubeMaterials &mats) noexcept {
 	for (int i = 0; i < 8; i++) {
 		uint32_t submask = 0;
 		for (int j = 0; j < 8; j++) {
-			auto pos = DC_OctreeNode::kCornerOffset[i] + DC_OctreeNode::kCornerOffset[j];
+			auto pos = kCellCornerOffset[i] + kCellCornerOffset[j];
 			auto mat = mats[pos.y][pos.x][pos.z];
 			if (mat != Material::Empty)
 				submask |= uint32_t (1 << dcToMc[j]);
@@ -482,7 +482,7 @@ bool DC_Octree::checkTopoSafety (const CubeMaterials &mats) noexcept {
 	// Check cube midpoint sign
 	auto mat = mats[1][1][1];
 	for (int i = 0; i < 8; i++) {
-		auto pos = 2 * DC_OctreeNode::kCornerOffset[i];
+		auto pos = 2 * kCellCornerOffset[i];
 		if (mat == mats[pos.y][pos.x][pos.z])
 			return true;
 	}

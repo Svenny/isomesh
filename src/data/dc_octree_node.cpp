@@ -13,10 +13,7 @@ DC_OctreeNode::DC_OctreeNode () noexcept : is_leaf (true) {
 }
 
 DC_OctreeNode::~DC_OctreeNode () noexcept {
-	if (!is_leaf) {
-		for (int i = 0; i < 8; i++)
-			delete children[i];
-	}
+	collapse ();
 }
 
 void DC_OctreeNode::subdivide () {

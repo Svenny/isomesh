@@ -54,8 +54,7 @@ bool MDC_Vertex::hasCollapsibleAncestor () const noexcept {
 }
 
 MDC_OctreeNode::~MDC_OctreeNode () noexcept {
-	if (m_isLeaf)
-		delete[] m_children;
+	collapse ();
 }
 
 void MDC_OctreeNode::subdivide () {

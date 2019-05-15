@@ -11,7 +11,7 @@ DMC_OctreeNode::DMC_OctreeNode () noexcept : children (nullptr)
 {}
 
 DMC_OctreeNode::~DMC_OctreeNode () noexcept {
-	delete[] children;
+	collapse ();
 }
 
 void DMC_OctreeNode::subdivide () {

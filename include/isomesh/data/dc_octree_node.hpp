@@ -36,16 +36,6 @@ struct DC_OctreeNode {
 		DC_OctreeNode *children[8];
 	};
 
-	inline const static glm::ivec3 kCornerOffset[8] = {
-		glm::ivec3 (0, 0, 0),
-		glm::ivec3 (0, 0, 1),
-		glm::ivec3 (1, 0, 0),
-		glm::ivec3 (1, 0, 1),
-		glm::ivec3 (0, 1, 0),
-		glm::ivec3 (0, 1, 1),
-		glm::ivec3 (1, 1, 0),
-		glm::ivec3 (1, 1, 1)
-	};
 private:
 	bool is_leaf;
 	int16_t m_depth = 0;

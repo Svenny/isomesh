@@ -46,7 +46,7 @@ public:
 		\return Surface material in point (x, y, z)
 	*/
 	virtual Material material (double x, double y, double z, double value) const noexcept {
-		x; y; z; value; // Unused parameters
+		(void) x; (void) y; (void) z; (void) value; // Unused parameters
 		return Material::Stone;
 	}
 	/// Shorthand for \ref value

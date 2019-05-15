@@ -27,7 +27,7 @@ extern const uint8_t kFaceProcChildTable[3][8][2];
 // Marching Cubes tables
 
 extern const uint16_t kMcVertexMaskToEdgeMask[256];
-extern const int8_t kMcTriangleTable[256][13];
+extern const int8_t kMcTriangleTable[256][16];
 
 // Manifold Dual Contouring tables
 

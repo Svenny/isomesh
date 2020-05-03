@@ -117,7 +117,7 @@ glm::vec4 QefSolver4D::solve (glm::vec4 min_point, glm::vec4 max_point) {
 	glm::mat4 sigma { 0.0f };
 	m_featureDim = 4;
 	for (int i = 0; i < 4; i++) {
-		if (abs (e[i]) >= m_pinvTolerance)
+		if (std::abs (e[i]) >= m_pinvTolerance)
 			sigma[i][i] = 1.0f / e[i];
 		else m_featureDim--;
 	}

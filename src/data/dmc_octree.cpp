@@ -3,6 +3,7 @@
 #include <isomesh/data/dmc_octree.hpp>
 #include <isomesh/util/tables.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <limits>
 #include <stdexcept>
@@ -562,7 +563,6 @@ bool DMC_Octree::shouldSplit (glm::ivec3 min_corner, int32_t size, BuildArgs &ar
 
 bool DMC_Octree::shouldStopSplitting (glm::ivec3 min_corner, int32_t size, BuildArgs &args) {
 	const ScalarField &field = args.field;
-	const double epsilon = args.epsilon;
 
 	const glm::dvec3 base_point = localToGlobal (min_corner);
 	const double side = size * m_globalScale;

@@ -8,6 +8,8 @@
 #include <glm/common.hpp>
 #include <isomesh/field/scalar_field.hpp>
 
+#include <string>
+
 class TriangleOctree;
 
 namespace isomesh {

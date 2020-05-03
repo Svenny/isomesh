@@ -2,10 +2,11 @@
   Copyright (c) 2019 Nikita Sirgienko (warquark@gmail.com) */
 #pragma once
 
-#include <vector>
-
 #include <glm/vec3.hpp>
 #include "triangle.hpp"
+
+#include <memory>
+#include <vector>
 
 class TriangleOctree {
 public:

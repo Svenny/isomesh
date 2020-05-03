@@ -6,6 +6,7 @@
 #include "jacobi.hpp"
 
 #include <cassert>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
 
@@ -111,7 +112,7 @@ glm::vec3 QefSolver3D::solve (glm::vec3 min_point, glm::vec3 max_point) {
 	glm::mat3 sigma { 0.0f };
 	m_featureDim = 3;
 	for (int i = 0; i < 3; i++) {
-		if (abs (e[i]) >= m_pinvTolerance)
+		if (std::abs (e[i]) >= m_pinvTolerance)
 			sigma[i][i] = 1.0f / e[i];
 		else m_featureDim--;
 	}

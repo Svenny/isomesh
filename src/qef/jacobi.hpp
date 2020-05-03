@@ -111,12 +111,12 @@ std::pair<glm::vec<D, T>, glm::mat<D, D, T> > jacobi (glm::mat<D, D, T> A, T tol
 	using namespace jacobi_detail;
 	glm::mat<D, D, T> E { T (1) };
 	for (int k = 0; k < max_iters; k++) {
-		T max_el = abs (A[0][1]);
+		T max_el = std::abs (A[0][1]);
 		int max_i = 0;
 		int max_j = 1;
 		for (int i = 0; i < D; i++) {
 			for (int j = i + 1; j < D; j++) {
-				T el = abs (A[i][j]);
+				T el = std::abs (A[i][j]);
 				if (el > max_el) {
 					max_el = el;
 					max_i = i;

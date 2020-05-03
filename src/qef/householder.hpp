@@ -2,6 +2,8 @@
   Copyright (c) 2018-2019 Pavel Asyutchenko (sventeam@yandex.ru) */
 #include <isomesh/common.hpp>
 
+#include <cstring>
+
 namespace isomesh
 {
 

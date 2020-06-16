@@ -35,9 +35,9 @@ void DC_Octree::build (const UniformGrid &grid, QefSolver3D &solver, float epsil
 		buildNode (&m_root, min_corner, m_rootSize, args);
 	}
 	catch (...) {
-		auto e = std::current_exception ();
-		m_root.collapse ();
-		std::rethrow_exception (e);
+		if (m_root.isSubdivided())
+			m_root.collapse ();
+		throw;
 	}
 }
 
@@ -316,7 +316,7 @@ void DC_Octree::buildNode (DC_OctreeNode *node, glm::ivec3 min_corner,
 	int32_t child_size = size / 2;
 	for (int i = 0; i < 8; i++) {
 		glm::ivec3 child_min_corner = min_corner + child_size * kCellCornerOffset[i];
-		buildNode ((*node)[i], child_min_corner, child_size, args);
+		buildNode(node->children[i], child_min_corner, child_size, args);
 	}
 	// All children are build and possibly simplified, try to do simplification of this node
 	std::array<Material, 8> corners;

@@ -13,7 +13,8 @@ DC_OctreeNode::DC_OctreeNode () noexcept : is_leaf (true) {
 }
 
 DC_OctreeNode::~DC_OctreeNode () noexcept {
-	collapse ();
+	if (!is_leaf)
+		collapse ();
 }
 
 void DC_OctreeNode::subdivide () {

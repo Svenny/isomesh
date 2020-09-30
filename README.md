@@ -1,2 +1,6 @@
 # isomesh
 A collection of isosurface extraction algorithms
+
+
+
+In order to deal with the heavy trend in size increase of volumetric datasets, research in isosurface extraction has focused in the past few years on related aspects such as surface simplification and load balanced parallel algorithms. We present in this paper a parallel, bloc-wise extension of the tandem algorithm [Attali et al. 2005], which simplifies on the fly an isosurface being extracted. Our approach minimizes the overall memory consumption using an adequate bloc splitting and merging strategy and with the introduction of a component dumping mechanism that drastically reduces the amount of memory needed for particular datasets such as those encountered in geophysics. As soon as detected, surface components are migrated to the disk along with a meta-data index (oriented bounding box, volume, etc) that will allow further improved exploration scenarios (small components removal or particularly oriented components selection for instance). For ease of implementation, we carefully describe a master and slave algorithm architecture that clearly separates the four required basic tasks. We show several results of our parallel algorithm applied on a 7000×1600×2000 geophysics dataset.
